@@ -69,6 +69,8 @@ db.exec(`
     age INTEGER,
     trade TEXT,
     bio TEXT,
+    goals TEXT,
+    availability TEXT,
     experience INTEGER,
     businessName TEXT,
     teachingPrefs TEXT,
@@ -179,11 +181,11 @@ async function startServer() {
 
   // Auth
   app.post('/api/auth/register', async (req, res) => {
-    const { name, email, password, role, location, age, trade, lang } = req.body;
+    const { name, email, password, role, location, age, trade, bio, goals, availability, lang } = req.body;
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, age, trade, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      const result = stmt.run(name, email, hashedPassword, role, location, age, trade, lang);
+      const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, age, trade, bio, goals, availability, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const result = stmt.run(name, email, hashedPassword, role, location, age, trade, bio, goals, availability, lang);
       
       const user = { id: result.lastInsertRowid, name, email, role };
       const token = jwt.sign(user, JWT_SECRET);

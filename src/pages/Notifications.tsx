@@ -1,75 +1,71 @@
-import { useState } from 'react';
-import { MoreHorizontal, Bell, UserPlus, MessageSquare, Briefcase, Star, Heart, ChevronRight, Info, ShieldCheck, Clock } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState } from 'react';
+import { Bell, UserPlus, MessageSquare, Briefcase, Star, Heart, ChevronRight, Info, ShieldCheck, Clock, MoreHorizontal } from 'lucide-react';
 
-export default function Notifications() {
-  const { lang, t } = useLanguage();
-  const isHe = lang === 'he';
+interface NotificationsProps {
+  isRtl: boolean;
+}
 
-  // Beta Mode: No notifications initially
-  const notifications: any[] = [];
+export default function Notifications({ isRtl }: NotificationsProps) {
+  const [activeTab, setActiveTab] = useState<'all' | 'mentions' | 'requests'>('all');
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-8 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-black text-black tracking-tight">
-          {isHe ? 'התראות' : 'Notifications'}
-        </h1>
-        <p className="text-gray-400 font-medium">
-          {isHe ? 'הישאר מעודכן בחדשות האחרונות מהרשת שלך.' : 'Stay updated with the latest from your network.'}
-        </p>
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black text-black tracking-tight">Notifications</h1>
+          <p className="text-gray-400 font-medium">Stay updated with your SkillLink network activities.</p>
+        </div>
+        <div className="flex p-1 bg-gray-100 rounded-2xl">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+              activeTab === 'all' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setActiveTab('mentions')}
+            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+              activeTab === 'mentions' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            }`}
+          >
+            Mentions
+          </button>
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+              activeTab === 'requests' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            }`}
+          >
+            Requests
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Sidebar */}
-        <div className="lg:col-span-3">
-          <div className="linkedin-card p-6 sticky top-24">
-            <h2 className="text-sm font-black text-black uppercase tracking-widest mb-4">{isHe ? 'ניהול התראות' : 'Manage Notifications'}</h2>
-            <button className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-black transition-all">
-              {isHe ? 'הגדרות התראות' : 'Notification Settings'}
-            </button>
+      {/* Notifications List */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        {/* Empty State */}
+        <div className="p-24 text-center space-y-8">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <Bell className="text-gray-200" size={48} />
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-6">
-          <div className="linkedin-card overflow-hidden">
-            {notifications.length > 0 ? (
-              <div className="divide-y divide-gray-50">
-                {/* Notifications list would go here */}
-              </div>
-            ) : (
-              <div className="p-20 text-center space-y-6">
-                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                  <Bell size={48} className="text-gray-200" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-black">{isHe ? 'אין התראות חדשות' : 'No new notifications'}</h3>
-                  <p className="text-gray-400 font-medium max-w-xs mx-auto">
-                    {isHe ? 'כאשר יהיו עדכונים על הפעילות שלך, הם יופיעו כאן.' : 'When there are updates on your activity, they will appear here.'}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="hidden lg:block lg:col-span-3">
-          <div className="bg-black text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="flex items-center gap-3 mb-6 relative z-10">
-              <ShieldCheck size={24} className="text-white" />
-              <h3 className="font-black text-sm uppercase tracking-widest">{isHe ? 'מצב בטא' : 'Beta Mode'}</h3>
-            </div>
-            <p className="text-sm text-gray-400 leading-relaxed font-medium relative z-10">
-              {isHe ? 'במהלך תקופת הבטא, התראות יישלחו על אירועים קריטיים כמו אישור מנטור או בקשות התמחות חדשות.' : 'During the beta period, notifications will be sent for critical events like mentor approval or new apprenticeship requests.'}
+          <div className="space-y-3">
+            <h2 className="text-3xl font-black text-black tracking-tight">All caught up!</h2>
+            <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
+              No new notifications at the moment. We'll alert you when something important happens in your network.
             </p>
           </div>
         </div>
+      </div>
 
+      {/* Footer Settings Link */}
+      <div className="text-center">
+        <button className="text-sm font-bold text-gray-400 hover:text-black transition-colors flex items-center gap-2 mx-auto">
+          <Info size={16} />
+          Manage notification settings
+        </button>
       </div>
     </div>
   );
