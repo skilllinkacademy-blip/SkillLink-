@@ -1,5 +1,21 @@
 import React, { useState } from 'react';
-import { Star, MapPin, ShieldCheck, Clock, Calendar, Hammer, Users, ArrowRight, Camera, Pencil, Globe, ExternalLink, Briefcase, Info } from 'lucide-react';
+import {
+  Star,
+  MapPin,
+  ShieldCheck,
+  Clock,
+  Calendar,
+  Hammer,
+  Users,
+  ArrowRight,
+  Camera,
+  Pencil,
+  Globe,
+  ExternalLink,
+  Briefcase,
+  Info,
+} from 'lucide-react';
+import { supabase } from '../App';
 
 interface ProfileProps {
   isRtl: boolean;
@@ -7,6 +23,49 @@ interface ProfileProps {
 
 export default function Profile({ isRtl }: ProfileProps) {
   const [viewRole, setViewRole] = useState<'mentor' | 'apprentice'>('mentor');
+  const [verifying, setVerifying] = useState(false);
+
+  const handleVerifyClick = async () => {
+    try {
+      setVerifying(true);
+
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        alert('You must be logged in to request verification.');
+        setVerifying(false);
+        return;
+      }
+
+      // TODO: להחליף ב‑URL אמיתי של מסמך אחרי העלאה ל‑Storage
+      const dummyDocumentUrl = 'https://example.com/verification-doc';
+
+      const { error } = await supabase
+        .from('mentor_verifications')
+        .insert({
+          user_id: user.id,
+          document_url: dummyDocumentUrl,
+          status: 'pending',
+        });
+
+      if (error) {
+        console.error('Error inserting mentor_verification:', error);
+        alert(`Verification error: ${error.message}`);
+        setVerifying(false);
+        return;
+      }
+
+      alert('Verification request sent successfully.');
+      setVerifying(false);
+    } catch (e) {
+      console.error('Unexpected error in handleVerifyClick:', e);
+      alert('Unexpected error during verification.');
+      setVerifying(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -16,7 +75,9 @@ export default function Profile({ isRtl }: ProfileProps) {
           <button
             onClick={() => setViewRole('mentor')}
             className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${
-              viewRole === 'mentor' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+              viewRole === 'mentor'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-500 hover:text-black'
             }`}
           >
             Mentor View
@@ -24,7 +85,9 @@ export default function Profile({ isRtl }: ProfileProps) {
           <button
             onClick={() => setViewRole('apprentice')}
             className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${
-              viewRole === 'apprentice' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+              viewRole === 'apprentice'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-500 hover:text-black'
             }`}
           >
             Apprentice View
@@ -55,10 +118,14 @@ export default function Profile({ isRtl }: ProfileProps) {
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-black text-black">My Name</h1>
-                    {viewRole === 'mentor' && <ShieldCheck className="text-emerald-500" size={24} />}
+                    {viewRole === 'mentor' && (
+                      <ShieldCheck className="text-emerald-500" size={24} />
+                    )}
                   </div>
                   <p className="text-lg font-bold text-gray-500 flex items-center gap-2">
-                    {viewRole === 'mentor' ? 'Master Electrician' : 'Aspiring Electrician'}
+                    {viewRole === 'mentor'
+                      ? 'Master Electrician'
+                      : 'Aspiring Electrician'}
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                     {viewRole === 'mentor' ? '12 Years Exp' : 'Age 22'}
                   </p>
@@ -74,40 +141,72 @@ export default function Profile({ isRtl }: ProfileProps) {
                   <>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
                       <div className="flex justify-center mb-1">
-                        {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} className="text-black fill-current" />)}
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star
+                            key={i}
+                            size={14}
+                            className="text-black fill-current"
+                          />
+                        ))}
                       </div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Self-Rating</div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Self-Rating
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
                       <div className="text-lg font-black text-black">12</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Years Exp</div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Years Exp
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                      <div className="text-lg font-black text-black">Tel Aviv</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Area Served</div>
+                      <div className="text-lg font-black text-black">
+                        Tel Aviv
+                      </div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Area Served
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                      <div className="text-lg font-black text-black">40h/w</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Availability</div>
+                      <div className="text-lg font-black text-black">
+                        40h/w
+                      </div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Availability
+                      </div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
                       <div className="text-lg font-black text-black">22</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Age</div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Age
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                      <div className="text-lg font-black text-black">Beginner</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skill Level</div>
+                      <div className="text-lg font-black text-black">
+                        Beginner
+                      </div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Skill Level
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                      <div className="text-lg font-black text-black">Jerusalem</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Location</div>
+                      <div className="text-lg font-black text-black">
+                        Jerusalem
+                      </div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Location
+                      </div>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                      <div className="text-lg font-black text-black">20h/w</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Availability</div>
+                      <div className="text-lg font-black text-black">
+                        20h/w
+                      </div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Availability
+                      </div>
                     </div>
                   </>
                 )}
@@ -119,12 +218,15 @@ export default function Profile({ isRtl }: ProfileProps) {
           <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
             <h2 className="text-2xl font-black text-black">Bio</h2>
             <p className="text-gray-500 font-medium leading-relaxed text-lg">
-              No bio added yet. Tell the SkillLink community about your journey in the trades.
+              No bio added yet. Tell the SkillLink community about your journey
+              in the trades.
             </p>
-            
+
             <div className="pt-8 border-t border-gray-50">
               <h3 className="text-xl font-black text-black mb-4">
-                {viewRole === 'mentor' ? 'Why Choose Me?' : 'Why I want to learn'}
+                {viewRole === 'mentor'
+                  ? 'Why Choose Me?'
+                  : 'Why I want to learn'}
               </h3>
               <p className="text-gray-500 font-medium leading-relaxed">
                 No goals or reasons added yet.
@@ -135,12 +237,19 @@ export default function Profile({ isRtl }: ProfileProps) {
           {/* Gallery / Past Work Skeleton */}
           <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-black text-black">Gallery of Work</h2>
-              <button className="text-sm font-bold text-gray-400 hover:text-black transition-colors">View All</button>
+              <h2 className="text-2xl font-black text-black">
+                Gallery of Work
+              </h2>
+              <button className="text-sm font-bold text-gray-400 hover:text-black transition-colors">
+                View All
+              </button>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="min-w-[240px] h-40 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-200">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="min-w-[240px] h-40 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-200"
+                >
                   <Camera size={32} />
                 </div>
               ))}
@@ -155,15 +264,27 @@ export default function Profile({ isRtl }: ProfileProps) {
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             <div className="relative z-10 space-y-4">
               <h3 className="text-2xl font-black leading-tight">
-                {viewRole === 'mentor' ? 'Ready to share your skills?' : 'Ready to start learning?'}
+                {viewRole === 'mentor'
+                  ? 'Ready to share your skills?'
+                  : 'Ready to start learning?'}
               </h3>
               <p className="text-gray-400 font-medium">
-                {viewRole === 'mentor' 
-                  ? 'Connect with eager apprentices and shape the next generation.' 
+                {viewRole === 'mentor'
+                  ? 'Connect with eager apprentices and shape the next generation.'
                   : 'Find a master mentor and jumpstart your career in the trades.'}
               </p>
-              <button className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2">
-                {viewRole === 'mentor' ? 'Post an Apprenticeship' : 'Find a Mentor'}
+              <button
+                className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                onClick={
+                  viewRole === 'mentor' ? handleVerifyClick : undefined
+                }
+                disabled={viewRole === 'mentor' && verifying}
+              >
+                {viewRole === 'mentor'
+                  ? verifying
+                    ? 'Sending Verification...'
+                    : 'Verify as Mentor'
+                  : 'Find a Mentor'}
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -171,15 +292,19 @@ export default function Profile({ isRtl }: ProfileProps) {
 
           {/* Details Card */}
           <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-8">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Profile Details</h3>
-            
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+              Profile Details
+            </h3>
+
             <div className="space-y-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
                   <MapPin size={20} className="text-black" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Location</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Location
+                  </p>
                   <p className="text-sm font-bold text-black">Not specified</p>
                 </div>
               </div>
@@ -189,7 +314,9 @@ export default function Profile({ isRtl }: ProfileProps) {
                   <Clock size={20} className="text-black" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Availability</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Availability
+                  </p>
                   <p className="text-sm font-bold text-black">Not specified</p>
                 </div>
               </div>
@@ -199,7 +326,9 @@ export default function Profile({ isRtl }: ProfileProps) {
                   <Hammer size={20} className="text-black" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Trade</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                    Trade
+                  </p>
                   <p className="text-sm font-bold text-black">Not specified</p>
                 </div>
               </div>
