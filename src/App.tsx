@@ -7,36 +7,73 @@ import Messaging from './pages/Messaging';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Landing from './pages/Landing';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export default function App() {
   const [isRtl, setIsRtl] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = isRtl ? 'he' : 'en';
   }, [isRtl]);
 
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const toggleLang = () => setIsRtl(!isRtl);
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-black">
+        <span>Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <Router>
-      <div className={`min-h-screen bg-white text-black selection:bg-black selection:text-white ${isRtl ? 'font-serif' : 'font-sans'}`}>
+      <div
+        className={`min-h-screen bg-white text-black selection:bg-black selection:text-white ${
+          isRtl ? 'font-serif' : 'font-sans'
+        }`}
+      >
         {isAuthenticated && <Navbar isRtl={isRtl} toggleLang={toggleLang} />}
-        
+
         <main className={isAuthenticated ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
           <Routes>
-            <Route 
-              path="/landing" 
+            <Route
+              path="/landing"
               element={
-                <Landing 
-                  onLogin={() => setIsAuthenticated(true)} 
-                  isRtl={isRtl} 
-                  toggleLang={toggleLang} 
+                <Landing
+                  onLogin={() => setIsAuthenticated(true)}
+                  isRtl={isRtl}
+                  toggleLang={toggleLang}
                 />
-              } 
+              }
             />
-            
+
             {isAuthenticated ? (
               <>
                 <Route path="/" element={<Home isRtl={isRtl} />} />
