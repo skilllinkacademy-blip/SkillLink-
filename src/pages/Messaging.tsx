@@ -28,6 +28,7 @@ type ConversationItem = {
   last_message_at: string | null;
   other_user_id: string;
   other_user_name: string | null;
+  has_unread: boolean;
 };
 
 type MessageItem = {
@@ -80,7 +81,8 @@ export default function Messaging({ isRtl }: MessagingProps) {
           last_message,
           last_message_at,
           profile1:profiles!conversations_participant_1_fkey ( id, full_name, username ),
-          profile2:profiles!conversations_participant_2_fkey ( id, full_name, username )
+          profile2:profiles!conversations_participant_2_fkey ( id, full_name, username ),
+          messages(count)
         `
         )
         .or(
@@ -97,6 +99,10 @@ export default function Messaging({ isRtl }: MessagingProps) {
       const mapped: ConversationItem[] = (data as any[]).map((row) => {
         const isP1 = row.participant_1 === currentUserId;
         const otherProfile = isP1 ? row.profile2 : row.profile1;
+
+        const hasUnread =
+          (row.messages?.[0]?.count_unread_for_user as boolean) ?? false;
+
         return {
           id: row.id,
           participant_1: row.participant_1,
@@ -106,6 +112,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
           other_user_id: otherProfile?.id ?? '',
           other_user_name:
             otherProfile?.full_name || otherProfile?.username || 'User',
+          has_unread: hasUnread,
         };
       });
 
@@ -116,17 +123,32 @@ export default function Messaging({ isRtl }: MessagingProps) {
     loadConversations();
   }, [currentUserId]);
 
-  // 3. טעינת הודעות לשיחה שנבחרה
+  // 3. טעינת הודעות לשיחה שנבחרה + סימון כנקראו
   useEffect(() => {
-    if (!selectedConversation) return;
+    if (!selectedConversation || !currentUserId) return;
 
-    const loadMessages = async () => {
+    const loadMessagesAndMarkRead = async () => {
       const list = await fetchMessages(supabase, selectedConversation.id);
       setMessages(list as MessageItem[]);
+
+      // סימון כל ההודעות אליי כנקראו
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('conversation_id', selectedConversation.id)
+        .eq('recipient_id', currentUserId)
+        .eq('is_read', false);
+
+      // עדכון מקומי – אין לא נקראו לשיחה הזו
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConversation.id ? { ...c, has_unread: false } : c
+        )
+      );
     };
 
-    loadMessages();
-  }, [selectedConversation]);
+    loadMessagesAndMarkRead();
+  }, [selectedConversation, currentUserId]);
 
   // 4. Realtime – הודעות חדשות בשיחה שנבחרה
   useEffect(() => {
@@ -168,7 +190,6 @@ export default function Messaging({ isRtl }: MessagingProps) {
       input.trim()
     );
     if (msg) {
-      // Realtime כבר יוסיף, אבל נשאיר fallback אם הערוץ לא מחובר
       setMessages((prev) => [...prev, msg as MessageItem]);
       setInput('');
     }
@@ -240,6 +261,10 @@ export default function Messaging({ isRtl }: MessagingProps) {
                       </p>
                     </div>
                   </div>
+
+                  {chat.has_unread && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                  )}
                 </li>
               ))}
             </ul>
