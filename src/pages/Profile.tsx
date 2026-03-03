@@ -1,19 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import {
   Star,
   MapPin,
   ShieldCheck,
   Clock,
-  Calendar,
   Hammer,
-  Users,
   ArrowRight,
   Camera,
   Pencil,
-  Globe,
-  ExternalLink,
-  Briefcase,
-  Info,
 } from 'lucide-react';
 import { supabase } from '../App';
 
@@ -24,9 +18,20 @@ interface ProfileProps {
 export default function Profile({ isRtl }: ProfileProps) {
   const [viewRole, setViewRole] = useState<'mentor' | 'apprentice'>('mentor');
   const [verifying, setVerifying] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+  };
 
   const handleVerifyClick = async () => {
     try {
+      if (!selectedFile) {
+        alert('Please upload an ID image/document first.');
+        return;
+      }
+
       setVerifying(true);
 
       const {
@@ -40,20 +45,36 @@ export default function Profile({ isRtl }: ProfileProps) {
         return;
       }
 
-      // TODO: להחליף ב‑URL אמיתי של מסמך אחרי העלאה ל‑Storage
-      const dummyDocumentUrl = 'https://example.com/verification-doc';
+      const path = `${user.id}/${Date.now()}-${selectedFile.name}`;
 
-      const { error } = await supabase
+      const { error: uploadError } = await supabase.storage
+        .from('mentor_verifications')
+        .upload(path, selectedFile);
+
+      if (uploadError) {
+        console.error('Error uploading verification document:', uploadError);
+        alert(`Upload error: ${uploadError.message}`);
+        setVerifying(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('mentor_verifications')
+        .getPublicUrl(path);
+
+      const documentUrl = urlData.publicUrl;
+
+      const { error: insertError } = await supabase
         .from('mentor_verifications')
         .insert({
           user_id: user.id,
-          document_url: dummyDocumentUrl,
+          document_url: documentUrl,
           status: 'pending',
         });
 
-      if (error) {
-        console.error('Error inserting mentor_verification:', error);
-        alert(`Verification error: ${error.message}`);
+      if (insertError) {
+        console.error('Error inserting mentor_verification:', insertError);
+        alert(`Verification error: ${insertError.message}`);
         setVerifying(false);
         return;
       }
@@ -69,7 +90,7 @@ export default function Profile({ isRtl }: ProfileProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      {/* View Toggle for Demo */}
+      {/* View Toggle */}
       <div className="flex justify-center mb-8">
         <div className="inline-flex p-1 bg-gray-100 rounded-2xl">
           <button
@@ -96,7 +117,7 @@ export default function Profile({ isRtl }: ProfileProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Main Info */}
+        {/* Left Column */}
         <div className="lg:col-span-8 space-y-8">
           {/* Header Card */}
           <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
@@ -118,6 +139,7 @@ export default function Profile({ isRtl }: ProfileProps) {
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-black text-black">My Name</h1>
+                    {/* כאן בעתיד תראה is_verified אמיתי מה־DB */}
                     {viewRole === 'mentor' && (
                       <ShieldCheck className="text-emerald-500" size={24} />
                     )}
@@ -234,7 +256,7 @@ export default function Profile({ isRtl }: ProfileProps) {
             </div>
           </div>
 
-          {/* Gallery / Past Work Skeleton */}
+          {/* Gallery */}
           <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-black text-black">
@@ -257,22 +279,37 @@ export default function Profile({ isRtl }: ProfileProps) {
           </div>
         </div>
 
-        {/* Right Column: Sidebar */}
+        {/* Right Column */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Action Card */}
+          {/* Action Card – Upload + Verify */}
           <div className="bg-black text-white rounded-3xl p-8 shadow-2xl space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             <div className="relative z-10 space-y-4">
               <h3 className="text-2xl font-black leading-tight">
                 {viewRole === 'mentor'
-                  ? 'Ready to share your skills?'
+                  ? 'Verify your mentor profile'
                   : 'Ready to start learning?'}
               </h3>
               <p className="text-gray-400 font-medium">
                 {viewRole === 'mentor'
-                  ? 'Connect with eager apprentices and shape the next generation.'
+                  ? 'Upload an ID or certification so we can verify you as a trusted mentor.'
                   : 'Find a master mentor and jumpstart your career in the trades.'}
               </p>
+
+              {viewRole === 'mentor' && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Upload ID / Certification
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    className="w-full text-xs text-gray-200 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-white file:text-black hover:file:bg-gray-100 cursor-pointer"
+                  />
+                </div>
+              )}
+
               <button
                 className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                 onClick={
@@ -283,7 +320,7 @@ export default function Profile({ isRtl }: ProfileProps) {
                 {viewRole === 'mentor'
                   ? verifying
                     ? 'Sending Verification...'
-                    : 'Verify as Mentor'
+                    : 'Submit Verification'
                   : 'Find a Mentor'}
                 <ArrowRight size={18} />
               </button>
