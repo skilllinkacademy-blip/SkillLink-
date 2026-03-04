@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { User, Briefcase, Mail, Lock, MapPin, ChevronRight, AlertCircle, CheckCircle2, ArrowLeft, Award, Rocket, GraduationCap, Presentation, Wrench } from 'lucide-react';
+import { User, Briefcase, Mail, Lock, MapPin, ChevronRight, AlertCircle, CheckCircle2, ArrowLeft, Award, Rocket, GraduationCap, Presentation, Wrench, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,7 +40,8 @@ export default function Auth({ isRtl }: AuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [location, setLocation] = useState('');
+  const [city, setCity] = useState('');
+  const [phone, setPhone] = useState('');
   const [occupation, setOccupation] = useState('');
   const [experience, setExperience] = useState('');
   const [workload, setWorkload] = useState('');
@@ -75,7 +76,8 @@ export default function Auth({ isRtl }: AuthProps) {
             data: {
               full_name: fullName,
               role: role,
-              location: location,
+              city: city,
+              phone: phone,
               occupation: role === 'mentor' ? occupation : undefined,
               years_experience: role === 'mentor' ? (parseInt(experience) || 0) : undefined,
               workload: role === 'mentor' ? workload : undefined,
@@ -208,9 +210,21 @@ export default function Auth({ isRtl }: AuthProps) {
         <input
           type="text"
           required
-          placeholder={isRtl ? 'מיקום (עיר)' : 'Location (City)'}
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          placeholder={isRtl ? 'עיר מגורים' : 'City'}
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none"
+        />
+      </div>
+
+      <div className="relative group">
+        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={20} />
+        <input
+          type="tel"
+          required
+          placeholder={isRtl ? 'מספר טלפון' : 'Phone Number'}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none"
         />
       </div>

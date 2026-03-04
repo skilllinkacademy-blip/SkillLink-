@@ -23,6 +23,7 @@ interface Opportunity {
     full_name: string;
     avatar_url?: string;
     occupation?: string;
+    city?: string;
   };
 }
 
@@ -83,7 +84,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
                 <MapPin size={14} />
-                <span>{opportunity.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
+                <span>{opportunity.location || opportunity.profiles?.city || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
               </div>
               <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
                 <Clock size={14} />

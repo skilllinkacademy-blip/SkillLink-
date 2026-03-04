@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -27,6 +27,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     headline: '',
     bio: '',
     location: '',
+    city: '',
+    phone: '',
     occupation: '',
     years_experience: 0,
     workload: '',
@@ -109,6 +111,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             headline: data.headline || '',
             bio: data.bio || '',
             location: data.location || '',
+            city: data.city || '',
+            phone: data.phone || '',
             occupation: data.occupation || '',
             years_experience: data.years_experience || 0,
             workload: data.workload || '',
@@ -498,14 +502,28 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isMyProfile ? (
                   <input 
                     type="text" 
-                    value={formData.location} 
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    onBlur={() => handleSave('location', formData.location)}
+                    value={formData.city || formData.location} 
+                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                    onBlur={() => handleSave('city', formData.city)}
                     className="w-full bg-transparent text-center outline-none"
                   />
-                ) : (profile.location || '---')}
+                ) : (profile.city || profile.location || '---')}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'עיר' : 'City'}</div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-2xl text-center">
+              <div className="text-lg font-black text-black">
+                {isMyProfile ? (
+                  <input 
+                    type="tel" 
+                    value={formData.phone} 
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onBlur={() => handleSave('phone', formData.phone)}
+                    className="w-full bg-transparent text-center outline-none"
+                  />
+                ) : (profile.phone || '---')}
+              </div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'טלפון' : 'Phone'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">

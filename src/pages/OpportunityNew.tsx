@@ -50,7 +50,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     if (profile) {
       const defaultType = profile.role === 'mentor' ? 'mentor_offer' : 'mentee_seeking';
       setType(defaultType);
-      setLocation(profile.location || '');
+      setLocation(profile.city || profile.location || '');
     }
   }, [profile]);
 

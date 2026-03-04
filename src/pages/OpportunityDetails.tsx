@@ -346,7 +346,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             <div className="pt-6 border-t border-gray-50 space-y-4">
               <div className="flex items-center justify-between text-sm font-bold">
                 <span className="text-gray-400 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</span>
-                <span className="text-gray-900">{opportunity.profiles?.location}</span>
+                <span className="text-gray-900">{opportunity.profiles?.city || opportunity.profiles?.location}</span>
               </div>
               <div className="flex items-center justify-between text-sm font-bold">
                 <span className="text-gray-400 uppercase tracking-widest">{isRtl ? 'חבר מאז' : 'Member Since'}</span>

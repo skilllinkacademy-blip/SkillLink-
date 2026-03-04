@@ -41,6 +41,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
+  const checkDatabaseSetup = async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const { data, error } = await supabase
+        .from('schema_migrations')
+        .select('id')
+        .eq('id', 'initial_setup')
+        .maybeSingle();
+      
+      if (error || !data) {
+        setDbError('DATABASE_SETUP_REQUIRED');
+      } else {
+        setDbError(null);
+      }
+    } catch (err) {
+      setDbError('DATABASE_SETUP_REQUIRED');
+    }
+  };
+
   const fetchUnreadCount = async (userId: string) => {
     if (!isSupabaseConfigured) return;
     try {
@@ -129,7 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               username: generatedUsername,
               full_name: metadata.full_name || 'User',
               role: metadata.role || 'mentee',
-              location: metadata.location || 'Unknown',
+              city: metadata.city || metadata.location || 'Unknown',
+              phone: metadata.phone || '',
               occupation: metadata.occupation,
               years_experience: metadata.years_experience,
               workload: metadata.workload,
@@ -168,6 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      checkDatabaseSetup();
       if (session?.user) {
         ensureProfile(session.user);
         fetchUnreadCount(session.user.id);
