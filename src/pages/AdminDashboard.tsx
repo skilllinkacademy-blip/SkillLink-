@@ -16,7 +16,7 @@ import {
 interface VerificationRequest {
   id: string;
   user_id: string;
-  document_url: string;
+  document_url: string; // כאן מאוחסן כרגע רק השם/הנתיב של הקובץ
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   profiles: {
@@ -63,7 +63,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
       const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
-      setRequests(data as any || []);
+      setRequests((data as any) || []);
     } catch (err: any) {
       console.error('Error fetching verification requests:', err);
       setError(err.message || 'Failed to fetch requests');
@@ -85,16 +85,36 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
 
       if (error) throw error;
       
-      // Refresh list
       setRequests(prev => prev.filter(req => req.id !== id || filter === 'all'));
-      
-      // If approved, we could also update the profile to mark as verified if we had that column
-      // For now, just updating the verification record is enough.
     } catch (err) {
       console.error('Error updating verification status:', err);
       alert(isRtl ? 'שגיאה בעדכון הסטטוס' : 'Error updating status');
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  // פונקציה שיוצרת Signed URL לקובץ בבאקט mentor_id_docs
+  const getSignedDocumentUrl = async (path: string) => {
+    try {
+      // אם כבר יש URL מלא (מתחיל ב‑http), פשוט נחזיר אותו
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('mentor_id_docs')
+        .createSignedUrl(path, 60 * 60); // שעה תוקף
+
+      if (error || !data?.signedUrl) {
+        console.error('Error creating signed URL:', error);
+        return null;
+      }
+
+      return data.signedUrl;
+    } catch (e) {
+      console.error('Error creating signed URL:', e);
+      return null;
     }
   };
 
@@ -203,15 +223,21 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
               </div>
 
               <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-                <a 
-                  href={req.document_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const url = await getSignedDocumentUrl(req.document_url);
+                    if (!url) {
+                      alert(isRtl ? 'לא ניתן לפתוח את המסמך' : 'Could not open document');
+                      return;
+                    }
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
                   className="flex items-center gap-2 px-6 py-3 bg-gray-50 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all border border-gray-100"
                 >
                   <ExternalLink size={16} />
                   {isRtl ? 'צפה במסמך' : 'View Document'}
-                </a>
+                </button>
 
                 {req.status === 'pending' && (
                   <div className="flex items-center gap-2 ml-auto md:ml-0">
