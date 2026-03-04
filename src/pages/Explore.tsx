@@ -1,181 +1,123 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Search as SearchIcon,
-  MapPin,
-  Filter,
-  Star,
-  Briefcase,
-  ArrowRight,
-} from 'lucide-react';
-import { supabase } from '../App';
-import { getOrCreateConversation, sendMessage } from '../lib/chat';
+import React, { useState, useEffect } from 'react';
+import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Link } from 'react-router-dom';
 
 interface ExploreProps {
   isRtl: boolean;
 }
 
-type Opportunity = {
-  id: string;
-  owner_id: string;
-  type: string | null;
-  title: string;
-  location: string | null;
-  work_hours: string | null;
-  pay_amount: number | null;
-  pay_period: string | null;
-  beginners_only: boolean | null;
-  created_at: string;
-};
-
 export default function Explore({ isRtl }: ExploreProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'mentor' | 'mentee'>('all');
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sendingId, setSendingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(
-          'id, owner_id, type, title, location, work_hours, pay_amount, pay_period, beginners_only, created_at'
-        )
-        .order('created_at', { ascending: false });
-
-      if (error || !data) {
-        console.error('Error loading opportunities', error);
-        setOpportunities([]);
-      } else {
-        setOpportunities(data as Opportunity[]);
-      }
-      setLoading(false);
-    };
-
-    load();
-  }, []);
-
-  const filtered = opportunities.filter((o) =>
-    o.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleInterested = async (opportunity: Opportunity) => {
+  const fetchResults = async () => {
+    setLoading(true);
     try {
-      setSendingId(opportunity.id);
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .order('full_name', { ascending: true });
 
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-
-      const currentUserId = userData.user.id;
-      if (currentUserId === opportunity.owner_id) {
-        setSendingId(null);
-        return;
+      if (searchQuery) {
+        query = query.or(`full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`);
       }
 
-      const convo = await getOrCreateConversation(
-        supabase,
-        opportunity.owner_id
-      );
-      if (!convo) {
-        setSendingId(null);
-        return;
+      if (locationQuery) {
+        query = query.ilike('location', `%${locationQuery}%`);
       }
 
-      const content = `Hey, I'm interested in your opportunity: "${opportunity.title}". Let's connect!`;
-      await sendMessage(supabase, convo.id, content);
+      if (roleFilter !== 'all') {
+        query = query.eq('role', roleFilter);
+      }
 
-      setSendingId(null);
-    } catch (e) {
-      console.error('Error sending interest message', e);
-      setSendingId(null);
+      const { data, error } = await query;
+      if (error) throw error;
+      setResults(data || []);
+    } catch (err) {
+      console.error('Error searching profiles:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const timer = setTimeout(fetchResults, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, locationQuery, roleFilter]);
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div className="space-y-12 animate-in fade-in duration-500">
       {/* Search Header */}
-      <div className="space-y-6">
-        <h1 className="text-4xl font-black text-black tracking-tight">
-          Search SkillLink
-        </h1>
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black text-black tracking-tight">
+            {isRtl ? 'חיפוש בקהילה' : 'Search Community'}
+          </h1>
+          <p className="text-gray-500 font-medium">
+            {isRtl ? 'מצא מנטורים וחניכים לפי תחום עיסוק ומיקום.' : 'Find mentors and mentees by occupation and location.'}
+          </p>
+        </div>
+
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative group">
-            <SearchIcon
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Trade / Specialty"
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-black transition-all font-medium"
+          <div className="flex-[2] relative group">
+            <SearchIcon className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors`} size={20} />
+            <input 
+              type="text" 
+              placeholder={isRtl ? 'מקצוע / תחום התמחות' : 'Trade / Specialty'}
+              className={`w-full ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-white border border-gray-100 rounded-2xl focus:ring-2 focus:ring-black transition-all font-medium shadow-sm`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex-1 relative group">
-            <MapPin
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="City / Radius"
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-black transition-all font-medium"
+            <MapPin className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors`} size={20} />
+            <input 
+              type="text" 
+              placeholder={isRtl ? 'עיר / אזור' : 'City / Region'}
+              className={`w-full ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-white border border-gray-100 rounded-2xl focus:ring-2 focus:ring-black transition-all font-medium shadow-sm`}
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
             />
           </div>
-          <button
+          <button 
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border ${
-              isFilterOpen
-                ? 'bg-black text-white border-black'
-                : 'bg-white text-black border-gray-100 hover:bg-gray-50'
+            className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border shadow-sm ${
+              isFilterOpen ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-100 hover:bg-gray-50'
             }`}
           >
             <Filter size={18} />
-            Filters
+            {isRtl ? 'סינון' : 'Filters'}
           </button>
         </div>
 
-        {/* Collapsible Filters – עדיין דמי, רק UI */}
+        {/* Collapsible Filters */}
         {isFilterOpen && (
-          <div className="p-8 bg-gray-50 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-8 animate-in slide-in-from-top duration-200">
+          <div className="p-8 bg-gray-50 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top duration-200">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Minimum Rating
-              </label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button
-                    key={i}
-                    className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all"
-                  >
-                    {i}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Availability
-              </label>
-              <select className="w-full p-3 bg-white border border-gray-100 rounded-xl text-sm font-bold text-black focus:ring-2 focus:ring-black transition-all">
-                <option>Any Availability</option>
-                <option>Full-time</option>
-                <option>Part-time</option>
-                <option>Weekends</option>
-              </select>
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Role
-              </label>
-              <div className="flex p-1 bg-white border border-gray-100 rounded-xl">
-                <button className="flex-1 py-2 rounded-lg font-bold text-xs bg-black text-white">
-                  Mentor
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{isRtl ? 'תפקיד' : 'Role'}</label>
+              <div className="flex p-1 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <button 
+                  onClick={() => setRoleFilter('all')}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs transition-all ${roleFilter === 'all' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
+                >
+                  {isRtl ? 'הכל' : 'All'}
                 </button>
-                <button className="flex-1 py-2 rounded-lg font-bold text-xs text-gray-400 hover:text-black">
-                  Apprentice
+                <button 
+                  onClick={() => setRoleFilter('mentor')}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs transition-all ${roleFilter === 'mentor' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
+                >
+                  {isRtl ? 'מנטור' : 'Mentor'}
+                </button>
+                <button 
+                  onClick={() => setRoleFilter('mentee')}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs transition-all ${roleFilter === 'mentee' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
+                >
+                  {isRtl ? 'חניך' : 'Mentee'}
                 </button>
               </div>
             </div>
@@ -184,78 +126,76 @@ export default function Explore({ isRtl }: ExploreProps) {
       </div>
 
       {/* Results Section */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex justify-between items-end px-2">
-          <h2 className="text-2xl font-black text-black">Results</h2>
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full">
-            {filtered.length} Results
+          <h2 className="text-2xl font-black text-black tracking-tight">{isRtl ? 'תוצאות' : 'Results'}</h2>
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-4 py-1.5 rounded-full">
+            {results.length} {isRtl ? 'תוצאות' : 'Results'}
           </span>
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center text-gray-400 text-sm">
-            Loading opportunities...
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-64 bg-gray-50 rounded-3xl animate-pulse border border-gray-100" />
+            ))}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-3xl border-2 border-dashed border-gray-100 p-20 text-center space-y-8 shadow-sm">
+        ) : results.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {results.map((profile) => (
+              <Link 
+                key={profile.id}
+                to={`/app/u/${profile.username}`}
+                className="bg-white rounded-[2.5rem] border border-gray-100 p-8 hover:shadow-2xl transition-all group relative overflow-hidden"
+              >
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-2xl overflow-hidden shadow-inner group-hover:scale-110 transition-transform">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        profile.full_name?.charAt(0) || 'U'
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">{profile.full_name}</h3>
+                      <p className="text-sm text-gray-500 font-bold">{profile.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                      <MapPin size={14} />
+                      <span>{profile.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 font-medium line-clamp-2 leading-relaxed">
+                      {profile.bio || (isRtl ? 'אין ביוגרפיה עדיין...' : 'No bio yet...')}
+                    </p>
+                  </div>
+
+                  <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                      profile.role === 'mentor' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                    }`}>
+                      {isRtl ? (profile.role === 'mentor' ? 'מנטור' : 'חניך') : profile.role}
+                    </span>
+                    <ArrowRight size={18} className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all rtl:rotate-180" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center space-y-8 shadow-sm">
             <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
               <SearchIcon className="text-gray-200" size={48} />
             </div>
             <div className="space-y-3">
-              <h2 className="text-3xl font-black text-black tracking-tight">
-                No results found.
-              </h2>
+              <h2 className="text-3xl font-black text-black tracking-tight">{isRtl ? 'אין תוצאות' : 'No results found'}</h2>
               <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
-                Try adjusting your filters or search terms to find the perfect
-                match in the SkillLink community.
+                {isRtl ? 'נסה לשנות את מילות החיפוש או הסינון כדי למצוא את ההתאמה המושלמת.' : 'Try adjusting your filters or search terms to find the perfect match in the SkillLink community.'}
               </p>
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filtered.map((opp) => (
-              <div
-                key={opp.id}
-                className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm hover:shadow-md transition-all"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-black text-black">
-                      {opp.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                      <Briefcase size={14} />
-                      {opp.type || 'Opportunity'}
-                    </p>
-                  </div>
-                  <div className="text-right text-xs text-gray-400">
-                    {opp.location || 'Remote / Flexible'}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>
-                    {opp.pay_amount
-                      ? `${opp.pay_amount} / ${opp.pay_period || ''}`
-                      : 'Unpaid / negotiable'}
-                  </span>
-                  <span>
-                    {opp.beginners_only ? 'Beginners welcome' : 'Experience preferred'}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-4 pt-2">
-                  <button
-                    onClick={() => handleInterested(opp)}
-                    disabled={sendingId === opp.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black text-white text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    I'm interested
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         )}
       </div>

@@ -122,13 +122,13 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    apprenticeId INTEGER NOT NULL,
+    menteeId INTEGER NOT NULL,
     mentorId INTEGER NOT NULL,
     message TEXT,
     startDate TEXT,
     status TEXT DEFAULT 'pending',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (apprenticeId) REFERENCES users (id),
+    FOREIGN KEY (menteeId) REFERENCES users (id),
     FOREIGN KEY (mentorId) REFERENCES users (id)
   );
 
@@ -323,11 +323,11 @@ async function startServer() {
     res.json(results);
   });
 
-  // Requests & Apprenticeships
+  // Requests & Mentorships
   app.post('/api/requests', authenticateToken, (req: any, res) => {
     const { mentorId, message, startDate } = req.body;
     try {
-      const stmt = db.prepare('INSERT INTO requests (apprenticeId, mentorId, message, startDate) VALUES (?, ?, ?, ?)');
+      const stmt = db.prepare('INSERT INTO requests (menteeId, mentorId, message, startDate) VALUES (?, ?, ?, ?)');
       stmt.run(req.user.id, mentorId, message || '', startDate || new Date().toISOString());
       res.json({ success: true });
     } catch (error) {
@@ -341,9 +341,9 @@ async function startServer() {
     try {
       if (role === 'mentor') {
         const requests = db.prepare(`
-          SELECT r.*, u.name as apprenticeName, u.trade as apprenticeTrade 
+          SELECT r.*, u.name as menteeName, u.trade as menteeTrade 
           FROM requests r 
-          JOIN users u ON r.apprenticeId = u.id 
+          JOIN users u ON r.menteeId = u.id 
           WHERE r.mentorId = ?
           ORDER BY r.createdAt DESC
         `).all(req.user.id);
@@ -353,7 +353,7 @@ async function startServer() {
           SELECT r.*, u.name as mentorName, u.trade as mentorTrade 
           FROM requests r 
           JOIN users u ON r.mentorId = u.id 
-          WHERE r.apprenticeId = ?
+          WHERE r.menteeId = ?
           ORDER BY r.createdAt DESC
         `).all(req.user.id);
         res.json(requests);
