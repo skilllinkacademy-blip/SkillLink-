@@ -72,10 +72,19 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
     }
   };
 
+  // כשמאשרים/דוחים:
+  // 1) מעדכנים mentor_verifications.status
+  // 2) מעדכנים profiles.role לפי הסטטוס
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
-      const { error } = await supabase
+      const request = requests.find(r => r.id === id);
+      if (!request) {
+        throw new Error('Verification request not found');
+      }
+
+      // 1) עדכון רשומת האימות
+      const { error: verError } = await supabase
         .from('mentor_verifications')
         .update({ 
           status,
@@ -83,9 +92,29 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
         })
         .eq('id', id);
 
-      if (error) throw error;
-      
-      setRequests(prev => prev.filter(req => req.id !== id || filter === 'all'));
+      if (verError) throw verError;
+
+      // 2) עדכון הפרופיל – אם מאושר -> role = 'mentor', אם נדחה -> 'mentee'
+      const newRole = status === 'approved' ? 'mentor' : 'mentee';
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: newRole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', request.user_id);
+
+      if (profileError) throw profileError;
+
+      // 3) עדכון state כדי שה‑UI יגיב מיד
+      setRequests(prev =>
+        prev
+          .map(req =>
+            req.id === id ? { ...req, status } : req
+          )
+          .filter(req => (filter === 'pending' ? req.status === 'pending' : true))
+      );
     } catch (err) {
       console.error('Error updating verification status:', err);
       alert(isRtl ? 'שגיאה בעדכון הסטטוס' : 'Error updating status');
