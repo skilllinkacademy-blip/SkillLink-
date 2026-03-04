@@ -18,7 +18,7 @@ import OpportunityDetails from './pages/OpportunityDetails';
 import SimplePage from './pages/SimplePage';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, dbError } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -30,13 +30,6 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
 
   return (
     <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white ${isRtl ? 'font-serif' : 'font-sans'}`}>
-      {dbError === 'DATABASE_SETUP_REQUIRED' && (
-        <div className="bg-red-600 text-white py-3 px-4 text-center font-black text-xs uppercase tracking-widest sticky top-0 z-[60] shadow-lg animate-in slide-in-from-top duration-500">
-          {isRtl 
-            ? 'נדרש הגדרת מסד נתונים (Supabase). אנא הרץ את הסקריפט SQL.' 
-            : 'Database Setup Required (Supabase). Please run the SQL script.'}
-        </div>
-      )}
       <Navbar isRtl={isRtl} toggleLang={toggleLang} />
       
       <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
