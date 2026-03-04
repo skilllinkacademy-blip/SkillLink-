@@ -16,7 +16,7 @@ import {
 interface VerificationRequest {
   id: string;
   user_id: string;
-  document_url: string; // כאן מאוחסן כרגע רק השם/הנתיב של הקובץ
+  document_url: string; // יכול להיות או path או URL מלא
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   profiles: {
@@ -94,28 +94,21 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
     }
   };
 
-  // פונקציה שיוצרת Signed URL לקובץ בבאקט mentor_id_docs
-  const getSignedDocumentUrl = async (path: string) => {
-    try {
-      // אם כבר יש URL מלא (מתחיל ב‑http), פשוט נחזיר אותו
-      if (path.startsWith('http://') || path.startsWith('https://')) {
-        return path;
-      }
+  // מחזיר URL לצפייה במסמך:
+  // - אם document_url כבר URL מלא -> מחזיר אותו
+  // - אם זה path בתוך mentor_id_docs -> מוציא public URL מהבאקט
+  const getDocumentUrl = (path: string) => {
+    if (!path) return null;
 
-      const { data, error } = await supabase.storage
-        .from('mentor_id_docs')
-        .createSignedUrl(path, 60 * 60); // שעה תוקף
-
-      if (error || !data?.signedUrl) {
-        console.error('Error creating signed URL:', error);
-        return null;
-      }
-
-      return data.signedUrl;
-    } catch (e) {
-      console.error('Error creating signed URL:', e);
-      return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
     }
+
+    const { data } = supabase.storage
+      .from('mentor_id_docs')
+      .getPublicUrl(path);
+
+    return data.publicUrl || null;
   };
 
   if (profile?.role !== 'admin') {
@@ -225,8 +218,8 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
               <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                 <button
                   type="button"
-                  onClick={async () => {
-                    const url = await getSignedDocumentUrl(req.document_url);
+                  onClick={() => {
+                    const url = getDocumentUrl(req.document_url);
                     if (!url) {
                       alert(isRtl ? 'לא ניתן לפתוח את המסמך' : 'Could not open document');
                       return;
