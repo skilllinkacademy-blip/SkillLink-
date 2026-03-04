@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import {
   Star,
   MapPin,
@@ -15,14 +15,91 @@ interface ProfileProps {
   isRtl: boolean;
 }
 
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+}
+
 export default function Profile({ isRtl }: ProfileProps) {
   const [viewRole, setViewRole] = useState<'mentor' | 'apprentice'>('mentor');
   const [verifying, setVerifying] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, cover_url')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && data) {
+        setProfile(data as ProfileData);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
+  };
+
+  const handleCoverUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      alert('You must be logged in to change cover image.');
+      return;
+    }
+
+    const ext = file.name.split('.').pop();
+    const filePath = `${user.id}/cover.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile_covers') // תוודא שיש bucket בשם הזה
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error(uploadError);
+      alert(`Cover upload error: ${uploadError.message}`);
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from('profile_covers')
+      .getPublicUrl(filePath);
+
+    const coverUrl = data.publicUrl;
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ cover_url: coverUrl })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error(updateError);
+      alert(`Cover update error: ${updateError.message}`);
+      return;
+    }
+
+    setProfile((prev) => (prev ? { ...prev, cover_url: coverUrl } : prev));
   };
 
   const handleVerifyClick = async () => {
@@ -121,10 +198,23 @@ export default function Profile({ isRtl }: ProfileProps) {
         <div className="lg:col-span-8 space-y-8">
           {/* Header Card */}
           <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-            <div className="h-48 bg-gray-50 relative">
-              <button className="absolute bottom-4 right-4 p-3 bg-black/50 text-white rounded-full hover:bg-black transition-all backdrop-blur-sm">
+            <div
+              className="h-48 relative bg-gray-50 bg-cover bg-center"
+              style={
+                profile?.cover_url
+                  ? { backgroundImage: `url(${profile.cover_url})` }
+                  : undefined
+              }
+            >
+              <label className="absolute bottom-4 right-4 p-3 bg-black/50 text-white rounded-full hover:bg-black transition-all backdrop-blur-sm cursor-pointer">
                 <Camera size={20} />
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCoverUpload}
+                />
+              </label>
             </div>
             <div className="px-8 pb-8 -mt-16 relative">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -138,7 +228,9 @@ export default function Profile({ isRtl }: ProfileProps) {
                 </div>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-3xl font-black text-black">My Name</h1>
+                    <h1 className="text-3xl font-black text-black">
+                      {profile?.full_name || 'My Name'}
+                    </h1>
                     {/* כאן בעתיד תראה is_verified אמיתי מה־DB */}
                     {viewRole === 'mentor' && (
                       <ShieldCheck className="text-emerald-500" size={24} />
