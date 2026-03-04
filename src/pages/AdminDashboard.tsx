@@ -74,7 +74,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
 
   // כשמאשרים/דוחים:
   // 1) מעדכנים mentor_verifications.status
-  // 2) מעדכנים profiles.role לפי הסטטוס
+  // 2) מעדכנים profiles.is_verified לפי הסטטוס
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
@@ -94,13 +94,13 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
 
       if (verError) throw verError;
 
-      // 2) עדכון הפרופיל – אם מאושר -> role = 'mentor', אם נדחה -> 'mentee'
-      const newRole = status === 'approved' ? 'mentor' : 'mentee';
+      // 2) עדכון הפרופיל – מאושר -> is_verified = true, נדחה -> false
+      const isVerified = status === 'approved';
 
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
-          role: newRole,
+          is_verified: isVerified,
           updated_at: new Date().toISOString()
         })
         .eq('id', request.user_id);
