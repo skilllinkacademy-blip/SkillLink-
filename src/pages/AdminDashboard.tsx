@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+// Updated with is_verified support
 import { useAuth } from '../contexts/AuthContext';
 import { 
   ShieldCheck, 
