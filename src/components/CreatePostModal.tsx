@@ -9,11 +9,11 @@ interface CreatePostModalProps {
 }
 
 export default function CreatePostModal({ isOpen, onClose, isRtl }: CreatePostModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   if (!isOpen) return null;
 
-  // Check if user is verified mentor
-  const canPost = user?.user_metadata?.is_verified === true;
+  // בדיקה אם המשתמש מנטור מאושר - קוראים מ-profile.is_verified
+  const canPost = profile?.is_verified === true;
 
   if (!canPost) {
     return (
