@@ -84,6 +84,13 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
         throw new Error('Verification request not found');
       }
 
+      // בדיקה בקונסול שנדע איזה user_id אנחנו שולחים
+      console.log('UPDATING VERIFICATION FOR', {
+        verification_id: id,
+        user_id: request.user_id,
+        status
+      });
+
       // 1) עדכון רשומת האימות
       const { error: verError } = await supabase
         .from('mentor_verifications')
@@ -93,15 +100,21 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
         })
         .eq('id', id);
 
-      if (verError) throw verError;
+      if (verError) {
+        console.error('MENTOR_VERIFICATIONS UPDATE ERROR', verError);
+        throw verError;
+      }
 
       // 2) עדכון הפרופיל של המנטור – אם מאושר is_verified = true, אחרת false
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ is_verified: status === 'approved' })
-        .eq('id', request.user_id);
+        .eq('id', request.user_id);  // כאן חשוב שה-id ב-profiles יהיה אותו UUID כמו user_id בטבלת האימותים
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('PROFILE UPDATE ERROR', profileError);
+        throw profileError;
+      }
 
       // הנתונים יתעדכנו אוטומטית כשהמשתמש יתחבר מחדש
       setRequests((prev) =>
@@ -113,7 +126,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
       );
     } catch (err) {
       console.error('Error updating verification status:', err);
-      alert(isRtl ? 'שגיאה בעדכון הסטטוס' : 'Error updating status');
+      alert(isRtl ? 'שגיאה בעדכון הסטטוס (בדוק קונסול)' : 'Error updating status (check console)');
     } finally {
       setProcessingId(null);
     }
@@ -265,7 +278,11 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                       className="p-3 bg-green-50 text-green-600 rounded-2xl hover:bg-green-100 transition-all disabled:opacity-50"
                       title={isRtl ? 'אשר' : 'Approve'}
                     >
-                      {processingId === req.id ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                      {processingId === req.id ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : (
+                        <Check size={20} />
+                      )}
                     </button>
                     <button
                       onClick={() => handleUpdateStatus(req.id, 'rejected')}
@@ -273,7 +290,11 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                       className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all disabled:opacity-50"
                       title={isRtl ? 'דחה' : 'Reject'}
                     >
-                      {processingId === req.id ? <Loader2 className="animate-spin" size={20} /> : <X size={20} />}
+                      {processingId === req.id ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : (
+                        <X size={20} />
+                      )}
                     </button>
                   </div>
                 )}
@@ -284,7 +305,13 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                       req.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
                     }`}
                   >
-                    {req.status === 'approved' ? (isRtl ? 'מאושר' : 'Approved') : (isRtl ? 'נדחה' : 'Rejected')}
+                    {req.status === 'approved'
+                      ? isRtl
+                        ? 'מאושר'
+                        : 'Approved'
+                      : isRtl
+                      ? 'נדחה'
+                      : 'Rejected'}
                   </div>
                 )}
               </div>
