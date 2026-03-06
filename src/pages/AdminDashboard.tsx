@@ -93,22 +93,10 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
         })
         .eq('id', id);
 
-      if (verError) throw verError;
-
-      // 2) עדכון הפרופיל – מאושר -> is_verified = true, נדחה -> false
-      const isVerified = status === 'approved';
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          is_verified: isVerified,
-          updated_at: new Date().toISOString()
+    // הנתונים יתעדכנו אוטומטית כשהמשתמש יתחבר מחדש
         })
-        .eq('id', request.user_id);
 
-      if (profileError) throw profileError;
 
-      // 3) עדכון state כדי שה‑UI יגיב מיד
       setRequests(prev =>
         prev
           .map(req =>
