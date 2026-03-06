@@ -24,6 +24,7 @@ interface Opportunity {
     avatar_url?: string;
     occupation?: string;
     city?: string;
+    is_verified?: boolean;
   };
 }
 
@@ -64,7 +65,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
         <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg backdrop-blur-md ${
           isMentorOffer ? 'bg-blue-600/90 text-white' : 'bg-emerald-600/90 text-white'
         }`}>
-          {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'חניך מחפש') : (isMentorOffer ? 'Mentor Offer' : 'Mentee Seeking')}
+          {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Mentor Offer' : 'Apprentice Seeking')}
         </div>
 
         {opportunity.beginners_only && (
@@ -130,7 +131,14 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               )}
             </div>
             <div className="text-xs">
-              <p className="font-black text-gray-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-black text-gray-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
+                {opportunity.profiles?.is_verified && (
+                  <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
+                    {isRtl ? 'מאומת' : 'Verified'}
+                  </span>
+                )}
+              </div>
               <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Member')}</p>
             </div>
           </div>

@@ -126,7 +126,7 @@ export default function Auth({ isRtl }: AuthProps) {
               <GraduationCap size={32} />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-black text-gray-900">{isRtl ? 'אני חניך' : 'I am a Mentee'}</h3>
+              <h3 className="text-xl font-black text-gray-900">{isRtl ? 'אני מתלמד' : 'I am an Apprentice'}</h3>
               <p className="text-sm text-gray-500 font-medium leading-relaxed">{isRtl ? 'מחפש ללמוד מקצוע מבעל מקצוע מנוסה' : 'Looking to learn a trade from an experienced pro'}</p>
             </div>
             {role === 'mentee' && (
@@ -189,7 +189,7 @@ export default function Auth({ isRtl }: AuthProps) {
       
       <div className="text-center mb-6">
         <span className="text-sm font-black uppercase tracking-widest text-gray-400">
-          {isRtl ? `הרשמה כ${role === 'mentor' ? 'מנטור' : 'חניך'}` : `Signing up as ${role}`}
+          {isRtl ? `הרשמה כ${role === 'mentor' ? 'מנטור' : 'מתלמד'}` : `Signing up as ${role === 'mentor' ? 'Mentor' : 'Apprentice'}`}
         </span>
       </div>
 
@@ -291,8 +291,8 @@ export default function Auth({ isRtl }: AuthProps) {
             />
             <span className="text-sm font-medium text-gray-700 leading-tight">
               {isRtl 
-                ? 'אני מבין/ה שאני מלמד/ת חניך את המקצוע ומתחייב/ת להתנהלות מכבדת.'
-                : 'I understand that I am teaching a mentee the trade and commit to respectful conduct.'}
+                ? 'אני מבין/ה שאני מלמד/ת מתלמד את המקצוע ומתחייב/ת להתנהלות מכבדת.'
+                : 'I understand that I am teaching an apprentice the trade and commit to respectful conduct.'}
             </span>
           </label>
         </>

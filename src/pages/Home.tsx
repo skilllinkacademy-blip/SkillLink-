@@ -21,7 +21,7 @@ export default function Home({ isRtl }: HomeProps) {
       setLoading(true);
       let query = supabase
         .from('opportunities')
-        .select('*, profiles(full_name, avatar_url, occupation, role)')
+        .select('*, profiles(full_name, avatar_url, occupation, role, is_verified)')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -56,7 +56,7 @@ export default function Home({ isRtl }: HomeProps) {
             {isRtl ? 'הזדמנויות בקהילה' : 'Community Opportunities'}
           </h1>
           <p className="text-gray-500 font-medium">
-            {isRtl ? 'מצא את המנטור הבא שלך או חניך שרוצה ללמוד.' : 'Find your next mentor or a mentee eager to learn.'}
+            {isRtl ? 'מצא את המנטור הבא שלך או מתלמד שרוצה ללמוד.' : 'Find your next mentor or an apprentice eager to learn.'}
           </p>
         </div>
         <Link 
@@ -103,7 +103,7 @@ export default function Home({ isRtl }: HomeProps) {
               filter === 'mentee_seeking' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
             }`}
           >
-            {isRtl ? 'חניכים' : 'Mentees'}
+            {isRtl ? 'מתלמדים' : 'Apprentices'}
           </button>
         </div>
       </div>

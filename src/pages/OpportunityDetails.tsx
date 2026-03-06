@@ -224,7 +224,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg ${
                 isMentorOffer ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'
               }`}>
-                {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'חניך מחפש') : opportunity.type.replace('_', ' ')}
+                {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Mentor Offer' : 'Apprentice Seeking')}
               </div>
             </div>
 
@@ -339,7 +339,14 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 )}
               </div>
               <div>
-                <h4 className="text-xl font-black text-gray-900">{opportunity.profiles?.full_name}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xl font-black text-gray-900">{opportunity.profiles?.full_name}</h4>
+                  {opportunity.profiles?.is_verified && (
+                    <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
+                      {isRtl ? 'מאומת' : 'Verified'}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 font-bold">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
             </div>

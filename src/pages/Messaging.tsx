@@ -382,7 +382,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-black">{isRtl ? 'אין הודעות' : 'No messages yet'}</h3>
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
-                  {isRtl ? 'התחבר למנטורים או חניכים כדי להתחיל שיחה.' : 'Connect with mentors or mentees to start a conversation.'}
+                  {isRtl ? 'התחבר למנטורים או מתלמדים כדי להתחיל שיחה.' : 'Connect with mentors or apprentices to start a conversation.'}
                 </p>
               </div>
             </div>

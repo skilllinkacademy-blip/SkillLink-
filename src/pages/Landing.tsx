@@ -29,8 +29,8 @@ export default function Landing({ isRtl }: LandingProps) {
               
               <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 {isRtl 
-                  ? 'חברו למנטורים מיומנים באינסטלציה, חשמל, נגרות ועוד. התחילו את מסע החניכות שלכם היום.'
-                  : 'Connect with skilled mentors in plumbing, electrical, carpentry and more. Start your mentee journey today.'}
+                  ? 'חברו למנטורים מיומנים באינסטלציה, חשמל, נגרות ועוד. התחילו את מסע ההתלמדות שלכם היום.'
+                  : 'Connect with skilled mentors in plumbing, electrical, carpentry and more. Start your apprentice journey today.'}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
@@ -45,7 +45,7 @@ export default function Landing({ isRtl }: LandingProps) {
                   to="/auth?role=mentee" 
                   className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center"
                 >
-                  {isRtl ? 'הצטרפות כחניך' : 'Join as Mentee'}
+                  {isRtl ? 'הצטרפות כמתלמד' : 'Join as Apprentice'}
                 </Link>
               </div>
               
@@ -92,7 +92,7 @@ export default function Landing({ isRtl }: LandingProps) {
             </div>
             <div className="space-y-4">
               <div className="text-5xl font-black text-gray-900">500+</div>
-              <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">{isRtl ? 'חניכים' : 'Mentees'}</p>
+              <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">{isRtl ? 'מתלמדים' : 'Apprentices'}</p>
             </div>
             <div className="space-y-4">
               <div className="text-5xl font-black text-gray-900">20+</div>

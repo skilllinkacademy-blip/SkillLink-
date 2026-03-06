@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-// Updated with is_verified support
 import { useAuth } from '../contexts/AuthContext';
-import {
-  ShieldCheck,
-  ShieldAlert,
-  ExternalLink,
-  Check,
-  X,
+import { 
+  ShieldCheck, 
+  ShieldAlert, 
+  ExternalLink, 
+  Check, 
+  X, 
   Loader2,
   User,
   Clock,
@@ -17,7 +16,7 @@ import {
 interface VerificationRequest {
   id: string;
   user_id: string;
-  document_url: string; // יכול להיות או path או URL מלא
+  document_url: string; // כאן מאוחסן כרגע רק השם/הנתיב של הקובץ
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   profiles: {
@@ -73,80 +72,66 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
     }
   };
 
-  // כשמאשרים/דוחים:
-  // 1) מעדכנים mentor_verifications.status
-  // 2) מעדכנים profiles.is_verified לפי הסטטוס
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
-      const request = requests.find((r) => r.id === id);
-      if (!request) {
-        throw new Error('Verification request not found');
-      }
-
-      // בדיקה בקונסול שנדע איזה user_id אנחנו שולחים
-      console.log('UPDATING VERIFICATION FOR', {
-        verification_id: id,
-        user_id: request.user_id,
-        status
-      });
-
-      // 1) עדכון רשומת האימות
-      const { error: verError } = await supabase
+      const { error } = await supabase
         .from('mentor_verifications')
-        .update({
+        .update({ 
           status,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
 
-      if (verError) {
-        console.error('MENTOR_VERIFICATIONS UPDATE ERROR', verError);
-        throw verError;
+      if (error) throw error;
+      
+      // If approved, update the profile to mark as verified
+      if (status === 'approved') {
+        const { data: request } = await supabase
+          .from('mentor_verifications')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+        
+        if (request?.user_id) {
+          await supabase
+            .from('profiles')
+            .update({ is_verified: true })
+            .eq('id', request.user_id);
+        }
       }
-
-      // 2) עדכון הפרופיל של המנטור – אם מאושר is_verified = true, אחרת false
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ is_verified: status === 'approved' })
-        .eq('id', request.user_id);  // כאן חשוב שה-id ב-profiles יהיה אותו UUID כמו user_id בטבלת האימותים
-
-      if (profileError) {
-        console.error('PROFILE UPDATE ERROR', profileError);
-        throw profileError;
-      }
-
-      // הנתונים יתעדכנו אוטומטית כשהמשתמש יתחבר מחדש
-      setRequests((prev) =>
-        prev
-          .map((req) =>
-            req.id === id ? { ...req, status } : req
-          )
-          .filter((req) => (filter === 'pending' ? req.status === 'pending' : true))
-      );
+      
+      setRequests(prev => prev.filter(req => req.id !== id || filter === 'all'));
     } catch (err) {
       console.error('Error updating verification status:', err);
-      alert(isRtl ? 'שגיאה בעדכון הסטטוס (בדוק קונסול)' : 'Error updating status (check console)');
+      alert(isRtl ? 'שגיאה בעדכון הסטטוס' : 'Error updating status');
     } finally {
       setProcessingId(null);
     }
   };
 
-  // מחזיר URL לצפייה במסמך:
-  // - אם document_url כבר URL מלא -> מחזיר אותו
-  // - אם זה path בתוך mentor_id_docs -> מוציא public URL מהבאקט
-  const getDocumentUrl = (path: string) => {
-    if (!path) return null;
+  // פונקציה שיוצרת Signed URL לקובץ בבאקט mentor_id_docs
+  const getSignedDocumentUrl = async (path: string) => {
+    try {
+      // אם כבר יש URL מלא (מתחיל ב‑http), פשוט נחזיר אותו
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+      }
 
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
+      const { data, error } = await supabase.storage
+        .from('mentor_id_docs')
+        .createSignedUrl(path, 60 * 60); // שעה תוקף
+
+      if (error || !data?.signedUrl) {
+        console.error('Error creating signed URL:', error);
+        return null;
+      }
+
+      return data.signedUrl;
+    } catch (e) {
+      console.error('Error creating signed URL:', e);
+      return null;
     }
-
-    const { data } = supabase.storage
-      .from('mentor_id_docs')
-      .getPublicUrl(path);
-
-    return data.publicUrl || null;
   };
 
   if (profile?.role !== 'admin') {
@@ -227,8 +212,8 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
       ) : (
         <div className="grid gap-6">
           {requests.map((req) => (
-            <div
-              key={req.id}
+            <div 
+              key={req.id} 
               className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
             >
               <div className="flex items-center gap-6">
@@ -256,8 +241,8 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
               <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                 <button
                   type="button"
-                  onClick={() => {
-                    const url = getDocumentUrl(req.document_url);
+                  onClick={async () => {
+                    const url = await getSignedDocumentUrl(req.document_url);
                     if (!url) {
                       alert(isRtl ? 'לא ניתן לפתוח את המסמך' : 'Could not open document');
                       return;
@@ -278,11 +263,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                       className="p-3 bg-green-50 text-green-600 rounded-2xl hover:bg-green-100 transition-all disabled:opacity-50"
                       title={isRtl ? 'אשר' : 'Approve'}
                     >
-                      {processingId === req.id ? (
-                        <Loader2 className="animate-spin" size={20} />
-                      ) : (
-                        <Check size={20} />
-                      )}
+                      {processingId === req.id ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
                     </button>
                     <button
                       onClick={() => handleUpdateStatus(req.id, 'rejected')}
@@ -290,28 +271,16 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                       className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all disabled:opacity-50"
                       title={isRtl ? 'דחה' : 'Reject'}
                     >
-                      {processingId === req.id ? (
-                        <Loader2 className="animate-spin" size={20} />
-                      ) : (
-                        <X size={20} />
-                      )}
+                      {processingId === req.id ? <Loader2 className="animate-spin" size={20} /> : <X size={20} />}
                     </button>
                   </div>
                 )}
 
                 {req.status !== 'pending' && (
-                  <div
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
-                      req.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                    }`}
-                  >
-                    {req.status === 'approved'
-                      ? isRtl
-                        ? 'מאושר'
-                        : 'Approved'
-                      : isRtl
-                      ? 'נדחה'
-                      : 'Rejected'}
+                  <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
+                    req.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  }`}>
+                    {req.status === 'approved' ? (isRtl ? 'מאושר' : 'Approved') : (isRtl ? 'נדחה' : 'Rejected')}
                   </div>
                 )}
               </div>

@@ -152,7 +152,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
             type="button"
             onClick={() => { 
               if (profile?.role !== 'mentor') {
-                alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post a mentee offer.');
+                alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post an apprentice offer.');
                 return;
               }
               if (profile.verification_status === 'approved') {
@@ -177,7 +177,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
               <div>
                 <h3 className="text-xl font-black text-gray-900">{isRtl ? 'הצעת מנטור' : 'Mentor Offer'}</h3>
                 <p className="text-sm text-gray-500 font-medium leading-relaxed">
-                  {isRtl ? 'פרסם הזדמנות לחניך לבוא ללמוד ולעבוד אצלך.' : 'Post an opportunity for a mentee to learn and work with you.'}
+                  {isRtl ? 'פרסם הזדמנות למתלמד לבוא ללמוד ולעבוד אצלך.' : 'Post an opportunity for an apprentice to learn and work with you.'}
                 </p>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
           type="button"
           onClick={() => { 
             if (profile?.role !== 'mentee') {
-              alert(isRtl ? 'רק חניכים יכולים לפרסם בקשת התלמדות.' : 'Only mentees can post a seeking request.');
+              alert(isRtl ? 'רק מתלמדים יכולים לפרסם בקשת התלמדות.' : 'Only apprentices can post a seeking request.');
               return;
             }
             setType('mentee_seeking'); 
@@ -213,7 +213,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
               <GraduationCap size={28} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-900">{isRtl ? 'חניך מחפש' : 'Mentee Seeking'}</h3>
+              <h3 className="text-xl font-black text-gray-900">{isRtl ? 'מתלמד מחפש' : 'Apprentice Seeking'}</h3>
               <p className="text-sm text-gray-500 font-medium leading-relaxed">
                 {isRtl ? 'פרסם את עצמך, היכולות שלך ומה אתה רוצה ללמוד.' : 'Post about yourself, your skills, and what you want to learn.'}
               </p>
@@ -234,7 +234,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
           type === 'mentor_offer' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'
         }`}>
-          {isRtl ? (type === 'mentor_offer' ? 'הצעת מנטור' : 'חניך מחפש') : type.replace('_', ' ')}
+          {isRtl ? (type === 'mentor_offer' ? 'הצעת מנטור' : 'מתלמד מחפש') : (type === 'mentor_offer' ? 'Mentor Offer' : 'Apprentice Seeking')}
         </div>
       </div>
 
@@ -285,7 +285,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
 
           <div className="space-y-2">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">
-              {type === 'mentor_offer' ? (isRtl ? 'תשלום לחניך' : 'Pay to Mentee') : (isRtl ? 'שכר מבוקש' : 'Desired Salary')}
+              {type === 'mentor_offer' ? (isRtl ? 'תשלום למתלמד' : 'Pay to Apprentice') : (isRtl ? 'שכר מבוקש' : 'Desired Salary')}
             </label>
             <div className="flex gap-2">
               <div className="relative group flex-1">
@@ -359,7 +359,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
                 <textarea 
                   required
                   rows={2}
-                  placeholder={isRtl ? 'תאר את החניך האידיאלי עבורך...' : 'Describe your ideal mentee...'}
+                  placeholder={isRtl ? 'תאר את המתלמד האידיאלי עבורך...' : 'Describe your ideal apprentice...'}
                   value={whoIWantToTeach}
                   onChange={(e) => setWhoIWantToTeach(e.target.value)}
                   className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
@@ -380,7 +380,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{isRtl ? 'מה החניך ילמד' : 'What the Mentee will learn'}</label>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{isRtl ? 'מה המתלמד ילמד' : 'What the Apprentice will learn'}</label>
                 <textarea 
                   required
                   rows={3}

@@ -42,6 +42,7 @@ CREATE TABLE public.profiles (
     availability_days TEXT[],
     cover_url TEXT,
     portfolio_urls TEXT[],
+    is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

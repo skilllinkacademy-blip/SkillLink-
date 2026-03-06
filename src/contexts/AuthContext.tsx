@@ -13,7 +13,7 @@ interface Profile {
   avatar_url?: string;
   verification_status?: 'pending' | 'approved' | 'rejected' | 'none';
   portfolio_urls?: string[];
-  is_verified?: boolean; // שדה חדש שמגיע מהטבלה
+  is_verified?: boolean;
 }
 
 interface AuthContextType {
@@ -111,17 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error fetching profile:', error);
         }
       } else {
-        const profileData: Profile = {
-          id: data.id,
-          full_name: data.full_name,
-          role: data.role,
-          location: data.location,
-          occupation: data.occupation,
-          years_experience: data.years_experience,
-          workload: data.workload,
-          avatar_url: data.avatar_url,
-          portfolio_urls: data.portfolio_urls,
-          is_verified: data.is_verified, // לוקח מהעמודה בטבלה
+        const profileData = {
+          ...data,
+          is_verified: data.is_verified || false,
           verification_status: data.mentor_verifications?.[0]?.status || 'none'
         };
         setProfile(profileData);
@@ -164,18 +156,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               years_experience: metadata.years_experience,
               workload: metadata.workload,
               updated_at: new Date().toISOString(),
-              // is_verified נשאר ברירת מחדל FALSE מה‑DB
             })
             .select()
             .single();
 
           if (upsertError) {
-            if (upsertError.message.includes('profiles')) {
-              setDbError('DATABASE_SETUP_REQUIRED');
-            }
-            throw upsertError;
+             if (upsertError.message.includes('profiles')) {
+               setDbError('DATABASE_SETUP_REQUIRED');
+             }
+             throw upsertError;
           }
-          setProfile(newProfile as Profile);
+          setProfile(newProfile);
         } else if (fetchError.message.includes('profiles')) {
           setDbError('DATABASE_SETUP_REQUIRED');
           throw fetchError;

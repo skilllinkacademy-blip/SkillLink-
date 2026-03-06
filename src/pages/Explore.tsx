@@ -59,7 +59,7 @@ export default function Explore({ isRtl }: ExploreProps) {
             {isRtl ? 'חיפוש בקהילה' : 'Search Community'}
           </h1>
           <p className="text-gray-500 font-medium">
-            {isRtl ? 'מצא מנטורים וחניכים לפי תחום עיסוק ומיקום.' : 'Find mentors and mentees by occupation and location.'}
+            {isRtl ? 'מצא מנטורים ומתלמדים לפי תחום עיסוק ומיקום.' : 'Find mentors and apprentices by occupation and location.'}
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function Explore({ isRtl }: ExploreProps) {
                   onClick={() => setRoleFilter('mentee')}
                   className={`flex-1 py-2 rounded-lg font-bold text-xs transition-all ${roleFilter === 'mentee' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
                 >
-                  {isRtl ? 'חניך' : 'Mentee'}
+                  {isRtl ? 'מתלמד' : 'Apprentice'}
                 </button>
               </div>
             </div>
@@ -158,7 +158,14 @@ export default function Explore({ isRtl }: ExploreProps) {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">{profile.full_name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">{profile.full_name}</h3>
+                        {profile.is_verified && (
+                          <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
+                            {isRtl ? 'מאומת' : 'Verified'}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500 font-bold">{profile.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
                     </div>
                   </div>
@@ -177,7 +184,7 @@ export default function Explore({ isRtl }: ExploreProps) {
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                       profile.role === 'mentor' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                     }`}>
-                      {isRtl ? (profile.role === 'mentor' ? 'מנטור' : 'חניך') : profile.role}
+                      {isRtl ? (profile.role === 'mentor' ? 'מנטור' : 'מתלמד') : (profile.role === 'mentor' ? 'Mentor' : 'Apprentice')}
                     </span>
                     <ArrowRight size={18} className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all rtl:rotate-180" />
                   </div>

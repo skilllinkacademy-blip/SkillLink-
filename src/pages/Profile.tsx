@@ -451,10 +451,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 ) : (
                   <h1 className="text-3xl font-black text-black">{profile.full_name}</h1>
                 )}
-                {isMentor && <ShieldCheck className="text-blue-600" size={24} />}
+                {profile.role === 'mentor' && profile.is_verified && (
+                  <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-full border border-green-100 flex items-center gap-1">
+                    <ShieldCheck size={14} />
+                    {isRtl ? 'מנטור מאומת על ידי SkillLink' : 'Verified mentor by SkillLink'}
+                  </span>
+                )}
               </div>
               
-                {profile?.is_verified && <ShieldCheck className="text-blue-600" size={24} />}
               <div className="text-lg font-bold text-gray-500 flex items-center gap-2">
                 {isMyProfile ? (
                   <input 
@@ -691,7 +695,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </h3>
               <p className="text-gray-400 font-medium">
                 {isMentor 
-                  ? (isRtl ? 'התחבר לחניכים רציניים ועצב את דור העתיד.' : 'Connect with eager mentees and shape the next generation.') 
+                  ? (isRtl ? 'התחבר למתלמדים רציניים ועצב את דור העתיד.' : 'Connect with eager apprentices and shape the next generation.') 
                   : (isRtl ? 'מצא מנטור מומחה והתחל את הקריירה שלך.' : 'Find a master mentor and jumpstart your career in the trades.')}
               </p>
               <button 
