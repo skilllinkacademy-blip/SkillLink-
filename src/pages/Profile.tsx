@@ -454,6 +454,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isMentor && <ShieldCheck className="text-blue-600" size={24} />}
               </div>
               
+                {profile?.is_verified && <ShieldCheck className="text-blue-600" size={24} />}
               <div className="text-lg font-bold text-gray-500 flex items-center gap-2">
                 {isMyProfile ? (
                   <input 
