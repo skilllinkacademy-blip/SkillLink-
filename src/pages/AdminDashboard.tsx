@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 // Updated with is_verified support
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  ShieldCheck, 
-  ShieldAlert, 
-  ExternalLink, 
-  Check, 
-  X, 
+import {
+  ShieldCheck,
+  ShieldAlert,
+  ExternalLink,
+  Check,
+  X,
   Loader2,
   User,
   Clock,
@@ -79,7 +79,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
-      const request = requests.find(r => r.id === id);
+      const request = requests.find((r) => r.id === id);
       if (!request) {
         throw new Error('Verification request not found');
       }
@@ -87,22 +87,29 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
       // 1) עדכון רשומת האימות
       const { error: verError } = await supabase
         .from('mentor_verifications')
-        .update({ 
+        .update({
           status,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
 
-    // הנתונים יתעדכנו אוטומטית כשהמשתמש יתחבר מחדש
-        })
+      if (verError) throw verError;
 
+      // 2) עדכון הפרופיל של המנטור – אם מאושר is_verified = true, אחרת false
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ is_verified: status === 'approved' })
+        .eq('id', request.user_id);
 
-      setRequests(prev =>
+      if (profileError) throw profileError;
+
+      // הנתונים יתעדכנו אוטומטית כשהמשתמש יתחבר מחדש
+      setRequests((prev) =>
         prev
-          .map(req =>
+          .map((req) =>
             req.id === id ? { ...req, status } : req
           )
-          .filter(req => (filter === 'pending' ? req.status === 'pending' : true))
+          .filter((req) => (filter === 'pending' ? req.status === 'pending' : true))
       );
     } catch (err) {
       console.error('Error updating verification status:', err);
@@ -207,8 +214,8 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
       ) : (
         <div className="grid gap-6">
           {requests.map((req) => (
-            <div 
-              key={req.id} 
+            <div
+              key={req.id}
               className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
             >
               <div className="flex items-center gap-6">
@@ -272,9 +279,11 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
                 )}
 
                 {req.status !== 'pending' && (
-                  <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
-                    req.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                  }`}>
+                  <div
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
+                      req.status === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                    }`}
+                  >
                     {req.status === 'approved' ? (isRtl ? 'מאושר' : 'Approved') : (isRtl ? 'נדחה' : 'Rejected')}
                   </div>
                 )}
