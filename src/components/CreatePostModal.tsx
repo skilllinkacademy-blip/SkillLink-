@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Image, Video, FileText, Globe, ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -8,7 +9,38 @@ interface CreatePostModalProps {
 }
 
 export default function CreatePostModal({ isOpen, onClose, isRtl }: CreatePostModalProps) {
+  const { user } = useAuth();
   if (!isOpen) return null;
+
+  // Check if user is verified mentor
+  const canPost = user?.user_metadata?.is_verified === true;
+
+  if (!canPost) {
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+            <h2 className="text-xl font-black text-black">Create a post</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-black"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <div className="p-6 text-center">
+            <p className="text-gray-600 font-medium">Only verified mentors can create posts. Please wait for admin approval.</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-6 py-2 bg-black text-white rounded-full font-bold"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -16,7 +48,7 @@ export default function CreatePostModal({ isOpen, onClose, isRtl }: CreatePostMo
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
           <h2 className="text-xl font-black text-black">Create a post</h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-black"
           >
@@ -38,7 +70,7 @@ export default function CreatePostModal({ isOpen, onClose, isRtl }: CreatePostMo
             </div>
           </div>
 
-          <textarea 
+          <textarea
             className="w-full h-48 p-0 bg-transparent border-none focus:ring-0 resize-none text-xl placeholder:text-gray-300 text-black font-medium"
             placeholder="What do you want to talk about?"
             autoFocus
@@ -78,7 +110,7 @@ export default function CreatePostModal({ isOpen, onClose, isRtl }: CreatePostMo
                 <FileText size={20} />
               </button>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="px-8 py-3 bg-black text-white rounded-full font-black uppercase tracking-widest text-sm shadow-xl hover:bg-gray-800 transition-all active:scale-95"
             >
