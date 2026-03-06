@@ -54,10 +54,47 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     }
   }, [profile]);
 
+  const isMentorVerified = profile?.role === 'mentor' && profile?.is_verified === true;
+
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin rounded-full" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin rounded-full" />
+          <p className="text-gray-500 font-medium">
+            {isRtl ? 'טוען...' : 'Loading...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile?.role !== 'mentor' || !isMentorVerified) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 text-center px-4">
+        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+          <ShieldCheck size={40} />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-gray-900">
+            {isRtl
+              ? 'רק מנטורים מאומתים יכולים לפרסם הזדמנויות'
+              : 'Only verified mentors can post opportunities'}
+          </h1>
+          <p className="text-gray-500 font-medium max-w-md mx-auto">
+            {isRtl
+              ? 'השלם תהליך אימות מנטור והמתן לאישור מנהל המערכת כדי לקבל גישה לפרסום הזדמנויות.'
+              : 'Complete the mentor verification process and wait for admin approval to gain access.'}
+          </p>
+        </div>
+        <button 
+          onClick={() => navigate(profile?.role === 'mentor' ? '/app/verify' : '/app/opportunities')}
+          className="px-8 py-3 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-gray-800 transition-all active:scale-95"
+        >
+          {profile?.role === 'mentor' 
+            ? (isRtl ? 'עבור לדף אימות' : 'Go to Verification')
+            : (isRtl ? 'חזרה להזדמנויות' : 'Back to Opportunities')}
+        </button>
       </div>
     );
   }
