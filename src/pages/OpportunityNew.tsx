@@ -10,13 +10,20 @@ interface OpportunityNewProps {
 
 export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Refresh profile on mount to get latest verification status
+  useEffect(() => {
+    if (user) {
+      refreshProfile();
+    }
+  }, [user]);
 
   // Form State
   const [type, setType] = useState<'mentor_offer' | 'mentee_seeking'>('mentee_seeking');
@@ -55,7 +62,8 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
   }, [profile]);
 
   const isApprentice = profile?.role === 'mentee';
-  const isVerifiedMentor = profile?.role === 'mentor' && profile?.is_verified === true;
+  const isAdmin = profile?.role === 'admin';
+  const isVerifiedMentor = profile?.role === 'mentor' && (profile?.is_verified === true || profile?.verification_status === 'approved');
 
   if (authLoading || (user && !profile)) {
     return (
@@ -70,7 +78,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     );
   }
 
-  if (!isApprentice && !isVerifiedMentor) {
+  if (!isApprentice && !isVerifiedMentor && !isAdmin) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 text-center px-4">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
@@ -88,14 +96,22 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
               : 'Complete the mentor verification process and wait for admin approval to gain access to post mentor offers.'}
           </p>
         </div>
-        <button 
-          onClick={() => navigate(profile?.role === 'mentor' ? '/app/verify' : '/app/opportunities')}
-          className="px-8 py-3 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-gray-800 transition-all active:scale-95"
-        >
-          {profile?.role === 'mentor' 
-            ? (isRtl ? 'עבור לדף אימות' : 'Go to Verification')
-            : (isRtl ? 'חזרה להזדמנויות' : 'Back to Opportunities')}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button 
+            onClick={() => navigate(profile?.role === 'mentor' ? '/app/verify' : '/app/opportunities')}
+            className="px-8 py-3 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-gray-800 transition-all active:scale-95"
+          >
+            {profile?.role === 'mentor' 
+              ? (isRtl ? 'עבור לדף אימות' : 'Go to Verification')
+              : (isRtl ? 'חזרה להזדמנויות' : 'Back to Opportunities')}
+          </button>
+          <button 
+            onClick={() => refreshProfile()}
+            className="px-8 py-3 bg-gray-100 text-black rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-200 transition-all active:scale-95"
+          >
+            {isRtl ? 'רענן סטטוס' : 'Refresh Status'}
+          </button>
+        </div>
       </div>
     );
   }
