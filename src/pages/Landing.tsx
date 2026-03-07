@@ -174,12 +174,12 @@ export default function Landing({ isRtl }: LandingProps) {
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-6 pt-12">
-                <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl" alt="Pro" />
-                <img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl" alt="Pro" />
+                <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Barber teaching apprentice" referrerPolicy="no-referrer" />
+                <img src="https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Plumber teaching" referrerPolicy="no-referrer" />
               </div>
               <div className="space-y-6">
-                <img src="https://images.unsplash.com/photo-1530124560676-587cabeeccd7?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl" alt="Pro" />
-                <img src="https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl" alt="Pro" />
+                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Social media manager with apprentice" referrerPolicy="no-referrer" />
+                <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Electrician" referrerPolicy="no-referrer" />
               </div>
             </div>
           </div>
@@ -223,15 +223,15 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800" 
-                  alt="Welding" 
-                  className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
+                  src="https://images.unsplash.com/photo-1632833239869-a37e3a5806d2?auto=format&fit=crop&q=80&w=800" 
+                  alt="HVAC installer" 
+                  className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=800" 
-                  alt="Electrical" 
-                  className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500"
+                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800" 
+                  alt="Electrician" 
+                  className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
               </div>

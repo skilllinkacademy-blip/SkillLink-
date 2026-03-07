@@ -182,6 +182,10 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
   const handleAddReview = async () => {
     if (!user || !profile) return;
+    if (!newReview.comment.trim()) {
+      alert(isRtl ? 'אנא הוסף תגובה' : 'Please add a comment');
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase
@@ -194,21 +198,23 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         });
 
       if (error) {
+        console.error('Supabase review error:', error);
         if (error.message.includes('relation "public.reviews" does not exist')) {
           alert(isRtl 
             ? 'מערכת הדירוגים עדיין לא הופעלה במסד הנתונים. אנא פנה למנהל.' 
             : 'Review system is not yet active in the database.');
         } else {
+          alert(isRtl ? `שגיאה: ${error.message}` : `Error: ${error.message}`);
           throw error;
         }
       } else {
         setNewReview({ rating: 5, comment: '' });
         setShowReviewForm(false);
         fetchReviews(profile.id);
+        alert(isRtl ? 'הביקורת נוספה בהצלחה!' : 'Review added successfully!');
       }
     } catch (err: any) {
       console.error('Error adding review:', err.message);
-      alert(isRtl ? 'שגיאה בהוספת ביקורת' : 'Error adding review');
     } finally {
       setSaving(false);
     }
@@ -459,8 +465,57 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const isMyProfile = user?.id === profile.id;
   const isMentor = profile.role === 'mentor';
 
+  // Calculate profile completion
+  const completionFields = [
+    formData.full_name,
+    formData.headline,
+    formData.bio,
+    formData.city || formData.location,
+    formData.occupation,
+    profile.avatar_url,
+    formData.cover_url,
+    formData.phone
+  ];
+  const completedCount = completionFields.filter(Boolean).length;
+  const completionPercentage = Math.round((completedCount / completionFields.length) * 100);
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      {isMyProfile && completionPercentage < 100 && (
+        <div className="bg-blue-600 text-white p-6 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="space-y-1 text-center md:text-start relative z-10">
+            <h3 className="text-xl font-black flex items-center gap-2 justify-center md:justify-start">
+              <Star className="text-yellow-400 fill-yellow-400 animate-bounce" size={24} />
+              {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
+            </h3>
+            <p className="text-blue-100 font-medium">{isRtl ? 'פרופיל מלא עוזר לך לקבל יותר פניות והצעות.' : 'A complete profile helps you get more inquiries and offers.'}</p>
+          </div>
+          <div className="flex items-center gap-6 w-full md:w-auto relative z-10">
+            <div className="flex-1 md:w-48 h-3 bg-blue-400/30 rounded-full overflow-hidden border border-white/10">
+              <div className="h-full bg-white transition-all duration-1000" style={{ width: `${completionPercentage}%` }} />
+            </div>
+            <span className="font-black text-2xl">{completionPercentage}%</span>
+          </div>
+        </div>
+      )}
+
+      {isMyProfile && completionPercentage === 100 && (
+        <div className="bg-emerald-600 text-white p-6 rounded-[2.5rem] shadow-xl flex items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+              <ShieldCheck size={28} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black">{isRtl ? 'פרופיל מושלם!' : 'Perfect Profile!'}</h3>
+              <p className="text-emerald-100 font-medium">{isRtl ? 'אתה נראה מקצוען אמיתי. עכשיו כולם יכולים להכיר אותך.' : 'You look like a true pro. Now everyone can get to know you.'}</p>
+            </div>
+          </div>
+          <Star className="text-yellow-400 fill-yellow-400 hidden md:block" size={32} />
+        </div>
+      )}
+
       {/* Header Card */}
       <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-xl">
         <div className="h-48 bg-gray-50 relative group/cover">
@@ -905,15 +960,19 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-8">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">{isRtl ? 'פרטי פרופיל' : 'Profile Details'}</h3>
+          <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-50 rounded-full -z-10"></div>
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Info size={14} />
+              {isRtl ? 'פרטי פרופיל' : 'Profile Details'}
+            </h3>
             
             <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                  <MapPin size={20} className="text-black" />
+              <div className="flex items-start gap-4 group">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                  <MapPin size={22} />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מיקום' : 'Location'}</p>
                   {isMyProfile ? (
                     <input 
@@ -921,7 +980,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                       value={formData.location} 
                       onChange={(e) => setFormData({...formData, location: e.target.value})}
                       onBlur={() => handleSave('location', formData.location)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-1 rounded transition-all w-full"
+                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-blue-200"
+                      placeholder={isRtl ? 'הוסף מיקום...' : 'Add location...'}
                     />
                   ) : (
                     <p className="text-sm font-bold text-black">{profile.location || (isRtl ? 'לא צוין' : 'Not specified')}</p>
@@ -929,11 +989,53 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                  <Clock size={20} className="text-black" />
+              <div className="flex items-start gap-4 group">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                  <Briefcase size={22} />
                 </div>
-                <div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מקצוע' : 'Occupation'}</p>
+                  {isMyProfile ? (
+                    <input 
+                      type="text" 
+                      value={formData.occupation} 
+                      onChange={(e) => setFormData({...formData, occupation: e.target.value})}
+                      onBlur={() => handleSave('occupation', formData.occupation)}
+                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-emerald-200"
+                      placeholder={isRtl ? 'מה המקצוע שלך?' : 'What is your trade?'}
+                    />
+                  ) : (
+                    <p className="text-sm font-bold text-black">{profile.occupation || (isRtl ? 'לא צוין' : 'Not specified')}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 group">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                  <Phone size={22} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'טלפון' : 'Phone'}</p>
+                  {isMyProfile ? (
+                    <input 
+                      type="tel" 
+                      value={formData.phone} 
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      onBlur={() => handleSave('phone', formData.phone)}
+                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-purple-200"
+                      placeholder={isRtl ? 'הוסף טלפון...' : 'Add phone...'}
+                    />
+                  ) : (
+                    <p className="text-sm font-bold text-black">{profile.phone || (isRtl ? 'לא צוין' : 'Not specified')}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 group">
+                <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
+                  <Clock size={22} />
+                </div>
+                <div className="flex-1">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'זמינות' : 'Availability'}</p>
                   {isMyProfile ? (
                     <input 
@@ -941,30 +1043,11 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                       value={formData.availability} 
                       onChange={(e) => setFormData({...formData, availability: e.target.value})}
                       onBlur={() => handleSave('availability', formData.availability)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-1 rounded transition-all w-full"
+                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-orange-200"
+                      placeholder={isRtl ? 'מתי אתה פנוי?' : 'When are you free?'}
                     />
                   ) : (
                     <p className="text-sm font-bold text-black">{profile.availability || profile.workload || (isRtl ? 'לא צוין' : 'Not specified')}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                  <Hammer size={20} className="text-black" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מקצוע' : 'Trade'}</p>
-                  {isMyProfile ? (
-                    <input 
-                      type="text" 
-                      value={formData.occupation} 
-                      onChange={(e) => setFormData({...formData, occupation: e.target.value})}
-                      onBlur={() => handleSave('occupation', formData.occupation)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-1 rounded transition-all w-full"
-                    />
-                  ) : (
-                    <p className="text-sm font-bold text-black">{profile.occupation || (isRtl ? 'לא צוין' : 'Not specified')}</p>
                   )}
                 </div>
               </div>

@@ -209,7 +209,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
                 alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post an apprentice offer.');
                 return;
               }
-              if (profile.verification_status === 'approved') {
+              if (profile.verification_status === 'approved' || profile.is_verified) {
                 setType('mentor_offer'); 
                 setStep(2); 
               } else {
