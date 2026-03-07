@@ -238,6 +238,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user || !isSupabaseConfigured) return;
 
+    // Profile updates listener
+    const profileSubscription = supabase
+      .channel(`profile-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        () => {
+          fetchProfile(user.id);
+        }
+      )
+      .subscribe();
+
     const messageSubscription = supabase
       .channel(`unread-updates-${user.id}`)
       .on(
@@ -273,6 +290,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(profileSubscription);
       supabase.removeChannel(messageSubscription);
     };
   }, [user?.id]);

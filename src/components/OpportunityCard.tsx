@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck } from 'lucide-react';
 
 interface Opportunity {
   id: string;
@@ -145,7 +145,8 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               <div className="flex items-center gap-2">
                 <p className="font-black text-gray-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
                 {opportunity.profiles?.is_verified && (
-                  <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                    <ShieldCheck size={10} fill="currentColor" />
                     {isRtl ? 'מאומת' : 'Verified'}
                   </span>
                 )}

@@ -48,16 +48,16 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
                 {profile.role === 'mentor' && (
                   <Link 
                     to="/app/verify"
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-                      profile.is_verified
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-gray-50 text-gray-400 border-gray-100 hover:bg-black hover:text-white'
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
+                      profile.is_verified || profile.verification_status === 'approved'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-black hover:text-white'
                     }`}
                   >
-                    {profile.is_verified && <ShieldCheck size={10} />}
+                    {(profile.is_verified || profile.verification_status === 'approved') && <ShieldCheck size={12} fill="currentColor" className="text-white" />}
                     {isRtl 
-                      ? (profile.is_verified ? 'מאומת' : profile.verification_status === 'pending' ? 'בבדיקה' : 'אמת חשבון') 
-                      : (profile.is_verified ? 'Verified' : profile.verification_status === 'pending' ? 'Pending' : 'Verify')}
+                      ? (profile.is_verified || profile.verification_status === 'approved' ? 'מאומת' : profile.verification_status === 'pending' ? 'בבדיקה' : 'אמת חשבון') 
+                      : (profile.is_verified || profile.verification_status === 'approved' ? 'Verified' : profile.verification_status === 'pending' ? 'Pending' : 'Verify')}
                   </Link>
                 )}
               </div>

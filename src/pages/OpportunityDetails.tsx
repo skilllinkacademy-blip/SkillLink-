@@ -349,7 +349,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 <div className="flex items-center gap-2">
                   <h4 className="text-xl font-black text-gray-900">{opportunity.profiles?.full_name}</h4>
                   {opportunity.profiles?.is_verified && (
-                    <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
+                    <span className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm">
+                      <ShieldCheck size={12} fill="currentColor" />
                       {isRtl ? 'מאומת' : 'Verified'}
                     </span>
                   )}

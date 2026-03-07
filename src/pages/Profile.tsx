@@ -42,9 +42,13 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     cover_url: ''
   });
 
-  const [activeTab, setActiveTab] = useState<'about' | 'saved'>('about');
+  const [activeTab, setActiveTab] = useState<'about' | 'saved' | 'reviews'>('about');
   const [savedOpportunities, setSavedOpportunities] = useState<any[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -125,6 +129,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             portfolio_urls: data.portfolio_urls || [],
             cover_url: data.cover_url || ''
           });
+          fetchReviews(data.id);
         }
       } catch (err: any) {
         console.error('Error fetching profile:', err.message);
@@ -137,6 +142,81 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     fetchProfile();
   }, [isPublicView, username, myProfile, user]);
 
+  useEffect(() => {
+    if (activeTab === 'reviews' && profile?.id) {
+      fetchReviews(profile.id);
+    }
+  }, [activeTab, profile?.id]);
+
+  const fetchReviews = async (profileId: string) => {
+    setLoadingReviews(true);
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          reviewer:reviewer_id (
+            full_name,
+            avatar_url,
+            username
+          )
+        `)
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST116' || error.message.includes('relation "public.reviews" does not exist')) {
+          setReviews([]);
+        } else {
+          throw error;
+        }
+      } else {
+        setReviews(data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleAddReview = async () => {
+    if (!user || !profile) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .insert({
+          profile_id: profile.id,
+          reviewer_id: user.id,
+          rating: newReview.rating,
+          comment: newReview.comment
+        });
+
+      if (error) {
+        if (error.message.includes('relation "public.reviews" does not exist')) {
+          alert(isRtl 
+            ? 'מערכת הדירוגים עדיין לא הופעלה במסד הנתונים. אנא פנה למנהל.' 
+            : 'Review system is not yet active in the database.');
+        } else {
+          throw error;
+        }
+      } else {
+        setNewReview({ rating: 5, comment: '' });
+        setShowReviewForm(false);
+        fetchReviews(profile.id);
+      }
+    } catch (err: any) {
+      console.error('Error adding review:', err.message);
+      alert(isRtl ? 'שגיאה בהוספת ביקורת' : 'Error adding review');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
+    : 0;
   useEffect(() => {
     if (activeTab === 'saved' && user?.id === profile?.id) {
       const fetchSaved = async () => {
@@ -451,10 +531,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 ) : (
                   <h1 className="text-3xl font-black text-black">{profile.full_name}</h1>
                 )}
-                {profile.role === 'mentor' && profile.is_verified && (
-                  <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-full border border-green-100 flex items-center gap-1">
-                    <ShieldCheck size={14} />
-                    {isRtl ? 'מנטור מאומת על ידי SkillLink' : 'Verified mentor by SkillLink'}
+                {profile.role === 'mentor' && (profile.is_verified || profile.verification_status === 'approved') && (
+                  <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-100">
+                    <ShieldCheck size={14} fill="currentColor" />
+                    {isRtl ? 'מנטור מאומת' : 'Verified Mentor'}
+                  </span>
+                )}
+                {profile.role === 'mentor' && !(profile.is_verified || profile.verification_status === 'approved') && (
+                  <span className="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 border border-gray-200">
+                    {isRtl ? 'מנטור בבדיקה' : 'Pending Mentor'}
                   </span>
                 )}
               </div>
@@ -545,8 +630,11 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'זמינות' : 'Availability'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black">100%</div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'אמינות' : 'Reliability'}</div>
+              <div className="text-lg font-black text-black flex items-center justify-center gap-1">
+                {averageRating > 0 ? averageRating.toFixed(1) : '—'}
+                <Star size={16} className={averageRating > 0 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
+              </div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'דירוג' : 'Rating'}</div>
             </div>
           </div>
         </div>
@@ -555,24 +643,30 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
-          {isMyProfile && (
-            <div className="flex gap-4 border-b border-gray-200 pb-4">
-              <button 
-                onClick={() => setActiveTab('about')}
-                className={`text-lg font-black transition-colors ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                {isRtl ? 'אודות' : 'About'}
-              </button>
+          <div className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar">
+            <button 
+              onClick={() => setActiveTab('about')}
+              className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              {isRtl ? 'אודות' : 'About'}
+            </button>
+            {isMyProfile && (
               <button 
                 onClick={() => setActiveTab('saved')}
-                className={`text-lg font-black transition-colors ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {isRtl ? 'מועדפים' : 'Saved'}
               </button>
-            </div>
-          )}
+            )}
+            <button 
+              onClick={() => setActiveTab('reviews')}
+              className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'reviews' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              {isRtl ? 'ביקורות' : 'Reviews'} ({reviews.length})
+            </button>
+          </div>
 
-          {activeTab === 'about' ? (
+          {activeTab === 'about' && (
             <>
               <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
                 <h2 className="text-2xl font-black text-black">{isRtl ? 'קצת עלי' : 'Bio'}</h2>
@@ -646,7 +740,110 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {activeTab === 'reviews' && (
+            <div className="space-y-6">
+              {!isMyProfile && (
+                <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-black text-black">{isRtl ? 'כתוב ביקורת' : 'Write a Review'}</h2>
+                    <button 
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="text-sm font-bold text-blue-600"
+                    >
+                      {showReviewForm ? (isRtl ? 'ביטול' : 'Cancel') : (isRtl ? 'הוסף ביקורת' : 'Add Review')}
+                    </button>
+                  </div>
+                  
+                  {showReviewForm && (
+                    <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                      <div className="flex gap-2">
+                        {[1,2,3,4,5].map(star => (
+                          <button 
+                            key={star}
+                            onClick={() => setNewReview({...newReview, rating: star})}
+                            className="transition-transform active:scale-90"
+                          >
+                            <Star 
+                              size={24} 
+                              className={star <= newReview.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200"} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea 
+                        value={newReview.comment}
+                        onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
+                        placeholder={isRtl ? 'איך הייתה החוויה שלך?' : 'How was your experience?'}
+                        rows={3}
+                        className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
+                      />
+                      <button 
+                        onClick={handleAddReview}
+                        disabled={saving || !newReview.comment}
+                        className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-sm disabled:opacity-50"
+                      >
+                        {isRtl ? 'שלח ביקורת' : 'Submit Review'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {loadingReviews ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="animate-spin text-gray-300" size={32} />
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-sm overflow-hidden">
+                            {review.reviewer?.avatar_url ? (
+                              <img src={review.reviewer.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              review.reviewer?.full_name?.charAt(0) || 'U'
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-black text-gray-900 text-sm">{review.reviewer?.full_name}</p>
+                            <div className="flex gap-0.5">
+                              {[1,2,3,4,5].map(star => (
+                                <Star 
+                                  key={star} 
+                                  size={10} 
+                                  className={star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200"} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-500 font-medium text-sm leading-relaxed">
+                        {review.comment}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center space-y-4">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
+                      <Star className="text-gray-200" size={32} />
+                    </div>
+                    <p className="text-gray-400 font-medium">
+                      {isRtl ? 'אין ביקורות עדיין.' : 'No reviews yet.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'saved' && (
             <div className="space-y-6">
               {loadingSaved ? (
                 <div className="flex justify-center py-12">
