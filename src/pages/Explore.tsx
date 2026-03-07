@@ -11,6 +11,8 @@ export default function Explore({ isRtl }: ExploreProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'mentor' | 'mentee'>('all');
+  const [experienceFilter, setExperienceFilter] = useState<number | null>(null);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -21,7 +23,7 @@ export default function Explore({ isRtl }: ExploreProps) {
       let query = supabase
         .from('profiles')
         .select('*')
-        .order('full_name', { ascending: true });
+        .order('updated_at', { ascending: false });
 
       if (searchQuery) {
         query = query.or(`full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`);
@@ -33,6 +35,14 @@ export default function Explore({ isRtl }: ExploreProps) {
 
       if (roleFilter !== 'all') {
         query = query.eq('role', roleFilter);
+      }
+
+      if (experienceFilter !== null) {
+        query = query.gte('years_experience', experienceFilter);
+      }
+
+      if (verifiedOnly) {
+        query = query.or('is_verified.eq.true,verification_status.eq.approved');
       }
 
       const { data, error } = await query;
@@ -48,7 +58,14 @@ export default function Explore({ isRtl }: ExploreProps) {
   useEffect(() => {
     const timer = setTimeout(fetchResults, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, locationQuery, roleFilter]);
+  }, [searchQuery, locationQuery, roleFilter, experienceFilter, verifiedOnly]);
+
+  const isRecentlyActive = (updatedAt: string) => {
+    const lastActive = new Date(updatedAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+    return diffInHours < 24;
+  };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
@@ -97,7 +114,7 @@ export default function Explore({ isRtl }: ExploreProps) {
 
         {/* Collapsible Filters */}
         {isFilterOpen && (
-          <div className="p-8 bg-gray-50 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top duration-200">
+          <div className="p-8 bg-gray-50 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-8 animate-in slide-in-from-top duration-200">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{isRtl ? 'תפקיד' : 'Role'}</label>
               <div className="flex p-1 bg-white border border-gray-100 rounded-xl shadow-sm">
@@ -120,6 +137,45 @@ export default function Explore({ isRtl }: ExploreProps) {
                   {isRtl ? 'מתלמד' : 'Apprentice'}
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{isRtl ? 'מינימום שנות ניסיון' : 'Min Years Experience'}</label>
+              <select 
+                value={experienceFilter || ''} 
+                onChange={(e) => setExperienceFilter(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-4 py-2 bg-white border border-gray-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-black transition-all shadow-sm"
+              >
+                <option value="">{isRtl ? 'הכל' : 'All'}</option>
+                <option value="1">1+</option>
+                <option value="3">3+</option>
+                <option value="5">5+</option>
+                <option value="10">10+</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between md:justify-end gap-4">
+              <div className="flex items-center gap-3">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מאומתים בלבד' : 'Verified Only'}</label>
+                <button 
+                  onClick={() => setVerifiedOnly(!verifiedOnly)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${verifiedOnly ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isRtl ? (verifiedOnly ? 'left-1' : 'right-1') : (verifiedOnly ? 'right-1' : 'left-1')}`} />
+                </button>
+              </div>
+              <button 
+                onClick={() => {
+                  setRoleFilter('all');
+                  setExperienceFilter(null);
+                  setVerifiedOnly(false);
+                  setSearchQuery('');
+                  setLocationQuery('');
+                }}
+                className="text-[10px] font-black text-red-600 uppercase tracking-widest hover:underline px-2"
+              >
+                {isRtl ? 'נקה הכל' : 'Clear All'}
+              </button>
             </div>
           </div>
         )}
@@ -148,6 +204,13 @@ export default function Explore({ isRtl }: ExploreProps) {
                 to={`/app/u/${profile.username}`}
                 className="bg-white rounded-[2.5rem] border border-gray-100 p-8 hover:shadow-2xl transition-all group relative overflow-hidden"
               >
+                {isRecentlyActive(profile.updated_at) && (
+                  <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} flex items-center gap-1.5`}>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-200" />
+                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">{isRtl ? 'פעיל כעת' : 'Online'}</span>
+                  </div>
+                )}
+                
                 <div className="relative z-10 space-y-6">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-2xl overflow-hidden shadow-inner group-hover:scale-110 transition-transform">
@@ -160,10 +223,8 @@ export default function Explore({ isRtl }: ExploreProps) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">{profile.full_name}</h3>
-                        {profile.is_verified && (
-                          <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest border border-green-100">
-                            {isRtl ? 'מאומת' : 'Verified'}
-                          </span>
+                        {(profile.is_verified || profile.verification_status === 'approved') && (
+                          <ShieldCheck size={16} className="text-emerald-600 fill-emerald-50" />
                         )}
                       </div>
                       <p className="text-sm text-gray-500 font-bold">{profile.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>

@@ -220,9 +220,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     }
   };
 
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
-    : 0;
   useEffect(() => {
     if (activeTab === 'saved' && user?.id === profile?.id) {
       const fetchSaved = async () => {
@@ -479,6 +476,20 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const completedCount = completionFields.filter(Boolean).length;
   const completionPercentage = Math.round((completedCount / completionFields.length) * 100);
 
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
+    : 0;
+
+  const trustScore = Math.min(100, (completionPercentage * 0.5) + (reviews.length * 5) + (profile?.is_verified ? 20 : 0));
+
+  const isRecentlyActive = (updatedAt: string) => {
+    if (!updatedAt) return false;
+    const lastActive = new Date(updatedAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+    return diffInHours < 24;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
       {isMyProfile && completionPercentage < 100 && (
@@ -684,12 +695,25 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'זמינות' : 'Availability'}</div>
             </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black flex items-center justify-center gap-1">
-                {averageRating > 0 ? averageRating.toFixed(1) : '—'}
-                <Star size={16} className={averageRating > 0 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
+            <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
+              <div className="text-lg font-black text-black">
+                {trustScore}%
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'דירוג' : 'Rating'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</div>
+              <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            </div>
+            <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
+              <div className="text-lg font-black text-black flex items-center justify-center gap-1.5">
+                {isRecentlyActive(profile.updated_at) ? (
+                  <>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-emerald-600">{isRtl ? 'פעיל' : 'Active'}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-400">{isRtl ? 'לאחרונה' : 'Recent'}</span>
+                )}
+              </div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
             </div>
           </div>
         </div>
