@@ -63,12 +63,18 @@ export default function Landing({ isRtl }: LandingProps) {
               
               <div className="flex items-center gap-6 justify-center lg:justify-start pt-4">
                 <div className="flex -space-x-3 rtl:space-x-reverse">
-                  {[1,2,3,4].map(i => (
+                  {[
+                    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100",
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
+                    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=100",
+                    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=100"
+                  ].map((url, i) => (
                     <img 
                       key={i}
-                      src={`https://picsum.photos/seed/user${i}/100/100`}
-                      className="w-12 h-12 rounded-full border-4 border-white shadow-sm"
+                      src={url}
+                      className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover"
                       alt="User"
+                      referrerPolicy="no-referrer"
                     />
                   ))}
                 </div>
@@ -84,26 +90,14 @@ export default function Landing({ isRtl }: LandingProps) {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex-1 relative"
             >
-              <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] border-[12px] border-white rotate-2 hover:rotate-0 transition-transform duration-700">
+              <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200" 
+                  src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=1200" 
                   alt="Professional at work"
                   className="w-full h-auto"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                
-                <div className="absolute bottom-10 left-10 right-10 p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 text-white">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <Star size={24} fill="currentColor" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest opacity-70">{isRtl ? 'מנטור השבוע' : 'Mentor of the Week'}</p>
-                      <p className="text-xl font-black">דוד כהן - חשמלאי מוסמך</p>
-                    </div>
-                  </div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
               
               {/* Floating Elements */}
@@ -126,12 +120,8 @@ export default function Landing({ isRtl }: LandingProps) {
       {/* Trust Bar */}
       <section className="py-12 border-y border-gray-100 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap justify-center lg:justify-between items-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">SkillLink<span className="text-blue-600">.</span></div>
-            <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">ProNetwork</div>
-            <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">TradeMaster</div>
-            <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">CraftConnect</div>
-            <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">Expertise.io</div>
+          <div className="flex justify-center items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="flex items-center gap-2 font-black text-4xl tracking-tighter">SkillLink<span className="text-blue-600">.</span></div>
           </div>
         </div>
       </section>
@@ -252,13 +242,13 @@ export default function Landing({ isRtl }: LandingProps) {
       </section>
 
       {/* Features Grid */}
-      <section className="py-40 bg-black text-white rounded-[4rem] mx-6 mb-20">
+      <section className="py-40 bg-gray-50 text-gray-900 rounded-[4rem] mx-6 mb-20 border border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-6 mb-32">
             <h2 className="text-6xl font-black tracking-tight">
               {isRtl ? 'למה לבחור ב-SkillLink?' : 'Why choose SkillLink?'}
             </h2>
-            <p className="text-xl text-gray-400 font-medium max-w-2xl mx-auto">
+            <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
               {isRtl 
                 ? 'אנחנו בונים את הגשר בין הידע המקצועי של הדור הוותיק לבין התשוקה של הדור החדש.'
                 : 'We build the bridge between the professional knowledge of the veteran generation and the passion of the new generation.'}
@@ -271,25 +261,25 @@ export default function Landing({ isRtl }: LandingProps) {
                 title: isRtl ? 'למידה מעשית' : 'Hands-on Learning',
                 desc: isRtl ? 'אל תסתפקו בתיאוריה. צאו לשטח ותלמדו איך הדברים באמת עובדים.' : 'Don\'t settle for theory. Go out to the field and learn how things really work.',
                 icon: Zap,
-                color: 'text-blue-400'
+                color: 'text-blue-600'
               },
               {
                 title: isRtl ? 'רשת מקצועית' : 'Professional Network',
                 desc: isRtl ? 'בנו קשרים עם בעלי עסקים ומקצוענים מובילים בתחום שלכם.' : 'Build connections with business owners and leading professionals in your field.',
                 icon: Users,
-                color: 'text-emerald-400'
+                color: 'text-emerald-600'
               },
               {
                 title: isRtl ? 'אימות וביטחון' : 'Verified & Secure',
                 desc: isRtl ? 'כל המנטורים עוברים תהליך אימות קפדני כדי להבטיח סביבת למידה בטוחה.' : 'All mentors undergo a rigorous verification process to ensure a safe learning environment.',
                 icon: ShieldCheck,
-                color: 'text-purple-400'
+                color: 'text-purple-600'
               },
               {
                 title: isRtl ? 'צמיחה כלכלית' : 'Financial Growth',
                 desc: isRtl ? 'התחילו להרוויח תוך כדי למידה. מנטורים מקבלים עזרה ומתלמדים מקבלים שכר.' : 'Start earning while learning. Mentors get help and apprentices get paid.',
                 icon: Award,
-                color: 'text-orange-400'
+                color: 'text-orange-600'
               }
             ].map((feature, i) => (
               <div key={i} className="space-y-6 group">
@@ -297,7 +287,7 @@ export default function Landing({ isRtl }: LandingProps) {
                   <feature.icon size={48} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-black">{feature.title}</h3>
-                <p className="text-gray-400 font-medium leading-relaxed">{feature.desc}</p>
+                <p className="text-gray-500 font-medium leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
