@@ -272,7 +272,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     </div>
                     <div className="space-y-4">
                       <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                        <ShieldCheck size={22} className="text-blue-600" />
+                        <GraduationCap size={22} className="text-blue-600" />
                         {isRtl ? 'מה תלמדו' : 'What you will learn'}
                       </h3>
                       <p className="text-gray-500 font-medium leading-relaxed">{opportunity.mentee_will_learn}</p>
@@ -313,7 +313,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     </div>
                     <div className="space-y-4">
                       <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                        <ShieldCheck size={22} className="text-emerald-600" />
+                        <Award size={22} className="text-emerald-600" />
                         {isRtl ? 'ניסיון קודם' : 'Prior Experience'}
                       </h3>
                       <p className="text-gray-500 font-medium leading-relaxed">{opportunity.experience_note || (isRtl ? 'אין ניסיון קודם' : 'No prior experience')}</p>
@@ -330,7 +330,14 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           {/* Owner Card */}
           <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-xl space-y-6">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
-            <div className="flex items-center gap-4">
+            <div 
+              className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => {
+                if (opportunity.profiles?.username) {
+                  navigate(`/app/u/${opportunity.profiles.username}`);
+                }
+              }}
+            >
               <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center text-white font-black text-2xl shadow-xl overflow-hidden">
                 {opportunity.profiles?.avatar_url ? (
                   <img src={opportunity.profiles.avatar_url} alt={opportunity.profiles.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />

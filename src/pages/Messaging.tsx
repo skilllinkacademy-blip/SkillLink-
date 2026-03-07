@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, MessageSquare, Send, Image, MoreHorizontal, User, Info, AlertCircle, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,6 +38,7 @@ interface MessagingProps {
 export default function Messaging({ isRtl }: MessagingProps) {
   const { user, refreshUnreadCount } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [selectedOtherUserId, setSelectedOtherUserId] = useState<string | null>(null);
@@ -129,8 +130,8 @@ export default function Messaging({ isRtl }: MessagingProps) {
         .from('conversations')
         .select(`
           *,
-          p1:profiles!participant_1(*),
-          p2:profiles!participant_2(*)
+          p1:profiles!participant_1(id, full_name, avatar_url, occupation, username),
+          p2:profiles!participant_2(id, full_name, avatar_url, occupation, username)
         `)
         .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
         .order('last_message_at', { ascending: false });
@@ -410,8 +411,21 @@ export default function Messaging({ isRtl }: MessagingProps) {
           <>
             {/* Chat Header */}
             <div className="px-8 py-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setSelectedConversationId(null)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-black">
+              <div 
+                className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => {
+                  if (selectedConversation?.other_user?.username) {
+                    navigate(`/app/u/${selectedConversation.other_user.username}`);
+                  }
+                }}
+              >
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedConversationId(null);
+                  }} 
+                  className="md:hidden p-2 -ml-2 text-gray-400 hover:text-black"
+                >
                   <ArrowLeft size={20} className="rtl:rotate-180" />
                 </button>
                 <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white font-black overflow-hidden">

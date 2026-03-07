@@ -54,9 +54,10 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     }
   }, [profile]);
 
-  const isMentorVerified = profile?.role === 'mentor' && profile?.is_verified === true;
+  const isApprentice = profile?.role === 'mentee';
+  const isVerifiedMentor = profile?.role === 'mentor' && profile?.is_verified === true;
 
-  if (authLoading) {
+  if (authLoading || (user && !profile)) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -69,22 +70,22 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     );
   }
 
-  if (profile?.role !== 'mentor' || !isMentorVerified) {
+  if (!isApprentice && !isVerifiedMentor) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 text-center px-4">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-          <ShieldCheck size={40} />
+          <AlertCircle size={40} />
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-black text-gray-900">
             {isRtl
-              ? 'רק מנטורים מאומתים יכולים לפרסם הזדמנויות'
-              : 'Only verified mentors can post opportunities'}
+              ? 'רק מנטורים מאומתים יכולים לפרסם הצעות'
+              : 'Only verified mentors can post offers'}
           </h1>
           <p className="text-gray-500 font-medium max-w-md mx-auto">
             {isRtl
-              ? 'השלם תהליך אימות מנטור והמתן לאישור מנהל המערכת כדי לקבל גישה לפרסום הזדמנויות.'
-              : 'Complete the mentor verification process and wait for admin approval to gain access.'}
+              ? 'השלם תהליך אימות מנטור והמתן לאישור מנהל המערכת כדי לקבל גישה לפרסום הצעות מנטור.'
+              : 'Complete the mentor verification process and wait for admin approval to gain access to post mentor offers.'}
           </p>
         </div>
         <button 

@@ -187,74 +187,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      checkDatabaseSetup();
-      if (session?.user) {
-        ensureProfile(session.user);
-        fetchUnreadCount(session.user.id);
+    // Initial session check
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        checkDatabaseSetup();
+        
+        if (currentUser) {
+          // Fire and forget, or handle in background
+          ensureProfile(currentUser);
+          fetchUnreadCount(currentUser.id);
+        }
+      } catch (err) {
+        console.error('Error during auth initialization:', err);
+      } finally {
+        // We set loading to false as soon as we have the session
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    initAuth();
+
+    // Auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        ensureProfile(session.user);
-        fetchUnreadCount(session.user.id);
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+      
+      if (newUser) {
+        // We don't set loading to true here to avoid flickering, 
+        // but we ensure profile data is refreshed
+        ensureProfile(newUser);
+        fetchUnreadCount(newUser.id);
       } else {
         setProfile(null);
         setUnreadMessagesCount(0);
+        setUnreadNotificationsCount(0);
       }
-      setLoading(false);
     });
-
-    // Real-time subscription for new messages
-    let messageSubscription: any = null;
-    
-    if (user) {
-      messageSubscription = supabase
-        .channel('unread-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'messages'
-          },
-          (payload) => {
-            const newMsg = payload.new as any;
-            const oldMsg = payload.old as any;
-            if (newMsg?.recipient_id === user.id || oldMsg?.recipient_id === user.id) {
-              fetchUnreadCount(user.id);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notifications'
-          },
-          (payload) => {
-            const newNotif = payload.new as any;
-            const oldNotif = payload.old as any;
-            if (newNotif?.user_id === user.id || oldNotif?.user_id === user.id) {
-              fetchUnreadCount(user.id);
-            }
-          }
-        )
-        .subscribe();
-    }
 
     return () => {
       subscription.unsubscribe();
-      if (messageSubscription) {
-        supabase.removeChannel(messageSubscription);
-      }
+    };
+  }, []);
+
+  // Separate effect for real-time subscriptions that depend on user.id
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured) return;
+
+    const messageSubscription = supabase
+      .channel(`unread-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          const oldMsg = payload.old as any;
+          if (newMsg?.recipient_id === user.id || oldMsg?.recipient_id === user.id) {
+            fetchUnreadCount(user.id);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications'
+        },
+        (payload) => {
+          const newNotif = payload.new as any;
+          const oldNotif = payload.old as any;
+          if (newNotif?.user_id === user.id || oldNotif?.user_id === user.id) {
+            fetchUnreadCount(user.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messageSubscription);
     };
   }, [user?.id]);
 

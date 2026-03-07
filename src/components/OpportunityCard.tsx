@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink } from 'lucide-react';
 
 interface Opportunity {
@@ -25,6 +25,7 @@ interface Opportunity {
     occupation?: string;
     city?: string;
     is_verified?: boolean;
+    username?: string;
   };
 }
 
@@ -38,6 +39,7 @@ interface OpportunityCardProps {
 
 export default function OpportunityCard({ opportunity, isRtl, onDelete, showActions, currentUserId }: OpportunityCardProps) {
   const isMentorOffer = opportunity.type === 'mentor_offer';
+  const navigate = useNavigate();
 
   return (
     <Link 
@@ -122,7 +124,16 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
 
         {/* Footer */}
         <div className="mt-8 pt-8 border-t border-gray-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div 
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (opportunity.profiles?.username) {
+                navigate(`/app/u/${opportunity.profiles.username}`);
+              }
+            }}
+          >
             <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-sm overflow-hidden shadow-inner">
               {opportunity.profiles?.avatar_url ? (
                 <img src={opportunity.profiles.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />

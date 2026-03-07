@@ -21,7 +21,7 @@ export default function Home({ isRtl }: HomeProps) {
       setLoading(true);
       let query = supabase
         .from('opportunities')
-        .select('*, profiles(full_name, avatar_url, occupation, role, is_verified)')
+        .select('*, profiles(full_name, avatar_url, occupation, role, is_verified, username)')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 

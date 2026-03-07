@@ -51,12 +51,10 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
                       profile.is_verified
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : profile.verification_status === 'pending'
-                        ? 'bg-orange-50 text-orange-700 border-orange-100'
-                        : 'bg-gray-50 text-gray-500 border-gray-100 hover:bg-black hover:text-white'
+                        : 'bg-gray-50 text-gray-400 border-gray-100 hover:bg-black hover:text-white'
                     }`}
                   >
-                    <ShieldCheck size={10} />
+                    {profile.is_verified && <ShieldCheck size={10} />}
                     {isRtl 
                       ? (profile.is_verified ? 'מאומת' : profile.verification_status === 'pending' ? 'בבדיקה' : 'אמת חשבון') 
                       : (profile.is_verified ? 'Verified' : profile.verification_status === 'pending' ? 'Pending' : 'Verify')}
