@@ -324,10 +324,11 @@ export default function Landing({ isRtl }: LandingProps) {
               </p>
             </div>
             
-            <div className="flex gap-12 text-sm font-black uppercase tracking-widest">
+            <div className="flex flex-wrap justify-center gap-8 md:gap-12 text-sm font-black uppercase tracking-widest">
+              <Link to="/about" className="text-gray-400 hover:text-black transition-colors">{isRtl ? 'אודות' : 'About'}</Link>
+              <Link to="/contact" className="text-gray-400 hover:text-black transition-colors">{isRtl ? 'קשר' : 'Contact'}</Link>
               <Link to="/privacy" className="text-gray-400 hover:text-black transition-colors">{isRtl ? 'פרטיות' : 'Privacy'}</Link>
               <Link to="/terms" className="text-gray-400 hover:text-black transition-colors">{isRtl ? 'תנאים' : 'Terms'}</Link>
-              <Link to="/contact" className="text-gray-400 hover:text-black transition-colors">{isRtl ? 'קשר' : 'Contact'}</Link>
             </div>
           </div>
           <div className="mt-20 pt-12 border-t border-gray-200 text-center">

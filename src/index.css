@@ -13,9 +13,14 @@
     @apply bg-white text-black transition-colors duration-200;
   }
 
-  /* Ensure Hebrew text is bold enough */
-  [dir="rtl"] {
-    font-family: "Rubik", "Inter", sans-serif;
+  /* Ensure Hebrew text is bold enough and uses Rubik */
+  [dir="rtl"], [dir="rtl"] * {
+    font-family: "Rubik", "Inter", sans-serif !important;
+  }
+
+  /* Fix for logo and headings to be bold enough in Hebrew */
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6, [dir="rtl"] .font-black {
+    font-weight: 900 !important;
   }
 
   ::selection {

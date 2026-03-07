@@ -34,7 +34,7 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <Link to={user ? "/app/opportunities" : "/"} className="text-2xl font-black tracking-tighter text-black flex items-center">
+            <Link to={user ? "/app/opportunities" : "/"} className="text-2xl font-black tracking-tighter text-black flex items-center !font-sans" dir="ltr">
               SkillLink<span className="text-blue-600">.</span>
             </Link>
             

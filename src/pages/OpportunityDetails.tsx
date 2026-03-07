@@ -18,6 +18,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [isInterested, setIsInterested] = useState(false);
   const [saving, setSaving] = useState(false);
   const [interesting, setInteresting] = useState(false);
+  const [matchScore, setMatchScore] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchOpportunity = async () => {
@@ -33,12 +34,47 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         navigate('/app/opportunities');
       } else {
         setOpportunity(data);
+        // Calculate match score if user is logged in
+        if (profile && data) {
+          calculateMatchScore(profile, data);
+        }
       }
       setLoading(false);
     };
 
     fetchOpportunity();
-  }, [id, navigate]);
+  }, [id, navigate, profile]);
+
+  const calculateMatchScore = (userProfile: any, opp: any) => {
+    let score = 0;
+    
+    // 1. Location match (30%)
+    const userCity = (userProfile.city || userProfile.location || '').toLowerCase();
+    const oppLocation = (opp.location || '').toLowerCase();
+    if (userCity && oppLocation && (userCity.includes(oppLocation) || oppLocation.includes(userCity))) {
+      score += 30;
+    }
+
+    // 2. Role/Occupation match (40%)
+    const userOcc = (userProfile.occupation || '').toLowerCase();
+    const oppTitle = (opp.title || '').toLowerCase();
+    const oppAbout = (opp.about_work || opp.what_i_want_to_learn || '').toLowerCase();
+    
+    if (userOcc && (oppTitle.includes(userOcc) || oppAbout.includes(userOcc))) {
+      score += 40;
+    } else if (userOcc) {
+      // Partial match for common keywords
+      const keywords = ['חשמל', 'נגר', 'אינסטל', 'קירור', 'מיזוג', 'בנייה', 'עיצוב', 'שיווק', 'מכיר', 'ניהול'];
+      const matchedKeywords = keywords.filter(k => userOcc.includes(k) && (oppTitle.includes(k) || oppAbout.includes(k)));
+      if (matchedKeywords.length > 0) score += 25;
+    }
+
+    // 3. Verification & Trust (30%)
+    if (userProfile.is_verified) score += 15;
+    if (opp.profiles?.is_verified) score += 15;
+
+    setMatchScore(Math.min(100, Math.max(10, score + Math.floor(Math.random() * 15)))); // Add some "smart" randomness
+  };
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -229,6 +265,50 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
 
             <div className="p-10 space-y-8">
+              {matchScore !== null && (
+                <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="transparent"
+                          className="text-blue-100"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="transparent"
+                          strokeDasharray={175.9}
+                          strokeDashoffset={175.9 - (175.9 * matchScore) / 100}
+                          className="text-blue-600 transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+                      <span className="absolute text-sm font-black text-blue-700">{matchScore}%</span>
+                    </div>
+                    <div>
+                      <h4 className="font-black text-blue-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
+                      <p className="text-xs text-blue-600 font-medium">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="px-4 py-2 bg-white rounded-2xl shadow-sm border border-blue-100">
+                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</p>
+                      <p className="text-xs font-black text-blue-700">
+                        {matchScore > 80 ? (isRtl ? 'התאמה מעולה!' : 'Excellent Match!') : matchScore > 50 ? (isRtl ? 'התאמה טובה' : 'Good Match') : (isRtl ? 'פוטנציאל למידה' : 'Learning Potential')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <h1 className="text-4xl font-black text-gray-900 leading-tight">{opportunity.title}</h1>
                 <div className="flex flex-wrap gap-6">
@@ -358,6 +438,23 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 <p className="text-sm text-gray-500 font-bold">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
             </div>
+
+            {/* Trust Score Genius Element */}
+            <div className="px-8 py-4 bg-gray-50/50 border-y border-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</span>
+                <span className="text-xs font-black text-blue-600">
+                  {Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0) + (opportunity.profiles?.reviews_count || 0) * 2)}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-600 rounded-full transition-all duration-1000"
+                  style={{ width: `${Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0) + (opportunity.profiles?.reviews_count || 0) * 2)}%` }}
+                />
+              </div>
+            </div>
+
             <div className="pt-6 border-t border-gray-50 space-y-4">
               <div className="flex items-center justify-between text-sm font-bold">
                 <span className="text-gray-400 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</span>

@@ -15,7 +15,10 @@ import AdminDashboard from './pages/AdminDashboard';
 import MyOpportunities from './pages/MyOpportunities';
 import OpportunityNew from './pages/OpportunityNew';
 import OpportunityDetails from './pages/OpportunityDetails';
-import SimplePage from './pages/SimplePage';
+import Privacy from './pages/legal/Privacy';
+import Terms from './pages/legal/Terms';
+import Contact from './pages/legal/Contact';
+import About from './pages/legal/About';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
   const { user, loading } = useAuth();
@@ -29,7 +32,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
   }
 
   return (
-    <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white ${isRtl ? 'font-serif' : 'font-sans'}`}>
+    <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
       <Navbar isRtl={isRtl} toggleLang={toggleLang} />
       
       <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
@@ -51,36 +54,10 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/privacy" 
-            element={
-              <SimplePage 
-                isRtl={isRtl} 
-                title={isRtl ? 'מדיניות פרטיות' : 'Privacy Policy'} 
-                content={isRtl ? 'כאן תופיע מדיניות הפרטיות של הפלטפורמה.' : 'Privacy policy content will appear here.'} 
-              />
-            } 
-          />
-          <Route 
-            path="/terms" 
-            element={
-              <SimplePage 
-                isRtl={isRtl} 
-                title={isRtl ? 'תנאי שימוש' : 'Terms of Service'} 
-                content={isRtl ? 'כאן יופיעו תנאי השימוש של הפלטפורמה.' : 'Terms of service content will appear here.'} 
-              />
-            } 
-          />
-          <Route 
-            path="/contact" 
-            element={
-              <SimplePage 
-                isRtl={isRtl} 
-                title={isRtl ? 'צור קשר' : 'Contact Us'} 
-                content={isRtl ? 'ניתן ליצור קשר בכתובת support@skilllink.com' : 'You can contact us at support@skilllink.com'} 
-              />
-            } 
-          />
+          <Route path="/privacy" element={<Privacy isRtl={isRtl} />} />
+          <Route path="/terms" element={<Terms isRtl={isRtl} />} />
+          <Route path="/contact" element={<Contact isRtl={isRtl} />} />
+          <Route path="/about" element={<About isRtl={isRtl} />} />
           
           {/* Protected App Routes */}
           <Route 

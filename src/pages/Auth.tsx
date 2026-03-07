@@ -388,7 +388,7 @@ export default function Auth({ isRtl }: AuthProps) {
         <div className="p-10 space-y-8">
           {/* Header */}
           <div className="text-center space-y-2">
-            <Link to="/" className="text-3xl font-black tracking-tighter text-black">
+            <Link to="/" className="text-3xl font-black tracking-tighter text-black !font-sans" dir="ltr">
               SkillLink<span className="text-blue-600">.</span>
             </Link>
           </div>
