@@ -57,7 +57,7 @@ export default function Landing({ isRtl }: LandingProps) {
                 {isRtl ? 'הפלטפורמה המובילה למקצועות טכניים' : 'The #1 platform for skilled trades'}
               </div>
               
-              <h1 className="text-6xl lg:text-8xl font-black text-gray-900 leading-[0.9] tracking-tighter">
+              <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-gray-900 leading-[0.9] tracking-tighter">
                 {isRtl ? (
                   <>ללמוד ישירות מ<span className="text-blue-600">מקצוענים</span></>
                 ) : (
@@ -65,7 +65,7 @@ export default function Landing({ isRtl }: LandingProps) {
                 )}
               </h1>
               
-              <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 {isRtl 
                   ? 'חברו למנטורים מיומנים באינסטלציה, חשמל, נגרות ועוד. התחילו את מסע ההתלמדות שלכם היום עם הדרכה צמודה בשטח.'
                   : 'Connect with skilled mentors in plumbing, electrical, carpentry and more. Start your apprentice journey today with hands-on field guidance.'}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -49,10 +49,18 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
-  const [showSkillForm, setShowSkillForm] = useState(false);
-  const [newSkill, setNewSkill] = useState({ name: '', level: 'Level 1', description: '' });
+  const [showTagForm, setShowTagForm] = useState(false);
+  const [newTag, setNewTag] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+
+  const quickTags = [
+    { id: 'tools', label: isRtl ? 'בעל כלי עבודה' : 'Owns Tools', icon: Hammer },
+    { id: 'vehicle', label: isRtl ? 'בעל רכב' : 'Has Vehicle', icon: Globe },
+    { id: 'weekends', label: isRtl ? 'זמין בסופ"ש' : 'Available Weekends', icon: Clock },
+    { id: 'fast', label: isRtl ? 'למידה מהירה' : 'Fast Learner', icon: Zap },
+    { id: 'safety', label: isRtl ? 'הסמכת בטיחות' : 'Safety Certified', icon: ShieldCheck },
+  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -647,7 +655,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             )}
           </div>
 
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">
                 {isMentor ? (
@@ -713,7 +721,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {trustScore}%
               </div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</div>
-              <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
               <div className="text-lg font-black text-black flex items-center justify-center gap-1.5">
@@ -735,24 +742,24 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar">
+          <div className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
             <button 
               onClick={() => setActiveTab('about')}
-              className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
             >
               {isRtl ? 'אודות' : 'About'}
             </button>
             {isMyProfile && (
               <button 
                 onClick={() => setActiveTab('saved')}
-                className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {isRtl ? 'מועדפים' : 'Saved'}
               </button>
             )}
             <button 
               onClick={() => setActiveTab('reviews')}
-              className={`text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'reviews' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'reviews' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
             >
               {isRtl ? 'ביקורות' : 'Reviews'} ({reviews.length})
             </button>
@@ -796,184 +803,97 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 </div>
               </div>
 
-              {/* Trade Passport / Skills */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-10 shadow-sm space-y-8 relative overflow-hidden">
+              {/* Professional DNA / Quick Tags */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 -z-10" />
                 
-                <div className="flex justify-between items-start">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
-                      Official Document
+                      Professional DNA
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-                      <Briefcase size={32} className="text-slate-900" />
-                      {isRtl ? 'דרכון מקצועי' : 'Trade Passport'}
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3">
+                      <Zap size={32} className="text-blue-600" />
+                      {isRtl ? 'תגיות מקצועיות' : 'Professional Tags'}
                     </h2>
-                    <p className="text-slate-500 font-medium max-w-md">
-                      {isRtl ? 'ריכוז מיומנויות טכניות שאומתו בשטח על ידי מנטורים מוסמכים.' : 'A collection of technical competencies verified in the field by certified mentors.'}
+                    <p className="text-slate-500 font-medium max-w-md text-sm sm:text-base">
+                      {isRtl ? 'תגיות מהירות המעידות על היכולות והזמינות שלך בשטח.' : 'Quick tags representing your field capabilities and availability.'}
                     </p>
                   </div>
-                  {isMyProfile && (
-                    <button 
-                      onClick={() => setShowSkillForm(!showSkillForm)}
-                      className={`p-4 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center gap-2 ${showSkillForm ? 'bg-red-50 text-red-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-                    >
-                      {showSkillForm ? <X size={20} /> : <Plus size={20} />}
-                      <span className="text-xs font-black uppercase tracking-widest">
-                        {showSkillForm ? (isRtl ? 'ביטול' : 'Cancel') : (isRtl ? 'הוסף מיומנות' : 'Add Skill')}
-                      </span>
-                    </button>
-                  )}
                 </div>
 
-                {showSkillForm && isMyProfile && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-8 bg-slate-50 rounded-[2rem] border-2 border-slate-200 space-y-6"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                          {isRtl ? 'שם המיומנות' : 'Skill Name'}
-                        </label>
-                        <input 
-                          type="text"
-                          value={newSkill.name}
-                          onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                          placeholder={isRtl ? 'למשל: התקנת לוחות חשמל' : 'e.g. Electrical Panel Installation'}
-                          className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                          {isRtl ? 'רמת מיומנות' : 'Skill Level'}
-                        </label>
-                        <select 
-                          value={newSkill.level}
-                          onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value })}
-                          className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none appearance-none"
-                        >
-                          <option value="Level 1">{isRtl ? 'רמה 1 - מתחיל' : 'Level 1 - Beginner'}</option>
-                          <option value="Level 2">{isRtl ? 'רמה 2 - בסיסי' : 'Level 2 - Basic'}</option>
-                          <option value="Level 3">{isRtl ? 'רמה 3 - בינוני' : 'Level 3 - Intermediate'}</option>
-                          <option value="Level 4">{isRtl ? 'רמה 4 - מתקדם' : 'Level 4 - Advanced'}</option>
-                          <option value="Level 5">{isRtl ? 'רמה 5 - מומחה' : 'Level 5 - Expert'}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                        {isRtl ? 'תיאור קצר (אופציונלי)' : 'Short Description (Optional)'}
-                      </label>
-                      <textarea 
-                        value={newSkill.description}
-                        onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
-                        placeholder={isRtl ? 'תאר בקצרה את הניסיון שלך במיומנות זו...' : 'Briefly describe your experience with this skill...'}
-                        rows={2}
-                        className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none resize-none"
-                      />
-                    </div>
-                    <button 
-                      onClick={() => {
-                        if (!newSkill.name) return;
-                        const newSkills = [...(formData.skills || []), { ...newSkill, verified: false }];
-                        setFormData({ ...formData, skills: newSkills });
-                        handleSave('skills', newSkills);
-                        setNewSkill({ name: '', level: 'Level 1', description: '' });
-                        setShowSkillForm(false);
-                      }}
-                      disabled={!newSkill.name}
-                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-all disabled:opacity-50"
-                    >
-                      {isRtl ? 'שמור מיומנות לדרכון' : 'Save Skill to Passport'}
-                    </button>
-                  </motion.div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {formData.skills && formData.skills.length > 0 ? (
-                    formData.skills.map((skill, i) => (
-                      <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-xl hover:border-emerald-200 transition-all duration-500">
-                        <div className="flex items-center gap-5">
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${skill.verified ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                            {skill.verified ? <ShieldCheck size={28} /> : <Hammer size={28} />}
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-900 text-lg">{skill.name}</p>
-                            {skill.description && (
-                              <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">{skill.description}</p>
-                            )}
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-200/50 px-2 py-0.5 rounded-md">{skill.level}</span>
-                              {skill.verified && (
-                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                                  {isRtl ? 'מאומת בשטח' : 'Field Verified'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {isMyProfile ? (
-                          <button 
-                            onClick={() => {
-                              const newSkills = formData.skills.filter((_, idx) => idx !== i);
-                              setFormData({ ...formData, skills: newSkills });
-                              handleSave('skills', newSkills);
+                <div className="flex flex-wrap gap-3 sm:gap-4">
+                  {quickTags.map((tag) => {
+                    const isSelected = formData.skills?.some((s: any) => s.name === tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        disabled={!isMyProfile}
+                        onClick={() => {
+                          let newSkills = [...(formData.skills || [])];
+                          if (isSelected) {
+                            newSkills = newSkills.filter((s: any) => s.name !== tag.id);
+                          } else {
+                            newSkills.push({ name: tag.id, label: tag.label, verified: false });
+                          }
+                          setFormData({ ...formData, skills: newSkills });
+                          handleSave('skills', newSkills);
+                        }}
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all border-2 ${
+                          isSelected 
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100' 
+                            : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                        } ${!isMyProfile && 'cursor-default'}`}
+                      >
+                        <tag.icon size={18} />
+                        {tag.label}
+                      </button>
+                    );
+                  })}
+                  
+                  {isMyProfile && (
+                    <div className="flex items-center gap-2">
+                      {showTagForm ? (
+                        <div className="flex items-center gap-2 animate-in slide-in-from-left-4">
+                          <input 
+                            type="text"
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            placeholder={isRtl ? 'תגית מותאמת...' : 'Custom tag...'}
+                            className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-blue-600"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && newTag) {
+                                const newSkills = [...(formData.skills || []), { name: newTag, label: newTag, verified: false }];
+                                setFormData({ ...formData, skills: newSkills });
+                                handleSave('skills', newSkills);
+                                setNewTag('');
+                                setShowTagForm(false);
+                              }
                             }}
-                            className="p-2 text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            <Trash2 size={18} />
+                          />
+                          <button onClick={() => setShowTagForm(false)} className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200">
+                            <X size={16} />
                           </button>
-                        ) : (
-                          myProfile?.role === 'mentor' && !skill.verified && (
-                            <button 
-                              onClick={async () => {
-                                if (!user) return;
-                                const newSkills = [...formData.skills];
-                                newSkills[i] = { ...newSkills[i], verified: true, verified_by: user.id };
-                                
-                                const { error } = await supabase
-                                  .from('profiles')
-                                  .update({ skills: newSkills })
-                                  .eq('id', profile.id);
-                                
-                                if (error) {
-                                  alert(isRtl ? 'שגיאה בעדכון הפרופיל.' : 'Error updating profile.');
-                                } else {
-                                  setFormData({ ...formData, skills: newSkills });
-                                  alert(isRtl ? 'המיומנות אומתה בהצלחה!' : 'Skill verified successfully!');
-                                }
-                              }}
-                              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-1.5"
-                            >
-                              <ShieldCheck size={12} />
-                              {isRtl ? 'אמת מיומנות' : 'Verify Skill'}
-                            </button>
-                          )
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full py-16 text-center space-y-4 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                        <Hammer className="text-slate-200" size={40} />
-                      </div>
-                      <p className="text-slate-400 font-bold text-lg">
-                        {isRtl ? 'טרם נוספו מיומנויות לדרכון המקצועי.' : 'No skills recorded in the trade passport yet.'}
-                      </p>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setShowTagForm(true)}
+                          className="p-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all border-2 border-dashed border-slate-200"
+                        >
+                          <Plus size={20} />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Gallery */}
-              <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-black text-black">{isRtl ? 'גלריית עבודות' : 'Gallery of Work'}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-black">{isRtl ? 'גלריית עבודות' : 'Gallery of Work'}</h2>
                   {isMyProfile && (
-                    <label className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-1">
+                    <label className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-1">
                       <Upload size={16} />
                       {isRtl ? 'הוסף תמונה' : 'Add Image'}
                       <input type="file" className="hidden" accept="image/*" onChange={handlePortfolioUpload} disabled={uploading} />
@@ -983,7 +903,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                   {formData.portfolio_urls && formData.portfolio_urls.length > 0 ? (
                     formData.portfolio_urls.map((url, i) => (
-                      <div key={i} className="min-w-[240px] h-40 rounded-2xl border border-gray-100 relative group overflow-hidden shrink-0">
+                      <div key={i} className="min-w-[200px] sm:min-w-[240px] h-32 sm:h-40 rounded-2xl border border-gray-100 relative group overflow-hidden shrink-0">
                         <img src={url} alt={`Portfolio ${i}`} className="w-full h-full object-cover" />
                         {isMyProfile && (
                           <button 
@@ -1148,20 +1068,20 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
         {/* Right Column: Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-black text-white rounded-3xl p-8 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="bg-black text-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             <div className="relative z-10 space-y-4">
-              <h3 className="text-2xl font-black leading-tight">
+              <h3 className="text-xl sm:text-2xl font-black leading-tight">
                 {isMentor ? (isRtl ? 'מוכן לחלוק את הידע שלך?' : 'Ready to share your skills?') : (isRtl ? 'מוכן להתחיל ללמוד?' : 'Ready to start learning?')}
               </h3>
-              <p className="text-gray-400 font-medium">
+              <p className="text-gray-400 font-medium text-sm sm:text-base">
                 {isMentor 
                   ? (isRtl ? 'התחבר למתלמדים רציניים ועצב את דור העתיד.' : 'Connect with eager apprentices and shape the next generation.') 
                   : (isRtl ? 'מצא מנטור מומחה והתחל את הקריירה שלך.' : 'Find a master mentor and jumpstart your career in the trades.')}
               </p>
               <button 
                 onClick={() => navigate(isMentor ? '/app/opportunities/new' : '/app/opportunities')}
-                className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 {isMentor ? (isRtl ? 'פרסם התלמדות' : 'Post a Mentorship') : (isRtl ? 'מצא מנטור' : 'Find a Mentor')}
                 <ArrowRight size={18} />
@@ -1169,7 +1089,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-8 relative overflow-hidden">
+          <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-50 rounded-full -z-10"></div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Info size={14} />
@@ -1178,8 +1098,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             
             <div className="space-y-6">
               <div className="flex items-start gap-4 group">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                  <MapPin size={22} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                  <MapPin size={20} />
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מיקום' : 'Location'}</p>
@@ -1199,8 +1119,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </div>
 
               <div className="flex items-start gap-4 group">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
-                  <Briefcase size={22} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                  <Briefcase size={20} />
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מקצוע' : 'Occupation'}</p>

@@ -56,16 +56,16 @@ export default function Home({ isRtl }: HomeProps) {
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
             Professional Network
           </div>
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
             {isRtl ? 'זירת ההתמחות' : 'The Apprenticeship Arena'}
           </h1>
-          <p className="text-slate-500 font-medium text-lg">
+          <p className="text-slate-500 font-medium text-base sm:text-lg">
             {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Master or a serious Apprentice to build your professional future.'}
           </p>
         </div>
         <Link 
           to="/app/opportunities/new"
-          className="px-10 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3"
+          className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
         >
           <Plus size={24} />
           {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
@@ -87,10 +87,10 @@ export default function Home({ isRtl }: HomeProps) {
             className="w-full pl-14 pr-6 py-5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all font-medium shadow-sm outline-none"
           />
         </div>
-        <div className="flex p-1.5 bg-slate-200/50 rounded-2xl border border-slate-200">
+        <div className="flex p-1 bg-slate-200/50 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setFilter('all')}
-            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
               filter === 'all' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -98,7 +98,7 @@ export default function Home({ isRtl }: HomeProps) {
           </button>
           <button
             onClick={() => setFilter('mentor_offer')}
-            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
               filter === 'mentor_offer' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -106,7 +106,7 @@ export default function Home({ isRtl }: HomeProps) {
           </button>
           <button
             onClick={() => setFilter('mentee_seeking')}
-            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
               filter === 'mentee_seeking' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >

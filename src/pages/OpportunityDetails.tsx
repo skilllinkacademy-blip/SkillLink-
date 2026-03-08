@@ -206,7 +206,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const isMentorOffer = opportunity.type === 'mentor_offer';
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6 space-y-10 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)}
@@ -218,12 +218,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         {isRtl ? 'חזרה' : 'Back'}
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* Main Content */}
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 space-y-8 sm:space-y-10">
           <div className="industrial-card overflow-hidden">
             {/* Image Header */}
-            <div className="h-96 bg-slate-50 relative overflow-hidden">
+            <div className="h-64 sm:h-96 bg-slate-50 relative overflow-hidden">
               {opportunity.image_url ? (
                 <img 
                   src={opportunity.image_url} 
@@ -233,23 +233,32 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-                  {isMentorOffer ? <Briefcase size={100} strokeWidth={1} /> : <GraduationCap size={100} strokeWidth={1} />}
+                  {isMentorOffer ? <Briefcase size={60} sm:size={100} strokeWidth={1} /> : <GraduationCap size={60} sm:size={100} strokeWidth={1} />}
                 </div>
               )}
-              <div className={`absolute top-8 ${isRtl ? 'right-8' : 'left-8'} px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
+              <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
                 isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
               }`}>
                 {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Master Offer' : 'Apprentice Seeking')}
               </div>
             </div>
 
-            <div className="p-12 space-y-10">
+            <div className="p-6 sm:p-12 space-y-8 sm:space-y-10">
               {matchScore !== null && (
                 <div className="space-y-4">
-                  <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="flex items-center gap-6">
-                      <div className="relative w-20 h-20 flex items-center justify-center">
+                  <div className="bg-slate-50 border border-slate-200 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-4 sm:gap-6">
+                      <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center">
                         <svg className="w-full h-full transform -rotate-90">
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="transparent"
+                            className="text-slate-200 sm:hidden"
+                          />
                           <circle
                             cx="40"
                             cy="40"
@@ -257,7 +266,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                             stroke="currentColor"
                             strokeWidth="6"
                             fill="transparent"
-                            className="text-slate-200"
+                            className="text-slate-200 hidden sm:block"
+                          />
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="transparent"
+                            strokeDasharray={150.8}
+                            strokeDashoffset={150.8 - (150.8 * matchScore) / 100}
+                            className="text-emerald-500 transition-all duration-1000 ease-out sm:hidden"
                           />
                           <circle
                             cx="40"
@@ -268,18 +288,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                             fill="transparent"
                             strokeDasharray={226.2}
                             strokeDashoffset={226.2 - (226.2 * matchScore) / 100}
-                            className="text-emerald-500 transition-all duration-1000 ease-out"
+                            className="text-emerald-500 transition-all duration-1000 ease-out hidden sm:block"
                           />
                         </svg>
-                        <span className="absolute text-lg font-black text-slate-900">{matchScore}%</span>
+                        <span className="absolute text-sm sm:text-lg font-black text-slate-900">{matchScore}%</span>
                       </div>
-                      <div className="space-y-1">
-                        <h4 className="text-xl font-black text-slate-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
+                      <div className="space-y-0.5 sm:space-y-1">
+                        <h4 className="text-base sm:text-xl font-black text-slate-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
+                        <p className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="hidden sm:block">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      <div className="hidden md:block">
                         <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isRtl ? 'סטטוס' : 'Status'}</p>
                           <p className="text-sm font-black text-emerald-600">
@@ -289,9 +309,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       </div>
                       <button 
                         onClick={() => setShowMatchDetails(!showMatchDetails)}
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
                       >
-                        <ArrowRight size={20} className={`transition-transform duration-300 ${showMatchDetails ? '-rotate-90' : 'rotate-90'}`} />
+                        <ArrowRight size={16} className={`transition-transform duration-300 ${showMatchDetails ? '-rotate-90' : 'rotate-90'}`} />
                       </button>
                     </div>
                   </div>
@@ -300,13 +320,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="bg-slate-900 text-white rounded-[2rem] p-8 space-y-6 overflow-hidden"
+                      className="bg-slate-900 text-white rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 space-y-6 overflow-hidden"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xl font-black">{matchBreakdown.location}/30</span>
+                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.location}/30</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
                               <div className="h-full bg-blue-500" style={{ width: `${(matchBreakdown.location / 30) * 100}%` }} />
                             </div>
@@ -315,7 +335,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'תחום ועיסוק' : 'Field & Role'}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xl font-black">{matchBreakdown.role}/40</span>
+                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.role}/40</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
                               <div className="h-full bg-emerald-500" style={{ width: `${(matchBreakdown.role / 40) * 100}%` }} />
                             </div>
@@ -324,7 +344,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'אמינות' : 'Trust'}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xl font-black">{matchBreakdown.trust}/30</span>
+                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.trust}/30</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
                               <div className="h-full bg-orange-500" style={{ width: `${(matchBreakdown.trust / 30) * 100}%` }} />
                             </div>
@@ -333,9 +353,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       </div>
                       <div className="pt-6 border-t border-slate-800">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">{isRtl ? 'פירוט נוסף' : 'Additional Details'}</p>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                           {matchBreakdown.details.map((detail, i) => (
-                            <span key={i} className="px-4 py-2 bg-slate-800 rounded-xl text-[10px] font-bold">
+                            <span key={i} className="px-3 py-1.5 bg-slate-800 rounded-xl text-[9px] sm:text-[10px] font-bold">
                               {detail}
                             </span>
                           ))}
@@ -346,27 +366,27 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 </div>
               )}
 
-              <div className="space-y-6">
-                <h1 className="text-5xl font-black text-slate-900 leading-tight tracking-tight">{opportunity.title}</h1>
-                <div className="flex flex-wrap gap-8">
-                  <div className="flex items-center gap-3 text-slate-500 font-bold">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                      <MapPin size={20} />
+              <div className="space-y-4 sm:space-y-6">
+                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight tracking-tight">{opportunity.title}</h1>
+                <div className="flex flex-wrap gap-4 sm:gap-8">
+                  <div className="flex items-center gap-2 sm:gap-3 text-slate-500 font-bold text-sm sm:text-base">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <MapPin size={18} />
                     </div>
                     <span>{opportunity.location}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-500 font-bold">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                      <Clock size={20} />
+                  <div className="flex items-center gap-2 sm:gap-3 text-slate-500 font-bold text-sm sm:text-base">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <Clock size={18} />
                     </div>
                     <span>{opportunity.work_hours}</span>
                   </div>
                   {(opportunity.pay_amount || opportunity.desired_salary) && (
-                    <div className="flex items-center gap-3 text-slate-900 font-black">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <DollarSign size={20} />
+                    <div className="flex items-center gap-2 sm:gap-3 text-slate-900 font-black text-sm sm:text-base">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <DollarSign size={18} />
                       </div>
-                      <span className="text-xl">
+                      <span className="text-base sm:text-xl">
                         {isMentorOffer 
                           ? `${opportunity.pay_amount} / ${opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : opportunity.pay_period === 'day' ? (isRtl ? 'יום' : 'day') : (isRtl ? 'חודש' : 'mo')}`
                           : `${isRtl ? 'שכר מבוקש:' : 'Desired:'} ${opportunity.desired_salary}`}
@@ -376,7 +396,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 pt-8 sm:pt-12 border-t border-slate-100">
                 {isMentorOffer ? (
                   <>
                     <div className="space-y-4">
@@ -449,38 +469,38 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-4 space-y-8">
+        <div className="lg:col-span-4 space-y-6 sm:space-y-8">
           {/* Owner Card */}
-          <div className="industrial-card p-10 space-y-8">
+          <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
             <div 
-              className="flex items-center gap-5 cursor-pointer group/owner"
+              className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
               onClick={() => {
                 if (opportunity.profiles?.username) {
                   navigate(`/app/u/${opportunity.profiles.username}`);
                 }
               }}
             >
-              <div className="w-20 h-20 rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
                 {opportunity.profiles?.avatar_url ? (
                   <img src={opportunity.profiles.avatar_url} alt={opportunity.profiles.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   opportunity.profiles?.full_name?.charAt(0) || 'U'
                 )}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5 sm:space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-2xl font-black text-slate-900 group-hover/owner:text-emerald-600 transition-colors">{opportunity.profiles?.full_name}</h4>
+                  <h4 className="text-xl sm:text-2xl font-black text-slate-900 group-hover/owner:text-emerald-600 transition-colors">{opportunity.profiles?.full_name}</h4>
                   {opportunity.profiles?.is_verified && (
-                    <ShieldCheck size={18} className="text-emerald-600 fill-emerald-500/10" />
+                    <ShieldCheck size={16} className="text-emerald-600 fill-emerald-500/10" />
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
             </div>
 
             {/* Trust Score Element */}
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+            <div className="p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</span>
                 <span className="text-xs font-black text-slate-900">
@@ -495,7 +515,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-400">{isRtl ? 'מיקום' : 'Location'}</span>
                 <span className="text-slate-900">{opportunity.profiles?.city || opportunity.profiles?.location}</span>
@@ -506,11 +526,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               </div>
             </div>
             
-            <div className="space-y-4 pt-4">
+            <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
               {user?.id === opportunity.owner_id ? (
                 <button 
                   onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
-                  className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
                   <Pencil size={18} />
                   {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
@@ -520,7 +540,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   <button 
                     onClick={handleInterested}
                     disabled={interesting || isInterested || user?.id === opportunity.owner_id}
-                    className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+                    className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
                       isInterested 
                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
                         : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
@@ -534,7 +554,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
                   <button 
                     onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
-                    className="w-full bg-white text-slate-900 border-2 border-slate-900 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
                     <MessageSquare size={18} />
                     {isRtl ? 'שלח הודעה' : 'Send Message'}
