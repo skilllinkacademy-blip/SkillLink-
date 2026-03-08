@@ -166,11 +166,14 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent submission if not on the last sub-step
+    // If we are not on the last sub-step, just move to the next one
     if (subStep < 3) {
-      setSubStep(subStep + 1);
+      setSubStep(prev => prev + 1);
       return;
     }
+
+    // Only proceed with submission if we are on the last sub-step (3)
+    if (subStep !== 3) return;
 
     if (!user) return;
     setLoading(true);
@@ -384,8 +387,6 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   );
 
   const renderStep2 = () => {
-    const totalSubSteps = 3;
-
     const renderSubStep1 = () => (
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="space-y-2">
@@ -641,10 +642,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
               </div>
               
               <div className="flex gap-4">
-                {subStep < totalSubSteps ? (
+                {subStep < 3 ? (
                   <button
-                    type="button"
-                    onClick={() => setSubStep(subStep + 1)}
+                    type="submit"
                     className="px-12 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 group"
                   >
                     {isRtl ? 'המשך' : 'Continue'}
