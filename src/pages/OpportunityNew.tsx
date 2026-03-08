@@ -262,9 +262,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
   const isApprentice = profile?.role === 'mentee';
   const isAdmin = profile?.role === 'admin';
-  const isVerifiedMentor = profile?.role === 'mentor' && (profile?.is_verified === true || profile?.verification_status === 'approved');
+  const isMentor = profile?.role === 'mentor';
 
-  if (!isApprentice && !isVerifiedMentor && !isAdmin) {
+  if (!isApprentice && !isMentor && !isAdmin) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 text-center px-4">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
@@ -307,8 +307,8 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           whileHover={{ y: -8, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { 
-            if (profile?.role !== 'mentor') return alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post an apprentice offer.');
-            if (profile.verification_status === 'approved' || profile.is_verified) { setType('mentor_offer'); setStep(2); } else { navigate('/app/verify'); }
+            if (profile?.role !== 'mentor' && profile?.role !== 'admin') return alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post an apprentice offer.');
+            setType('mentor_offer'); setStep(2);
           }}
           className={`group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden ${
             profile?.role === 'mentor' ? 'border-slate-900 bg-white shadow-2xl shadow-slate-100' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
