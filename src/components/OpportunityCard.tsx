@@ -11,7 +11,6 @@ interface Opportunity {
   pay_amount?: number;
   pay_period?: string;
   desired_salary?: number;
-  beginners_only: boolean;
   image_url?: string;
   created_at: string;
   owner_id: string;
@@ -69,12 +68,6 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
         }`}>
           {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Mentor Offer' : 'Apprentice Seeking')}
         </div>
-
-        {opportunity.beginners_only && (
-          <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-1.5 bg-white/90 backdrop-blur-md text-gray-900 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg border border-white/20`}>
-            {isRtl ? 'מתחילים בלבד' : 'Beginners Only'}
-          </div>
-        )}
       </div>
 
       {/* Content */}

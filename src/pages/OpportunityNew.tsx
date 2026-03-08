@@ -155,7 +155,6 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
           title,
           location,
           work_hours: workHours,
-          beginners_only: type === 'mentor_offer' ? true : false,
           pay_amount: payAmount ? (parseFloat(payAmount) || 0) : null,
           pay_period: payAmount ? payPeriod : null,
           about_work: type === 'mentor_offer' ? aboutWork : null,
