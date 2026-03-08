@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -21,7 +21,8 @@ import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, dbError } = useAuth();
+  const { user, loading, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -31,7 +32,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
     );
   }
 
-  if (dbError === 'DATABASE_SETUP_REQUIRED') {
+  if (dbError === 'DATABASE_SETUP_REQUIRED' && !location.pathname.includes('/auth')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6 text-center">
         <div className="max-w-md space-y-6">
@@ -47,6 +48,11 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
                 ? 'נראה שטבלאות המערכת נמחקו או לא הוגדרו כראוי. עליך להריץ את קובץ ה-schema.sql ב-SQL Editor של Supabase.' 
                 : 'It seems the system tables were deleted or not configured correctly. You must run the schema.sql file in your Supabase SQL Editor.'}
             </p>
+            <p className="text-sm text-red-600 font-bold bg-red-50 p-3 rounded-xl border border-red-100">
+              {isRtl 
+                ? 'שים לב: אם איפסת את בסיס הנתונים, עליך להירשם מחדש (Sign Up) כי המשתמש הישן נמחק.' 
+                : 'Note: If you reset the database, you must Sign Up again because your old user was deleted.'}
+            </p>
           </div>
           <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm text-start">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{isRtl ? 'הוראות:' : 'Instructions:'}</p>
@@ -58,12 +64,32 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
               <li>{isRtl ? 'לחץ על הכפתור למטה' : 'Click the button below'}</li>
             </ol>
           </div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
-          >
-            {isRtl ? 'רענן דף עכשיו' : 'Refresh Page Now'}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+            >
+              {isRtl ? 'רענן דף עכשיו' : 'Refresh Page Now'}
+            </button>
+            <button 
+              onClick={() => window.location.href = '/auth?mode=signup'}
+              className="w-full py-3 bg-white text-slate-900 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+            >
+              {isRtl ? 'דלג להרשמה (Sign Up)' : 'Skip to Sign Up'}
+            </button>
+            <button 
+              onClick={handleBypassDbCheck}
+              className="w-full py-2 text-slate-400 text-xs font-bold hover:text-slate-600 transition-all"
+            >
+              {isRtl ? 'כבר הרצתי את הקוד, אל תראה לי את זה שוב' : "I've already run the code, don't show this again"}
+            </button>
+            <button 
+              onClick={handleForceSignOut}
+              className="w-full py-2 text-red-400 text-xs font-bold hover:text-red-600 transition-all border-t border-slate-100 mt-2"
+            >
+              {isRtl ? 'התנתק ונקה זיכרון דפדפן (Force Sign Out)' : "Force Sign Out & Clear Browser Cache"}
+            </button>
+          </div>
         </div>
       </div>
     );

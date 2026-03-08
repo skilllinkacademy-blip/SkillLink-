@@ -14,6 +14,8 @@ CREATE TABLE public.schema_migrations (
     id TEXT PRIMARY KEY,
     executed_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE public.schema_migrations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to schema_migrations" ON public.schema_migrations FOR SELECT USING (true);
 INSERT INTO public.schema_migrations (id) VALUES ('initial_setup');
 
 -- 2. Profiles Table

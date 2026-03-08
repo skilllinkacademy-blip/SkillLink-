@@ -29,6 +29,8 @@ interface AuthContextType {
   refreshUnreadCount: () => Promise<void>;
   setUnreadMessagesCount: React.Dispatch<React.SetStateAction<number>>;
   setUnreadNotificationsCount: React.Dispatch<React.SetStateAction<number>>;
+  handleBypassDbCheck: () => void;
+  handleForceSignOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,11 +41,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [bypassDbCheck, setBypassDbCheck] = useState(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('bypass_db_check') === 'true';
+  });
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const checkDatabaseSetup = async () => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || bypassDbCheck) {
+      setDbError(null);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('schema_migrations')
@@ -318,20 +326,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) await fetchUnreadCount(user.id);
   };
 
+  const handleBypassDbCheck = () => {
+    localStorage.setItem('bypass_db_check', 'true');
+    setBypassDbCheck(true);
+    setDbError(null);
+  };
+
+  const handleForceSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.clear();
+      window.location.href = '/auth?mode=signup';
+    } catch (err) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       session, 
       profile, 
       loading, 
-      dbError, 
+      dbError: bypassDbCheck ? null : dbError, 
       unreadMessagesCount,
       unreadNotificationsCount,
       signOut, 
       refreshProfile,
       refreshUnreadCount,
       setUnreadMessagesCount,
-      setUnreadNotificationsCount
+      setUnreadNotificationsCount,
+      handleBypassDbCheck,
+      handleForceSignOut
     }}>
       {children}
     </AuthContext.Provider>
