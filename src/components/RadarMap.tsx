@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Zap, Users, Briefcase, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 interface RadarMapProps {
   isRtl: boolean;
@@ -9,6 +10,28 @@ interface RadarMapProps {
 
 export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
   const [pulse, setPulse] = useState(0);
+  const [counts, setCounts] = useState({ mentors: 0, apprentices: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { count: mentorCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'mentor');
+      
+      const { count: menteeCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'mentee');
+
+      setCounts({
+        mentors: mentorCount || 0,
+        apprentices: menteeCount || 0
+      });
+    };
+
+    fetchCounts();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,11 +85,11 @@ export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
           <div className="flex flex-wrap gap-6 justify-center lg:justify-start">
             <div className="flex items-center gap-3 text-white">
               <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-              <span className="text-sm font-black uppercase tracking-widest">12 {isRtl ? 'מנטורים בשטח' : 'Masters on-site'}</span>
+              <span className="text-sm font-black uppercase tracking-widest">{counts.mentors} {isRtl ? 'מנטורים בשטח' : 'Masters on-site'}</span>
             </div>
             <div className="flex items-center gap-3 text-white">
               <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-pulse" />
-              <span className="text-sm font-black uppercase tracking-widest">8 {isRtl ? 'מתלמדים פעילים' : 'Active apprentices'}</span>
+              <span className="text-sm font-black uppercase tracking-widest">{counts.apprentices} {isRtl ? 'מתלמדים פעילים' : 'Active apprentices'}</span>
             </div>
           </div>
         </div>

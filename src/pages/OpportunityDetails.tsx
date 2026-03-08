@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
 
 interface OpportunityDetailsProps {
   isRtl: boolean;
@@ -20,12 +21,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [saving, setSaving] = useState(false);
   const [interesting, setInteresting] = useState(false);
   const [matchScore, setMatchScore] = useState<number | null>(null);
-  const [matchBreakdown, setMatchBreakdown] = useState<{
-    location: number;
-    role: number;
-    trust: number;
-    details: string[];
-  } | null>(null);
+  const [matchBreakdown, setMatchBreakdown] = useState<MatchBreakdown | null>(null);
   const [showMatchDetails, setShowMatchDetails] = useState(false);
 
   useEffect(() => {
@@ -44,7 +40,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         setOpportunity(data);
         // Calculate match score if user is logged in
         if (profile && data) {
-          calculateMatchScore(profile, data);
+          const { score, breakdown } = calculateMatchScore(data, profile, isRtl);
+          setMatchScore(score);
+          setMatchBreakdown(breakdown);
         }
       }
       setLoading(false);
@@ -53,82 +51,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     fetchOpportunity();
   }, [id, navigate, profile]);
 
-  const calculateMatchScore = (userProfile: any, opp: any) => {
-    // If user is owner, it's a perfect match for preview purposes
-    if (userProfile.id === opp.owner_id) {
-      setMatchScore(100);
-      setMatchBreakdown({
-        location: 30,
-        role: 40,
-        trust: 30,
-        details: [isRtl ? 'זה הפוסט שלך!' : 'This is your post!']
-      });
-      return;
-    }
-
-    let locationScore = 0;
-    let roleScore = 0;
-    let trustScore = 0;
-    const details: string[] = [];
-    
-    // 1. Location match (30%)
-    const userCity = (userProfile.city || userProfile.location || '').toLowerCase();
-    const oppLocation = (opp.location || '').toLowerCase();
-    if (userCity && oppLocation && (userCity.includes(oppLocation) || oppLocation.includes(userCity))) {
-      locationScore = 30;
-      details.push(isRtl ? 'מיקום תואם' : 'Matching location');
-    } else {
-      details.push(isRtl ? 'מיקום שונה' : 'Different location');
-    }
-
-    // 2. Role/Occupation match (40%)
-    const userOcc = (userProfile.occupation || '').toLowerCase();
-    const oppTitle = (opp.title || '').toLowerCase();
-    const oppAbout = (opp.about_work || opp.what_i_want_to_learn || '').toLowerCase();
-    
-    // Check if roles are complementary (Mentor vs Mentee)
-    const complementaryRoles = (userProfile.role === 'mentor' && opp.type === 'mentee_seeking') || 
-                             (userProfile.role === 'mentee' && opp.type === 'mentor_offer');
-    
-    if (complementaryRoles) {
-      roleScore += 10;
-      details.push(isRtl ? 'תפקידים משלימים (מנטור/מתלמד)' : 'Complementary roles (Mentor/Apprentice)');
-    }
-
-    if (userOcc && (oppTitle.includes(userOcc) || oppAbout.includes(userOcc))) {
-      roleScore += 30;
-      details.push(isRtl ? 'תחום עיסוק תואם' : 'Matching occupation');
-    } else if (userOcc) {
-      // Partial match for common keywords
-      const keywords = ['חשמל', 'נגר', 'אינסטל', 'קירור', 'מיזוג', 'בנייה', 'עיצוב', 'שיווק', 'מכיר', 'ניהול'];
-      const matchedKeywords = keywords.filter(k => userOcc.includes(k) && (oppTitle.includes(k) || oppAbout.includes(k)));
-      if (matchedKeywords.length > 0) {
-        roleScore += 20;
-        details.push(isRtl ? 'תחומים קרובים' : 'Related fields');
-      } else {
-        details.push(isRtl ? 'תחומי עיסוק שונים' : 'Different occupations');
-      }
-    }
-
-    // 3. Verification & Trust (30%)
-    if (userProfile.is_verified) {
-      trustScore += 15;
-      details.push(isRtl ? 'הפרופיל שלך מאומת' : 'Your profile is verified');
-    }
-    if (opp.profiles?.is_verified) {
-      trustScore += 15;
-      details.push(isRtl ? 'המפרסם מאומת' : 'Poster is verified');
-    }
-
-    const total = locationScore + roleScore + trustScore;
-    setMatchScore(Math.min(100, total));
-    setMatchBreakdown({
-      location: locationScore,
-      role: roleScore,
-      trust: trustScore,
-      details
-    });
-  };
+  // Removed local calculateMatchScore function as it's now in utils
 
   useEffect(() => {
     const checkStatus = async () => {

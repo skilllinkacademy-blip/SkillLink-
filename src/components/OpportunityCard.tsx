@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight, Pencil } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { calculateMatchScore } from '../utils/matchScore';
 
 interface Opportunity {
   id: string;
@@ -43,33 +44,9 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   const { profile: myProfile } = useAuth();
 
   const matchScore = useMemo(() => {
-    if (!myProfile) return 0;
-    let score = 0;
-    
-    // Location match
-    if (opportunity.location === myProfile.city || opportunity.location === myProfile.location) {
-      score += 35;
-    } else if (opportunity.location?.includes(myProfile.city || '') || (myProfile.city && opportunity.location?.includes(myProfile.city))) {
-      score += 20;
-    }
-
-    // Role alignment
-    if (opportunity.type === 'mentor_offer' && myProfile.role === 'mentee') score += 25;
-    if (opportunity.type === 'mentee_seeking' && myProfile.role === 'mentor') score += 25;
-
-    // Occupation match
-    if (myProfile.occupation && (
-      opportunity.title.toLowerCase().includes(myProfile.occupation.toLowerCase()) ||
-      opportunity.about_work?.toLowerCase().includes(myProfile.occupation.toLowerCase())
-    )) {
-      score += 30;
-    }
-
-    // Verified bonus
-    if (opportunity.profiles?.is_verified) score += 10;
-
-    return Math.min(100, score);
-  }, [opportunity, myProfile]);
+    const { score } = calculateMatchScore(opportunity, myProfile, isRtl);
+    return score;
+  }, [opportunity, myProfile, isRtl]);
 
   return (
     <Link 

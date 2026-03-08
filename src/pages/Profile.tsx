@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -48,6 +49,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const [showSkillForm, setShowSkillForm] = useState(false);
+  const [newSkill, setNewSkill] = useState({ name: '', level: 'Level 1', description: '' });
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
@@ -812,20 +815,81 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   </div>
                   {isMyProfile && (
                     <button 
-                      onClick={() => {
-                        const name = prompt(isRtl ? 'שם המיומנות:' : 'Skill Name:');
-                        if (name) {
-                          const newSkills = [...(formData.skills || []), { name, level: 'Level 1', verified: false }];
-                          setFormData({ ...formData, skills: newSkills });
-                          handleSave('skills', newSkills);
-                        }
-                      }}
-                      className="p-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                      onClick={() => setShowSkillForm(!showSkillForm)}
+                      className={`p-4 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center gap-2 ${showSkillForm ? 'bg-red-50 text-red-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                     >
-                      <Plus size={20} />
+                      {showSkillForm ? <X size={20} /> : <Plus size={20} />}
+                      <span className="text-xs font-black uppercase tracking-widest">
+                        {showSkillForm ? (isRtl ? 'ביטול' : 'Cancel') : (isRtl ? 'הוסף מיומנות' : 'Add Skill')}
+                      </span>
                     </button>
                   )}
                 </div>
+
+                {showSkillForm && isMyProfile && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-8 bg-slate-50 rounded-[2rem] border-2 border-slate-200 space-y-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                          {isRtl ? 'שם המיומנות' : 'Skill Name'}
+                        </label>
+                        <input 
+                          type="text"
+                          value={newSkill.name}
+                          onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
+                          placeholder={isRtl ? 'למשל: התקנת לוחות חשמל' : 'e.g. Electrical Panel Installation'}
+                          className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                          {isRtl ? 'רמת מיומנות' : 'Skill Level'}
+                        </label>
+                        <select 
+                          value={newSkill.level}
+                          onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value })}
+                          className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none appearance-none"
+                        >
+                          <option value="Level 1">{isRtl ? 'רמה 1 - מתחיל' : 'Level 1 - Beginner'}</option>
+                          <option value="Level 2">{isRtl ? 'רמה 2 - בסיסי' : 'Level 2 - Basic'}</option>
+                          <option value="Level 3">{isRtl ? 'רמה 3 - בינוני' : 'Level 3 - Intermediate'}</option>
+                          <option value="Level 4">{isRtl ? 'רמה 4 - מתקדם' : 'Level 4 - Advanced'}</option>
+                          <option value="Level 5">{isRtl ? 'רמה 5 - מומחה' : 'Level 5 - Expert'}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                        {isRtl ? 'תיאור קצר (אופציונלי)' : 'Short Description (Optional)'}
+                      </label>
+                      <textarea 
+                        value={newSkill.description}
+                        onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
+                        placeholder={isRtl ? 'תאר בקצרה את הניסיון שלך במיומנות זו...' : 'Briefly describe your experience with this skill...'}
+                        rows={2}
+                        className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:border-slate-900 transition-all font-medium outline-none resize-none"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (!newSkill.name) return;
+                        const newSkills = [...(formData.skills || []), { ...newSkill, verified: false }];
+                        setFormData({ ...formData, skills: newSkills });
+                        handleSave('skills', newSkills);
+                        setNewSkill({ name: '', level: 'Level 1', description: '' });
+                        setShowSkillForm(false);
+                      }}
+                      disabled={!newSkill.name}
+                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-all disabled:opacity-50"
+                    >
+                      {isRtl ? 'שמור מיומנות לדרכון' : 'Save Skill to Passport'}
+                    </button>
+                  </motion.div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {formData.skills && formData.skills.length > 0 ? (
@@ -837,6 +901,9 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                           </div>
                           <div>
                             <p className="font-black text-slate-900 text-lg">{skill.name}</p>
+                            {skill.description && (
+                              <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">{skill.description}</p>
+                            )}
                             <div className="flex items-center gap-3 mt-1">
                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-200/50 px-2 py-0.5 rounded-md">{skill.level}</span>
                               {skill.verified && (
