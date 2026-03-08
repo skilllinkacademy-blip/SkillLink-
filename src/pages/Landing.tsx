@@ -1,13 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield } from 'lucide-react';
+import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield, User as UserIcon, Search } from 'lucide-react';
 import { motion } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 interface LandingProps {
   isRtl: boolean;
 }
 
 export default function Landing({ isRtl }: LandingProps) {
+  const [counts, setCounts] = useState({ mentors: 0, mentees: 0, total: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { count: mentorCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'mentor');
+      
+      const { count: menteeCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'mentee');
+
+      const total = (mentorCount || 0) + (menteeCount || 0);
+      setCounts({ 
+        mentors: mentorCount || 0, 
+        mentees: menteeCount || 0, 
+        total: total > 0 ? total : 500 // Fallback to 500 if DB is empty for demo
+      });
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white selection:bg-blue-600 selection:text-white">
       {/* Hero Section */}
@@ -78,8 +104,14 @@ export default function Landing({ isRtl }: LandingProps) {
                     />
                   ))}
                 </div>
-                <div className="text-sm font-bold text-gray-400">
-                  <span className="text-gray-900 font-black">500+</span> {isRtl ? 'מקצוענים כבר כאן' : 'Professionals already here'}
+                <div className="flex flex-col gap-1">
+                  <div className="text-sm font-bold text-gray-400">
+                    <span className="text-gray-900 font-black">{counts.total}+</span> {isRtl ? 'מקצוענים כבר כאן' : 'Professionals already here'}
+                  </div>
+                  <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> {counts.mentors} {isRtl ? 'מנטורים' : 'Mentors'}</span>
+                    <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-600" /> {counts.mentees} {isRtl ? 'מתלמדים' : 'Apprentices'}</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -99,29 +131,7 @@ export default function Landing({ isRtl }: LandingProps) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
-              
-              {/* Floating Elements */}
-              <div className="absolute -top-10 -right-10 bg-white p-6 rounded-[2rem] shadow-2xl border border-gray-50 hidden xl:block animate-bounce-slow">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
-                    <ShieldCheck size={28} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{isRtl ? 'אימות קפדני' : 'Strict Verification'}</p>
-                    <p className="text-lg font-black text-gray-900">100% {isRtl ? 'בטוח' : 'Secure'}</p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Bar */}
-      <section className="py-12 border-y border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-center items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="flex items-center gap-2 font-black text-4xl tracking-tighter">SkillLink<span className="text-blue-600">.</span></div>
           </div>
         </div>
       </section>
@@ -340,13 +350,4 @@ export default function Landing({ isRtl }: LandingProps) {
       </footer>
     </div>
   );
-}
-
-// Helper icons that were missing
-function UserIcon({ size, className }: { size: number, className?: string }) {
-  return <Users size={size} className={className} />;
-}
-
-function Search({ size, className }: { size: number, className?: string }) {
-  return <Globe size={size} className={className} />;
 }

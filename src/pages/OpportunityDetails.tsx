@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight } from 'lucide-react';
+import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -19,6 +20,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [saving, setSaving] = useState(false);
   const [interesting, setInteresting] = useState(false);
   const [matchScore, setMatchScore] = useState<number | null>(null);
+  const [matchBreakdown, setMatchBreakdown] = useState<{
+    location: number;
+    role: number;
+    trust: number;
+    details: string[];
+  } | null>(null);
+  const [showMatchDetails, setShowMatchDetails] = useState(false);
 
   useEffect(() => {
     const fetchOpportunity = async () => {
@@ -46,13 +54,31 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   }, [id, navigate, profile]);
 
   const calculateMatchScore = (userProfile: any, opp: any) => {
-    let score = 0;
+    // If user is owner, it's a perfect match for preview purposes
+    if (userProfile.id === opp.owner_id) {
+      setMatchScore(100);
+      setMatchBreakdown({
+        location: 30,
+        role: 40,
+        trust: 30,
+        details: [isRtl ? 'זה הפוסט שלך!' : 'This is your post!']
+      });
+      return;
+    }
+
+    let locationScore = 0;
+    let roleScore = 0;
+    let trustScore = 0;
+    const details: string[] = [];
     
     // 1. Location match (30%)
     const userCity = (userProfile.city || userProfile.location || '').toLowerCase();
     const oppLocation = (opp.location || '').toLowerCase();
     if (userCity && oppLocation && (userCity.includes(oppLocation) || oppLocation.includes(userCity))) {
-      score += 30;
+      locationScore = 30;
+      details.push(isRtl ? 'מיקום תואם' : 'Matching location');
+    } else {
+      details.push(isRtl ? 'מיקום שונה' : 'Different location');
     }
 
     // 2. Role/Occupation match (40%)
@@ -60,20 +86,48 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     const oppTitle = (opp.title || '').toLowerCase();
     const oppAbout = (opp.about_work || opp.what_i_want_to_learn || '').toLowerCase();
     
+    // Check if roles are complementary (Mentor vs Mentee)
+    const complementaryRoles = (userProfile.role === 'mentor' && opp.type === 'mentee_seeking') || 
+                             (userProfile.role === 'mentee' && opp.type === 'mentor_offer');
+    
+    if (complementaryRoles) {
+      roleScore += 10;
+      details.push(isRtl ? 'תפקידים משלימים (מנטור/מתלמד)' : 'Complementary roles (Mentor/Apprentice)');
+    }
+
     if (userOcc && (oppTitle.includes(userOcc) || oppAbout.includes(userOcc))) {
-      score += 40;
+      roleScore += 30;
+      details.push(isRtl ? 'תחום עיסוק תואם' : 'Matching occupation');
     } else if (userOcc) {
       // Partial match for common keywords
       const keywords = ['חשמל', 'נגר', 'אינסטל', 'קירור', 'מיזוג', 'בנייה', 'עיצוב', 'שיווק', 'מכיר', 'ניהול'];
       const matchedKeywords = keywords.filter(k => userOcc.includes(k) && (oppTitle.includes(k) || oppAbout.includes(k)));
-      if (matchedKeywords.length > 0) score += 25;
+      if (matchedKeywords.length > 0) {
+        roleScore += 20;
+        details.push(isRtl ? 'תחומים קרובים' : 'Related fields');
+      } else {
+        details.push(isRtl ? 'תחומי עיסוק שונים' : 'Different occupations');
+      }
     }
 
     // 3. Verification & Trust (30%)
-    if (userProfile.is_verified) score += 15;
-    if (opp.profiles?.is_verified) score += 15;
+    if (userProfile.is_verified) {
+      trustScore += 15;
+      details.push(isRtl ? 'הפרופיל שלך מאומת' : 'Your profile is verified');
+    }
+    if (opp.profiles?.is_verified) {
+      trustScore += 15;
+      details.push(isRtl ? 'המפרסם מאומת' : 'Poster is verified');
+    }
 
-    setMatchScore(Math.min(100, Math.max(10, score + Math.floor(Math.random() * 15)))); // Add some "smart" randomness
+    const total = locationScore + roleScore + trustScore;
+    setMatchScore(Math.min(100, total));
+    setMatchBreakdown({
+      location: locationScore,
+      role: roleScore,
+      trust: trustScore,
+      details
+    });
   };
 
   useEffect(() => {
@@ -268,46 +322,104 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
             <div className="p-12 space-y-10">
               {matchScore !== null && (
-                <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center gap-6">
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r="36"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="transparent"
-                          className="text-slate-200"
-                        />
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r="36"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="transparent"
-                          strokeDasharray={226.2}
-                          strokeDashoffset={226.2 - (226.2 * matchScore) / 100}
-                          className="text-emerald-500 transition-all duration-1000 ease-out"
-                        />
-                      </svg>
-                      <span className="absolute text-lg font-black text-slate-900">{matchScore}%</span>
+                <div className="space-y-4">
+                  <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-6">
+                      <div className="relative w-20 h-20 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="transparent"
+                            className="text-slate-200"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="transparent"
+                            strokeDasharray={226.2}
+                            strokeDashoffset={226.2 - (226.2 * matchScore) / 100}
+                            className="text-emerald-500 transition-all duration-1000 ease-out"
+                          />
+                        </svg>
+                        <span className="absolute text-lg font-black text-slate-900">{matchScore}%</span>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xl font-black text-slate-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-xl font-black text-slate-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="hidden sm:block">
+                        <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isRtl ? 'סטטוס' : 'Status'}</p>
+                          <p className="text-sm font-black text-emerald-600">
+                            {matchScore > 80 ? (isRtl ? 'התאמה מעולה!' : 'Excellent Match!') : matchScore > 50 ? (isRtl ? 'התאמה טובה' : 'Good Match') : (isRtl ? 'פוטנציאל למידה' : 'Learning Potential')}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setShowMatchDetails(!showMatchDetails)}
+                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
+                      >
+                        <ArrowRight size={20} className={`transition-transform duration-300 ${showMatchDetails ? '-rotate-90' : 'rotate-90'}`} />
+                      </button>
                     </div>
                   </div>
-                  <div className="hidden sm:block">
-                    <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isRtl ? 'סטטוס' : 'Status'}</p>
-                      <p className="text-sm font-black text-emerald-600">
-                        {matchScore > 80 ? (isRtl ? 'התאמה מעולה!' : 'Excellent Match!') : matchScore > 50 ? (isRtl ? 'התאמה טובה' : 'Good Match') : (isRtl ? 'פוטנציאל למידה' : 'Learning Potential')}
-                      </p>
-                    </div>
-                  </div>
+
+                  {showMatchDetails && matchBreakdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="bg-slate-900 text-white rounded-[2rem] p-8 space-y-6 overflow-hidden"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black">{matchBreakdown.location}/30</span>
+                            <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500" style={{ width: `${(matchBreakdown.location / 30) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'תחום ועיסוק' : 'Field & Role'}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black">{matchBreakdown.role}/40</span>
+                            <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500" style={{ width: `${(matchBreakdown.role / 40) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'אמינות' : 'Trust'}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black">{matchBreakdown.trust}/30</span>
+                            <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-orange-500" style={{ width: `${(matchBreakdown.trust / 30) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="pt-6 border-t border-slate-800">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">{isRtl ? 'פירוט נוסף' : 'Additional Details'}</p>
+                        <div className="flex flex-wrap gap-3">
+                          {matchBreakdown.details.map((detail, i) => (
+                            <span key={i} className="px-4 py-2 bg-slate-800 rounded-xl text-[10px] font-bold">
+                              {detail}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               )}
 

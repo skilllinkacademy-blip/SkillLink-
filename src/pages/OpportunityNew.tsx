@@ -62,21 +62,21 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   // Calculate Post Strength
   const postStrength = useMemo(() => {
     let score = 0;
-    if (title.length > 10) score += 15;
+    if (title.length > 5) score += 15;
     if (location.length > 2) score += 10;
     if (type === 'mentor_offer') {
-      if (aboutWork.length > 50) score += 20;
-      if (requirements.length > 20) score += 15;
-      if (menteeWillLearn.length > 50) score += 20;
-      if (whoIWantToTeach.length > 30) score += 10;
+      if (aboutWork.length > 20) score += 20;
+      if (requirements.length > 10) score += 15;
+      if (menteeWillLearn.length > 20) score += 20;
+      if (whoIWantToTeach.length > 10) score += 10;
     } else {
-      if (whatIWantToLearn.length > 50) score += 30;
-      if (experienceNote.length > 20) score += 20;
+      if (whatIWantToLearn.length > 20) score += 30;
+      if (experienceNote.length > 10) score += 20;
       if (availabilityDays.length > 0) score += 15;
     }
-    if (imageFile) score += 10;
+    if (imageFile || imagePreview) score += 10;
     return Math.min(100, score);
-  }, [title, location, aboutWork, requirements, menteeWillLearn, whoIWantToTeach, whatIWantToLearn, experienceNote, availabilityDays, imageFile, type]);
+  }, [title, location, aboutWork, requirements, menteeWillLearn, whoIWantToTeach, whatIWantToLearn, experienceNote, availabilityDays, imageFile, imagePreview, type]);
 
   const strengthLabel = useMemo(() => {
     if (postStrength < 30) return isRtl ? 'התחלה טובה' : 'Good start';
