@@ -46,16 +46,36 @@ export default function MentorVerify({ isRtl }: MentorVerifyProps) {
         .from('mentor_id_docs')
         .getPublicUrl(filePath);
 
-      // 2. Insert or Upsert into mentor_verifications
-      const { error: upsertError } = await supabase
+      // 2. Insert or Update mentor_verifications
+      // Check if exists first to avoid RLS issues with upsert
+      const { data: existing } = await supabase
         .from('mentor_verifications')
-        .upsert({
-          user_id: user.id,
-          document_url: publicUrl,
-          status: 'pending'
-        }, { onConflict: 'user_id' });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (upsertError) throw upsertError;
+      if (existing) {
+        const { error: updateError } = await supabase
+          .from('mentor_verifications')
+          .update({
+            document_url: filePath,
+            status: 'pending',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('mentor_verifications')
+          .insert({
+            user_id: user.id,
+            document_url: filePath,
+            status: 'pending'
+          });
+        
+        if (insertError) throw insertError;
+      }
 
       await refreshProfile();
       setSuccess(true);

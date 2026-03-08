@@ -87,59 +87,59 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
       </div>
 
       {/* Content */}
-      <div className="p-8 flex-1 flex flex-col space-y-6">
-        <div className="flex-1 space-y-4">
-          <div className="space-y-2">
-            <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
+      <div className="p-5 sm:p-8 flex-1 flex flex-col space-y-4 sm:space-y-6">
+        <div className="flex-1 space-y-3 sm:space-y-4">
+          <div className="space-y-1 sm:space-y-2">
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
               {opportunity.title}
             </h3>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                <MapPin size={14} className="text-slate-300" />
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+                <MapPin size={12} sm:size={14} className="text-slate-300" />
                 <span>{opportunity.location || opportunity.profiles?.city || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                <Clock size={14} className="text-slate-300" />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+                <Clock size={12} sm:size={14} className="text-slate-300" />
                 <span>{opportunity.work_hours || (isRtl ? 'גמיש' : 'Flexible')}</span>
               </div>
             </div>
           </div>
 
           {/* Learning Focus / About */}
-          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <GraduationCap size={14} className="text-slate-300" />
+          <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 sm:space-y-2">
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <GraduationCap size={12} sm:size={14} className="text-slate-300" />
               {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
             </div>
-            <p className="text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed">
               {isMentorOffer ? (opportunity.about_work || opportunity.who_i_want_to_teach) : opportunity.what_i_want_to_learn}
             </p>
           </div>
         </div>
 
         {/* Financials */}
-        <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-          <div className="space-y-1">
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'שכר בסיס' : 'Base Pay'}</div>
-            <div className="text-xl font-black text-slate-900 flex items-center gap-1">
-              <DollarSign size={18} className="text-emerald-500" />
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-3 sm:pt-4 border-t border-slate-100">
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'שכר בסיס' : 'Base Pay'}</div>
+            <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
+              <DollarSign size={16} sm:size={18} className="text-emerald-500" />
               {opportunity.pay_amount || opportunity.desired_salary || '---'}
-              <span className="text-[10px] text-slate-400 font-bold">/{opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
-            <div className="text-xl font-black text-slate-900 flex items-center gap-1">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
+            <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse" />
               {isRtl ? 'פעיל' : 'Active'}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+        <div className="pt-4 sm:pt-6 border-t border-slate-100 flex items-center justify-between">
           <div 
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -148,7 +148,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               }
             }}
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-sm overflow-hidden border border-slate-200">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs sm:text-sm overflow-hidden border border-slate-200">
               {opportunity.profiles?.avatar_url ? (
                 <img src={opportunity.profiles.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -156,28 +156,28 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-black text-slate-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <p className="text-xs sm:text-sm font-black text-slate-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
                 {opportunity.profiles?.is_verified && (
-                  <ShieldCheck size={14} className="text-emerald-500 fill-emerald-500/10" />
+                  <ShieldCheck size={12} sm:size={14} className="text-emerald-500 fill-emerald-500/10" />
                 )}
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
+              <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {showActions && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <button 
                   onClick={(e) => { 
                     e.preventDefault(); 
                     e.stopPropagation();
                     navigate(`/app/opportunities/${opportunity.id}/edit`);
                   }}
-                  className="p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                  className="p-2 sm:p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
                 >
-                  <Pencil size={20} />
+                  <Pencil size={18} sm:size={20} />
                 </button>
                 {onDelete && (
                   <button 
@@ -186,15 +186,15 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                       e.stopPropagation();
                       onDelete(opportunity.id); 
                     }}
-                    className="p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-2 sm:p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} sm:size={20} />
                   </button>
                 )}
               </div>
             )}
-            <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
-              <ArrowRight size={24} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
+              <ArrowRight size={20} sm:size={24} />
             </div>
           </div>
         </div>

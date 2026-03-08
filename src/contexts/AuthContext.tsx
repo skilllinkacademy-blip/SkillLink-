@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: user.id,
               username: generatedUsername,
               full_name: metadata.full_name || 'User',
-              role: metadata.role || 'mentee',
+              role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
               city: metadata.city || metadata.location || 'Unknown',
               phone: metadata.phone || '',
               occupation: metadata.occupation,

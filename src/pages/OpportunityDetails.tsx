@@ -138,6 +138,22 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
       const senderName = profile?.full_name || user.user_metadata?.full_name || (isRtl ? 'משתמש' : 'User');
       console.log('Sending interest notification from:', senderName, 'to:', opportunity.owner_id);
       
+      // First check if a notification already exists to avoid duplicates or RLS issues
+      const { data: existingNotif } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', opportunity.owner_id)
+        .eq('sender_id', user.id)
+        .eq('type', 'interest')
+        .eq('link', `/app/opportunities/${opportunity.id}`)
+        .maybeSingle();
+
+      if (existingNotif) {
+        setIsInterested(true);
+        alert(isRtl ? 'כבר הבעת עניין בהזדמנות זו' : 'You have already expressed interest in this opportunity');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -155,6 +171,10 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
       if (error) {
         console.error('Supabase error inserting notification:', error);
+        // If it's an RLS error, we might want to inform the user more clearly
+        if (error.code === '42501') {
+          throw new Error(isRtl ? 'אין לך הרשאות לשלוח התראה זו. אנא פנה לתמיכה.' : 'You do not have permission to send this notification. Please contact support.');
+        }
         throw error;
       }
       

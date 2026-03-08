@@ -122,18 +122,19 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-4">
+          <div className="md:hidden flex items-center gap-3">
             <button 
               onClick={toggleLang}
-              className="flex items-center gap-1 px-2 py-1 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-widest"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-[9px] font-black uppercase tracking-widest bg-gray-50"
             >
+              <Globe size={12} />
               {isRtl ? 'EN' : 'HE'}
             </button>
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-black p-1"
+              className="text-black p-1.5 bg-gray-50 rounded-xl border border-gray-100"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
