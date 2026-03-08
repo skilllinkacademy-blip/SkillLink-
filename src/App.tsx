@@ -231,14 +231,14 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
 
 export default function App() {
   const [isRtl, setIsRtl] = useState(() => {
-    const saved = localStorage.getItem('app_lang_rtl');
+    const saved = localStorage.getItem('skilllink_lang_rtl');
     return saved !== null ? saved === 'true' : true;
   });
 
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = isRtl ? 'he' : 'en';
-    localStorage.setItem('app_lang_rtl', isRtl.toString());
+    localStorage.setItem('skilllink_lang_rtl', isRtl.toString());
   }, [isRtl]);
 
   const toggleLang = () => setIsRtl(!isRtl);

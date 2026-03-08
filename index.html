@@ -1,9 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>SkillLink - ללמוד מהמקצוענים</title>
+    <script>
+      (function() {
+        const saved = localStorage.getItem('skilllink_lang_rtl');
+        const isRtl = saved !== null ? saved === 'true' : true;
+        document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+        document.documentElement.lang = isRtl ? 'he' : 'en';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
