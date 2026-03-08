@@ -249,39 +249,13 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     }
   };
 
+  // Removed blocking logic as requested
   if (authLoading || (user && !profile) || fetching) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin rounded-full" />
           <p className="text-gray-500 font-medium">{isRtl ? 'טוען...' : 'Loading...'}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const isApprentice = profile?.role === 'mentee';
-  const isAdmin = profile?.role === 'admin';
-  const isMentor = profile?.role === 'mentor';
-
-  if (!isApprentice && !isMentor && !isAdmin) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 text-center px-4">
-        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-          <AlertCircle size={40} />
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-black text-gray-900">
-            {isRtl ? 'רק מנטורים מאומתים יכולים לפרסם הצעות' : 'Only verified mentors can post offers'}
-          </h1>
-          <p className="text-gray-500 font-medium max-w-md mx-auto">
-            {isRtl ? 'השלם תהליך אימות מנטור והמתן לאישור מנהל המערכת.' : 'Complete the mentor verification process and wait for admin approval.'}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button onClick={() => navigate(profile?.role === 'mentor' ? '/app/verify' : '/app/opportunities')} className="px-8 py-3 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-gray-800 transition-all active:scale-95">
-            {profile?.role === 'mentor' ? (isRtl ? 'עבור לדף אימות' : 'Go to Verification') : (isRtl ? 'חזרה להזדמנויות' : 'Back to Opportunities')}
-          </button>
         </div>
       </div>
     );
@@ -307,12 +281,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           whileHover={{ y: -8, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { 
-            if (profile?.role !== 'mentor' && profile?.role !== 'admin') return alert(isRtl ? 'רק מנטורים יכולים לפרסם הצעת התלמדות.' : 'Only mentors can post an apprentice offer.');
             setType('mentor_offer'); setStep(2);
           }}
-          className={`group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden ${
-            profile?.role === 'mentor' ? 'border-slate-900 bg-white shadow-2xl shadow-slate-100' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
-          }`}
+          className="group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-slate-900 bg-white shadow-2xl shadow-slate-100"
         >
           <div className="relative z-10 space-y-6">
             <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 ${
@@ -337,12 +308,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           whileHover={{ y: -8, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { 
-            if (profile?.role !== 'mentee') return alert(isRtl ? 'רק מתלמדים יכולים לפרסם בקשת התלמדות.' : 'Only apprentices can post a seeking request.');
             setType('mentee_seeking'); setStep(2); 
           }}
-          className={`group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden ${
-            profile?.role === 'mentee' ? 'border-emerald-600 bg-white shadow-2xl shadow-emerald-100' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
-          }`}
+          className="group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-emerald-600 bg-white shadow-2xl shadow-emerald-100"
         >
           <div className="relative z-10 space-y-6">
             <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 ${
