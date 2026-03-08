@@ -127,7 +127,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             headline: data.headline || '',
             bio: data.bio || '',
             location: data.location || '',
-            city: data.city || '',
+            city: data.location || '',
             phone: data.phone || '',
             occupation: data.occupation || '',
             years_experience: data.years_experience || 0,
@@ -679,9 +679,9 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isMyProfile ? (
                   <input 
                     type="text" 
-                    value={formData.city || formData.location} 
-                    onChange={(e) => setFormData({...formData, city: e.target.value})}
-                    onBlur={() => handleSave('city', formData.city)}
+                    value={formData.location} 
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    onBlur={() => handleSave('location', formData.location)}
                     className="w-full bg-transparent text-center outline-none"
                   />
                 ) : (profile.city || profile.location || '---')}

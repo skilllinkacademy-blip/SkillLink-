@@ -30,7 +30,7 @@ export default function Explore({ isRtl }: ExploreProps) {
       }
 
       if (locationQuery) {
-        query = query.or(`city.ilike.%${locationQuery}%,location.ilike.%${locationQuery}%`);
+        query = query.or(`location.ilike.%${locationQuery}%`);
       }
 
       if (roleFilter !== 'all') {
@@ -234,7 +234,7 @@ export default function Explore({ isRtl }: ExploreProps) {
                   <div className="space-y-4 flex-1">
                     <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                       <MapPin size={14} className="text-slate-300" />
-                      <span>{profile.city || profile.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
+                      <span>{profile.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
                     </div>
                     <p className="text-sm text-slate-600 font-medium line-clamp-3 leading-relaxed">
                       {profile.bio || (isRtl ? 'אין ביוגרפיה עדיין...' : 'No bio yet...')}

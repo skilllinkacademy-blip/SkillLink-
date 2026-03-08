@@ -76,7 +76,7 @@ export default function Auth({ isRtl }: AuthProps) {
             data: {
               full_name: fullName,
               role: role,
-              city: city,
+              location: city,
               phone: phone,
               occupation: role === 'mentor' ? occupation : undefined,
               years_experience: role === 'mentor' ? (parseInt(experience) || 0) : undefined,
