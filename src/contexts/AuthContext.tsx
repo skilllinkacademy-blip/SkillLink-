@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             username: generatedUsername,
             full_name: metadata.full_name || 'User',
             role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
-            location: metadata.city || metadata.location || 'פתח תקווה',
+            location: metadata.location || 'פתח תקווה',
             phone: metadata.phone || '',
             occupation: metadata.occupation,
             years_experience: metadata.years_experience,

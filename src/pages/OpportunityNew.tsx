@@ -97,7 +97,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     if (profile && !isEditing) {
       const defaultType = profile.role === 'mentor' ? 'mentor_offer' : 'mentee_seeking';
       setType(defaultType);
-      setLocation(profile.city || profile.location || '');
+      setLocation(profile.location || '');
     }
   }, [profile, isEditing]);
 

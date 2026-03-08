@@ -28,7 +28,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     headline: '',
     bio: '',
     location: '',
-    city: '',
     phone: '',
     occupation: '',
     years_experience: 0,
@@ -127,7 +126,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             headline: data.headline || '',
             bio: data.bio || '',
             location: data.location || '',
-            city: data.location || '',
             phone: data.phone || '',
             occupation: data.occupation || '',
             years_experience: data.years_experience || 0,
@@ -489,7 +487,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     formData.full_name,
     formData.headline,
     formData.bio,
-    formData.city || formData.location,
+    formData.location,
     formData.occupation,
     profile.avatar_url,
     formData.cover_url,
@@ -684,7 +682,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     onBlur={() => handleSave('location', formData.location)}
                     className="w-full bg-transparent text-center outline-none"
                   />
-                ) : (profile.city || profile.location || '---')}
+                ) : (profile.location || '---')}
               </div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'עיר' : 'City'}</div>
             </div>

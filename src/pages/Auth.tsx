@@ -40,7 +40,7 @@ export default function Auth({ isRtl }: AuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [city, setCity] = useState('');
+  const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [occupation, setOccupation] = useState('');
   const [experience, setExperience] = useState('');
@@ -76,7 +76,7 @@ export default function Auth({ isRtl }: AuthProps) {
             data: {
               full_name: fullName,
               role: role,
-              location: city,
+              location: location,
               phone: phone,
               occupation: role === 'mentor' ? occupation : undefined,
               years_experience: role === 'mentor' ? (parseInt(experience) || 0) : undefined,
@@ -211,8 +211,8 @@ export default function Auth({ isRtl }: AuthProps) {
           type="text"
           required
           placeholder={isRtl ? 'עיר מגורים' : 'City'}
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none"
         />
       </div>
