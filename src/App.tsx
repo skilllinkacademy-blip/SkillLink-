@@ -141,6 +141,14 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             } 
           />
           <Route 
+            path="/app/opportunities/:id/edit" 
+            element={
+              <ProtectedRoute>
+                <OpportunityNew isRtl={isRtl} isEditing={true} />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/app/opportunities/:id" 
             element={
               <ProtectedRoute>

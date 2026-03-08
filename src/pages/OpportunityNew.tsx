@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Presentation, 
   GraduationCap, 
@@ -18,7 +18,8 @@ import {
   Target,
   Zap,
   Users,
-  Briefcase
+  Briefcase,
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
@@ -26,15 +27,18 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface OpportunityNewProps {
   isRtl: boolean;
+  isEditing?: boolean;
 }
 
-export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
+export default function OpportunityNew({ isRtl, isEditing = false }: OpportunityNewProps) {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(isEditing ? 2 : 1);
   const [subStep, setSubStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -90,12 +94,56 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
 
   // Sync type with profile role once loaded
   useEffect(() => {
-    if (profile) {
+    if (profile && !isEditing) {
       const defaultType = profile.role === 'mentor' ? 'mentor_offer' : 'mentee_seeking';
       setType(defaultType);
       setLocation(profile.city || profile.location || '');
     }
-  }, [profile]);
+  }, [profile, isEditing]);
+
+  // Fetch opportunity for editing
+  useEffect(() => {
+    const fetchOpportunity = async () => {
+      if (!isEditing || !id || !user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        if (data.owner_id !== user.id) {
+          navigate('/app/opportunities');
+          return;
+        }
+
+        setType(data.type);
+        setTitle(data.title);
+        setLocation(data.location);
+        setWorkHours(data.work_hours || '');
+        setPayAmount(data.pay_amount?.toString() || '');
+        setPayPeriod(data.pay_period || 'hour');
+        setAboutWork(data.about_work || '');
+        setRequirements(data.requirements || '');
+        setMenteeWillLearn(data.mentee_will_learn || '');
+        setWhoIWantToTeach(data.who_i_want_to_teach || '');
+        setAvailabilityDays(data.availability_days || []);
+        setDesiredSalary(data.desired_salary?.toString() || '');
+        setWhatIWantToLearn(data.what_i_want_to_learn || '');
+        setExperienceNote(data.experience_note || '');
+        setImagePreview(data.image_url);
+      } catch (err: any) {
+        console.error('Error fetching opportunity:', err.message);
+        setError(err.message);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchOpportunity();
+  }, [isEditing, id, user, navigate]);
 
   const daysOfWeek = isRtl 
     ? ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'] 
@@ -117,12 +165,19 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if not on the last sub-step
+    if (subStep < 3) {
+      setSubStep(subStep + 1);
+      return;
+    }
+
     if (!user) return;
     setLoading(true);
     setError(null);
 
     try {
-      let imageUrl = null;
+      let imageUrl = imagePreview;
 
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
@@ -147,31 +202,43 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
         imageUrl = publicUrl;
       }
 
-      const { data, error: insertError } = await supabase
-        .from('opportunities')
-        .insert({
-          owner_id: user.id,
-          type,
-          title,
-          location,
-          work_hours: workHours,
-          pay_amount: payAmount ? (parseFloat(payAmount) || 0) : null,
-          pay_period: payAmount ? payPeriod : null,
-          about_work: type === 'mentor_offer' ? aboutWork : null,
-          requirements: type === 'mentor_offer' ? requirements : null,
-          who_i_want_to_teach: type === 'mentor_offer' ? whoIWantToTeach : null,
-          mentee_will_learn: type === 'mentor_offer' ? menteeWillLearn : null,
-          availability_days: type === 'mentee_seeking' ? availabilityDays : null,
-          desired_salary: type === 'mentee_seeking' ? (parseFloat(desiredSalary) || 0) : null,
-          what_i_want_to_learn: type === 'mentee_seeking' ? whatIWantToLearn : null,
-          experience_note: type === 'mentee_seeking' ? experienceNote : null,
-          image_url: imageUrl
-        })
-        .select()
-        .single();
+      const opportunityData = {
+        owner_id: user.id,
+        type,
+        title,
+        location,
+        work_hours: workHours,
+        pay_amount: payAmount ? (parseFloat(payAmount) || 0) : null,
+        pay_period: payAmount ? payPeriod : null,
+        about_work: type === 'mentor_offer' ? aboutWork : null,
+        requirements: type === 'mentor_offer' ? requirements : null,
+        who_i_want_to_teach: type === 'mentor_offer' ? whoIWantToTeach : null,
+        mentee_will_learn: type === 'mentor_offer' ? menteeWillLearn : null,
+        availability_days: type === 'mentee_seeking' ? availabilityDays : null,
+        desired_salary: type === 'mentee_seeking' ? (parseFloat(desiredSalary) || 0) : null,
+        what_i_want_to_learn: type === 'mentee_seeking' ? whatIWantToLearn : null,
+        experience_note: type === 'mentee_seeking' ? experienceNote : null,
+        image_url: imageUrl
+      };
 
-      if (insertError) throw insertError;
-      navigate(`/app/opportunities/${data.id}`);
+      if (isEditing && id) {
+        const { error: updateError } = await supabase
+          .from('opportunities')
+          .update(opportunityData)
+          .eq('id', id);
+
+        if (updateError) throw updateError;
+        navigate(`/app/opportunities/${id}`);
+      } else {
+        const { data, error: insertError } = await supabase
+          .from('opportunities')
+          .insert(opportunityData)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        navigate(`/app/opportunities/${data.id}`);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -179,7 +246,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
     }
   };
 
-  if (authLoading || (user && !profile)) {
+  if (authLoading || (user && !profile) || fetching) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -532,6 +599,7 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
               type="button" 
               onClick={() => {
                 if (subStep > 1) setSubStep(subStep - 1);
+                else if (isEditing) navigate(-1);
                 else setStep(1);
               }} 
               className="flex items-center gap-2 text-xs font-black text-gray-400 hover:text-black transition-colors uppercase tracking-widest"
@@ -539,10 +607,17 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
               <ArrowLeft size={16} className="rtl:rotate-180" />
               {isRtl ? 'חזרה' : 'Back'}
             </button>
-            <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-              type === 'mentor_offer' ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
-            }`}>
-              {isRtl ? (type === 'mentor_offer' ? 'הצעת מנטור' : 'מתלמד מחפש') : (type === 'mentor_offer' ? 'Mentor Offer' : 'Apprentice Seeking')}
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-black text-slate-900">
+                {isEditing 
+                  ? (isRtl ? 'עריכת הזדמנות' : 'Edit Opportunity')
+                  : (isRtl ? 'פרסום הזדמנות חדשה' : 'Post New Opportunity')}
+              </h2>
+              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                type === 'mentor_offer' ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
+              }`}>
+                {isRtl ? (type === 'mentor_offer' ? 'הצעת מנטור' : 'מתלמד מחפש') : (type === 'mentor_offer' ? 'Mentor Offer' : 'Apprentice Seeking')}
+              </div>
             </div>
           </div>
 
@@ -585,8 +660,10 @@ export default function OpportunityNew({ isRtl }: OpportunityNewProps) {
                       <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
                     ) : (
                       <>
-                        {isRtl ? 'פרסם הזדמנות' : 'Post Opportunity'}
-                        <ArrowRight size={20} className="rtl:rotate-180 group-hover:translate-x-1 transition-transform" />
+                        {isEditing 
+                          ? (isRtl ? 'שמור שינויים' : 'Save Changes')
+                          : (isRtl ? 'פרסם הזדמנות' : 'Post Opportunity')}
+                        {isEditing ? <Save size={20} /> : <ArrowRight size={20} className="rtl:rotate-180 group-hover:translate-x-1 transition-transform" />}
                       </>
                     )}
                   </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -472,28 +472,40 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
             
             <div className="space-y-4 pt-4">
-              <button 
-                onClick={handleInterested}
-                disabled={interesting || isInterested || user?.id === opportunity.owner_id}
-                className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                  isInterested 
-                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
-                    : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
-                }`}
-              >
-                {isInterested ? <ShieldCheck size={18} /> : <Heart size={18} />}
-                {isInterested 
-                  ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent') 
-                  : (isRtl ? 'אני מעוניין!' : "I'm Interested!")}
-              </button>
+              {user?.id === opportunity.owner_id ? (
+                <button 
+                  onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
+                  className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <Pencil size={18} />
+                  {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
+                </button>
+              ) : (
+                <>
+                  <button 
+                    onClick={handleInterested}
+                    disabled={interesting || isInterested || user?.id === opportunity.owner_id}
+                    className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+                      isInterested 
+                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
+                        : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
+                    }`}
+                  >
+                    {isInterested ? <ShieldCheck size={18} /> : <Heart size={18} />}
+                    {isInterested 
+                      ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent') 
+                      : (isRtl ? 'אני מעוניין!' : "I'm Interested!")}
+                  </button>
 
-              <button 
-                onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
-                className="w-full bg-white text-slate-900 border-2 border-slate-900 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
-              >
-                <MessageSquare size={18} />
-                {isRtl ? 'שלח הודעה' : 'Send Message'}
-              </button>
+                  <button 
+                    onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
+                    className="w-full bg-white text-slate-900 border-2 border-slate-900 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    <MessageSquare size={18} />
+                    {isRtl ? 'שלח הודעה' : 'Send Message'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

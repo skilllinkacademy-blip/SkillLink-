@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight, Pencil } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Opportunity {
@@ -190,13 +190,31 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
           </div>
 
           <div className="flex items-center gap-2">
-            {showActions && onDelete && (
-              <button 
-                onClick={(e) => { e.preventDefault(); onDelete(opportunity.id); }}
-                className="p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-              >
-                <Trash2 size={20} />
-              </button>
+            {showActions && (
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation();
+                    navigate(`/app/opportunities/${opportunity.id}/edit`);
+                  }}
+                  className="p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                >
+                  <Pencil size={20} />
+                </button>
+                {onDelete && (
+                  <button 
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation();
+                      onDelete(opportunity.id); 
+                    }}
+                    className="p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+              </div>
             )}
             <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
               <ArrowRight size={24} />
