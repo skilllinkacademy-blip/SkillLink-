@@ -51,12 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', 'initial_setup')
         .maybeSingle();
       
-      if (error || !data) {
+      if (error) {
+        console.error('AuthContext: Database check error:', error);
+        setDbError('DATABASE_SETUP_REQUIRED');
+      } else if (!data) {
+        console.warn('AuthContext: initial_setup record missing in schema_migrations');
         setDbError('DATABASE_SETUP_REQUIRED');
       } else {
         setDbError(null);
       }
     } catch (err) {
+      console.error('AuthContext: Unexpected error during DB check:', err);
       setDbError('DATABASE_SETUP_REQUIRED');
     }
   };
@@ -130,54 +135,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) return;
     
     try {
+      console.log('AuthContext: Ensuring profile for user:', user.id);
       // Check if profile exists
       const { data: existing, error: fetchError } = await supabase
         .from('profiles')
         .select('id, username')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-          // Profile doesn't exist, create it
-          const metadata = user.user_metadata;
-          const generatedUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
-          
-          const { data: newProfile, error: upsertError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: user.id,
-              username: generatedUsername,
-              full_name: metadata.full_name || 'User',
-              role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
-              city: metadata.city || metadata.location || 'Unknown',
-              phone: metadata.phone || '',
-              occupation: metadata.occupation,
-              years_experience: metadata.years_experience,
-              workload: metadata.workload,
-              updated_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (upsertError) {
-             if (upsertError.message.includes('profiles')) {
-               setDbError('DATABASE_SETUP_REQUIRED');
-             }
-             throw upsertError;
-          }
-          setProfile(newProfile);
-        } else if (fetchError.message.includes('profiles')) {
+        console.error('AuthContext: Error fetching profile:', fetchError);
+        if (fetchError.message.includes('profiles')) {
           setDbError('DATABASE_SETUP_REQUIRED');
-          throw fetchError;
-        } else {
-          throw fetchError;
         }
-      } else if (existing) {
+        return;
+      }
+
+      if (!existing) {
+        console.log('AuthContext: Profile not found, creating...');
+        // Profile doesn't exist, create it
+        const metadata = user.user_metadata || {};
+        const generatedUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
+        
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            username: generatedUsername,
+            full_name: metadata.full_name || 'User',
+            role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
+            city: metadata.city || metadata.location || 'פתח תקווה',
+            phone: metadata.phone || '',
+            occupation: metadata.occupation,
+            years_experience: metadata.years_experience,
+            workload: metadata.workload,
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('AuthContext: Error inserting profile:', insertError);
+          if (insertError.message.includes('profiles')) {
+            setDbError('DATABASE_SETUP_REQUIRED');
+          }
+          throw insertError;
+        }
+        console.log('AuthContext: Profile created successfully');
+        setProfile(newProfile);
+      } else {
+        console.log('AuthContext: Profile exists, fetching full data...');
         await fetchProfile(user.id);
       }
     } catch (err: any) {
-      console.error('AuthContext: Error ensuring profile:', err.message);
+      console.error('AuthContext: Error in ensureProfile:', err.message);
     }
   };
 

@@ -1,7 +1,3 @@
--- SkillLink MASTER RESET SCHEMA
--- This script will drop all existing tables and recreate them perfectly.
--- WARNING: This will delete all existing data in the public schema.
-
 -- 0. Cleanup
 DROP TABLE IF EXISTS public.saved_opportunities CASCADE;
 DROP TABLE IF EXISTS public.notifications CASCADE;
@@ -159,6 +155,8 @@ CREATE POLICY "Anyone can insert notifications" ON public.notifications FOR INSE
 CREATE POLICY "Users can manage saved opportunities" ON public.saved_opportunities FOR ALL USING (auth.uid() = user_id);
 
 -- 9. Functions & Triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -194,6 +192,13 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('opportunities_images', '
 INSERT INTO storage.buckets (id, name, public) VALUES ('mentor_id_docs', 'mentor_id_docs', false) ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies
+DROP POLICY IF EXISTS "Avatar images are publicly accessible" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Opportunity images are publicly accessible" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload opportunity images" ON storage.objects;
+DROP POLICY IF EXISTS "Mentor ID upload" ON storage.objects;
+DROP POLICY IF EXISTS "Mentor ID read own or admin" ON storage.objects;
+
 CREATE POLICY "Avatar images are publicly accessible" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
 CREATE POLICY "Users can upload own avatar" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
 
