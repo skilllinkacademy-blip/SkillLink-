@@ -304,38 +304,38 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
   return (
-    <div className="h-[calc(100vh-8rem)] bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden flex">
+    <div className="h-[calc(100vh-8rem)] bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden flex animate-in fade-in duration-500">
       {/* Sidebar: Chat List */}
-      <div className={`w-full md:w-80 lg:w-96 border-r border-gray-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-6 border-b border-gray-100 space-y-4">
-          <h1 className="text-2xl font-black text-black">{isRtl ? 'הודעות' : 'Messages'}</h1>
+      <div className={`w-full md:w-80 lg:w-96 border-r border-slate-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-8 border-b border-slate-100 space-y-6">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'הודעות' : 'Messages'}</h1>
           <div className="relative group">
-            <Search className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors`} size={18} />
+            <Search className={`absolute ${isRtl ? 'right-5' : 'left-5'} top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors`} size={18} />
             <input 
               type="text" 
               placeholder={isRtl ? 'חפש הודעות...' : 'Search messages...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black transition-all font-medium text-sm`}
+              className={`w-full ${isRtl ? 'pr-14 pl-5' : 'pl-14 pr-5'} py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-slate-900 transition-all font-bold text-sm outline-none shadow-inner`}
             />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
           {loading ? (
-            <div className="p-8 space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex gap-4 animate-pulse">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl" />
-                  <div className="flex-1 space-y-2 py-1">
-                    <div className="h-4 bg-gray-100 rounded w-1/2" />
-                    <div className="h-3 bg-gray-50 rounded w-3/4" />
+            <div className="p-8 space-y-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex gap-5 animate-pulse">
+                  <div className="w-14 h-14 bg-slate-100 rounded-2xl" />
+                  <div className="flex-1 space-y-3 py-1">
+                    <div className="h-4 bg-slate-100 rounded-lg w-1/2" />
+                    <div className="h-3 bg-slate-50 rounded-lg w-3/4" />
                   </div>
                 </div>
               ))}
             </div>
           ) : filteredConversations.length > 0 ? (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-slate-50">
               {filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
@@ -343,46 +343,49 @@ export default function Messaging({ isRtl }: MessagingProps) {
                     setSelectedConversationId(conv.id);
                     setSelectedOtherUserId(conv.other_user?.id || null);
                   }}
-                  className={`w-full p-4 flex gap-4 hover:bg-gray-50 transition-all text-start relative ${
-                    selectedConversationId === conv.id ? 'bg-blue-50/50' : ''
+                  className={`w-full p-6 flex gap-5 hover:bg-slate-50 transition-all text-start relative group ${
+                    selectedConversationId === conv.id ? 'bg-slate-50' : ''
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-black relative shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xl relative shrink-0 overflow-hidden border border-slate-200 group-hover:scale-105 transition-transform">
                     {conv.other_user?.avatar_url ? (
-                      <img src={conv.other_user.avatar_url} alt={conv.other_user.full_name} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
+                      <img src={conv.other_user.avatar_url} alt={conv.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       conv.other_user?.full_name?.charAt(0) || 'U'
                     )}
                     {conv.unread_count > 0 && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-900 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
                         {conv.unread_count}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-gray-900 truncate">{conv.other_user?.full_name}</h4>
+                      <h4 className="font-black text-slate-900 truncate text-lg">{conv.other_user?.full_name}</h4>
                       {conv.last_message_at && (
-                        <span className="text-[10px] text-gray-400 font-bold uppercase">
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
                           {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 font-medium truncate mt-0.5">
+                    <p className={`text-xs font-bold truncate mt-1 ${conv.unread_count > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
                       {conv.last_message || (isRtl ? 'התחל שיחה...' : 'Start a conversation...')}
                     </p>
                   </div>
+                  {selectedConversationId === conv.id && (
+                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} bottom-0 w-1 bg-slate-900`} />
+                  )}
                 </button>
               ))}
             </div>
           ) : (
-            <div className="p-12 text-center space-y-6">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <MessageSquare className="text-gray-200" size={32} />
+            <div className="p-16 text-center space-y-8">
+              <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner border border-slate-100">
+                <MessageSquare className="text-slate-200" size={32} />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-black text-black">{isRtl ? 'אין הודעות' : 'No messages yet'}</h3>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
+              <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">{isRtl ? 'אין הודעות' : 'No messages yet'}</h3>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed max-w-[200px] mx-auto">
                   {isRtl ? 'התחבר למנטורים או מתלמדים כדי להתחיל שיחה.' : 'Connect with mentors or apprentices to start a conversation.'}
                 </p>
               </div>
@@ -392,15 +395,15 @@ export default function Messaging({ isRtl }: MessagingProps) {
       </div>
 
       {/* Main: Chat Interface */}
-      <div className={`flex-1 flex flex-col bg-gray-50/30 ${!selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col bg-slate-50/30 ${!selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
         {!selectedConversationId ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-8">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-xl">
-              <MessageSquare className="text-gray-200" size={48} />
+          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-10">
+            <div className="w-32 h-32 bg-white rounded-[3rem] flex items-center justify-center shadow-2xl border border-slate-100 animate-in zoom-in duration-700">
+              <MessageSquare className="text-slate-100" size={64} strokeWidth={1} />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-black text-black tracking-tight">{isRtl ? 'בחר שיחה' : 'Select a conversation'}</h2>
-              <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
+            <div className="space-y-4">
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight">{isRtl ? 'בחר שיחה' : 'Select a conversation'}</h2>
+              <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed text-lg">
                 {isRtl 
                   ? 'בחר צ׳אט מהרשימה כדי להתחיל להתכתב. השיחות שלך פרטיות ומאובטחות.' 
                   : 'Choose a chat from the sidebar to start messaging. Your conversations are private and secure.'}
@@ -410,9 +413,9 @@ export default function Messaging({ isRtl }: MessagingProps) {
         ) : (
           <>
             {/* Chat Header */}
-            <div className="px-8 py-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm">
+            <div className="px-10 py-6 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-10">
               <div 
-                className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-5 cursor-pointer group/header"
                 onClick={() => {
                   if (selectedConversation?.other_user?.username) {
                     navigate(`/app/u/${selectedConversation.other_user.username}`);
@@ -424,11 +427,11 @@ export default function Messaging({ isRtl }: MessagingProps) {
                     e.stopPropagation();
                     setSelectedConversationId(null);
                   }} 
-                  className="md:hidden p-2 -ml-2 text-gray-400 hover:text-black"
+                  className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900 transition-colors"
                 >
-                  <ArrowLeft size={20} className="rtl:rotate-180" />
+                  <ArrowLeft size={24} className="rtl:rotate-180" />
                 </button>
-                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white font-black overflow-hidden">
+                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-xl overflow-hidden shadow-lg group-hover/header:scale-105 transition-transform border border-slate-800">
                   {selectedConversation?.other_user?.avatar_url ? (
                     <img src={selectedConversation.other_user.avatar_url} alt={selectedConversation.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -436,22 +439,25 @@ export default function Messaging({ isRtl }: MessagingProps) {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-black">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</h3>
-                  <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Online</p>
+                  <h3 className="text-xl font-black text-slate-900 group-hover/header:text-emerald-600 transition-colors">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-200" />
+                    <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Online</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-50 rounded-xl transition-all text-gray-400 hover:text-black">
+              <div className="flex items-center gap-3">
+                <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
                   <Info size={20} />
                 </button>
-                <button className="p-2 hover:bg-gray-50 rounded-xl transition-all text-gray-400 hover:text-black">
+                <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
                   <MoreHorizontal size={20} />
                 </button>
               </div>
             </div>
 
             {/* Chat Messages Area */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar bg-slate-50/50">
               {messages.map((msg, idx) => {
                 const isOwn = msg.sender_id === user?.id;
                 const showDate = idx === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[idx-1].created_at).toDateString();
@@ -459,25 +465,29 @@ export default function Messaging({ isRtl }: MessagingProps) {
                 return (
                   <React.Fragment key={msg.id}>
                     {showDate && (
-                      <div className="flex justify-center">
-                        <span className="px-3 py-1 bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-full">
-                          {new Date(msg.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      <div className="flex justify-center py-4">
+                        <span className="px-4 py-1.5 bg-white border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] rounded-full shadow-sm">
+                          {new Date(msg.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </div>
                     )}
-                    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] space-y-1 ${isOwn ? 'items-end' : 'items-start'}`}>
-                        <div className={`px-5 py-3 rounded-2xl text-sm font-medium shadow-sm ${
-                          isOwn ? 'bg-black text-white rounded-tr-none' : 'bg-white text-gray-900 rounded-tl-none'
+                    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                      <div className={`max-w-[75%] space-y-2 ${isOwn ? 'items-end' : 'items-start'}`}>
+                        <div className={`px-6 py-4 rounded-[2rem] text-sm font-medium shadow-sm border ${
+                          isOwn 
+                            ? 'bg-slate-900 text-white border-slate-800 rounded-tr-none' 
+                            : 'bg-white text-slate-900 border-slate-100 rounded-tl-none'
                         }`}>
                           {renderMessageContent(msg.content)}
                         </div>
-                        <div className={`flex items-center gap-1.5 px-1 ${isOwn ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-[9px] text-gray-400 font-bold">
+                        <div className={`flex items-center gap-2 px-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
+                          <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isOwn && (
-                            msg.is_read ? <CheckCheck size={12} className="text-blue-500" /> : <Check size={12} className="text-gray-300" />
+                            msg.is_read 
+                              ? <CheckCheck size={14} className="text-emerald-500" /> 
+                              : <Check size={14} className="text-slate-300" />
                           )}
                         </div>
                       </div>
@@ -489,9 +499,9 @@ export default function Messaging({ isRtl }: MessagingProps) {
             </div>
 
             {/* Chat Input Area */}
-            <div className="p-8 bg-white border-t border-gray-100">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-transparent focus-within:border-black transition-all shadow-inner">
-                <label className="p-3 hover:bg-white rounded-xl transition-all text-gray-400 hover:text-black shadow-sm cursor-pointer">
+            <div className="p-10 bg-white border-t border-slate-100">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-5 bg-slate-50 p-3 rounded-[2.5rem] border-2 border-transparent focus-within:border-slate-900 focus-within:bg-white transition-all shadow-inner group">
+                <label className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl transition-all text-slate-400 hover:text-slate-900 shadow-sm cursor-pointer border border-slate-100 hover:border-slate-900">
                   <Image size={20} />
                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={sending} />
                 </label>
@@ -500,15 +510,15 @@ export default function Messaging({ isRtl }: MessagingProps) {
                   placeholder={isRtl ? 'הקלד הודעה...' : 'Type a message...'}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 bg-transparent border-none focus:ring-0 font-medium text-black"
+                  className="flex-1 bg-transparent border-none focus:ring-0 font-bold text-slate-900 placeholder:text-slate-300 text-lg outline-none"
                   disabled={sending}
                 />
                 <button 
                   type="submit"
                   disabled={!newMessage.trim() || sending}
-                  className="p-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                  className="w-12 h-12 flex items-center justify-center bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:bg-slate-200"
                 >
-                  <Send size={20} />
+                  <Send size={20} className={isRtl ? 'rotate-180' : ''} />
                 </button>
               </form>
             </div>

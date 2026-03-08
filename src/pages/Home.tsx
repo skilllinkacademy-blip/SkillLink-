@@ -4,6 +4,7 @@ import { Plus, Briefcase, MessageSquare, Search, Filter, MapPin, Clock, DollarSi
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
+import RadarMap from '../components/RadarMap';
 
 interface HomeProps {
   isRtl: boolean;
@@ -50,57 +51,63 @@ export default function Home({ isRtl }: HomeProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-            {isRtl ? 'הזדמנויות בקהילה' : 'Community Opportunities'}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
+            Professional Network
+          </div>
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">
+            {isRtl ? 'זירת ההתמחות' : 'The Apprenticeship Arena'}
           </h1>
-          <p className="text-gray-500 font-medium">
-            {isRtl ? 'מצא את המנטור הבא שלך או מתלמד שרוצה ללמוד.' : 'Find your next mentor or an apprentice eager to learn.'}
+          <p className="text-slate-500 font-medium text-lg">
+            {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Master or a serious Apprentice to build your professional future.'}
           </p>
         </div>
         <Link 
           to="/app/opportunities/new"
-          className="px-8 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-gray-800 transition-all active:scale-95 flex items-center gap-2"
+          className="px-10 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3"
         >
-          <Plus size={20} />
-          {isRtl ? 'פרסם הזדמנות' : 'Post Opportunity'}
+          <Plus size={24} />
+          {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
         </Link>
       </div>
 
+      {/* Radar Map Section */}
+      <RadarMap isRtl={isRtl} opportunities={opportunities} />
+
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" size={20} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={24} />
           <input 
             type="text" 
-            placeholder={isRtl ? 'חפש לפי מקצוע, עיר או כותרת...' : 'Search by trade, city, or title...'}
+            placeholder={isRtl ? 'חפש מקצוע, מיקום או מיומנות...' : 'Search trade, location, or skill...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-2 focus:ring-black transition-all font-medium shadow-sm"
+            className="w-full pl-14 pr-6 py-5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all font-medium shadow-sm outline-none"
           />
         </div>
-        <div className="flex p-1 bg-gray-100 rounded-2xl">
+        <div className="flex p-1.5 bg-slate-200/50 rounded-2xl border border-slate-200">
           <button
             onClick={() => setFilter('all')}
-            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-              filter === 'all' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              filter === 'all' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {isRtl ? 'הכל' : 'All'}
           </button>
           <button
             onClick={() => setFilter('mentor_offer')}
-            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-              filter === 'mentor_offer' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              filter === 'mentor_offer' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            {isRtl ? 'מנטורים' : 'Mentors'}
+            {isRtl ? 'מנטורים' : 'Masters'}
           </button>
           <button
             onClick={() => setFilter('mentee_seeking')}
-            className={`px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-              filter === 'mentee_seeking' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              filter === 'mentee_seeking' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {isRtl ? 'מתלמדים' : 'Apprentices'}
@@ -112,7 +119,7 @@ export default function Home({ isRtl }: HomeProps) {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="h-96 bg-gray-50 rounded-3xl animate-pulse border border-gray-100" />
+            <div key={i} className="h-96 bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
           ))}
         </div>
       ) : opportunities.length > 0 ? (
@@ -128,23 +135,23 @@ export default function Home({ isRtl }: HomeProps) {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] border-2 border-dashed border-gray-100 p-24 text-center space-y-8 shadow-sm">
-          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <Briefcase className="text-gray-200" size={48} />
+        <div className="industrial-card p-24 text-center space-y-8">
+          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
+            <Briefcase className="text-slate-200" size={48} />
           </div>
           <div className="space-y-3">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
               {isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}
             </h2>
-            <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
-              {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה שלך!' : 'Be the first to post an opportunity in your community!'}
+            <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+              {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה המקצועית שלך!' : 'Be the first to post an opportunity in your professional community!'}
             </p>
           </div>
           <Link 
             to="/app/opportunities/new"
-            className="px-10 py-4 bg-black text-white rounded-full font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-gray-800 transition-all active:scale-95 flex items-center gap-2 mx-auto inline-flex"
+            className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
           >
-            <Plus size={20} />
+            <Plus size={24} />
             {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
           </Link>
         </div>

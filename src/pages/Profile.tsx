@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -39,7 +39,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     who_i_want_to_teach: '',
     availability_days: [] as string[],
     portfolio_urls: [] as string[],
-    cover_url: ''
+    cover_url: '',
+    skills: [] as { name: string; level: string; verified: boolean; verified_by?: string }[]
   });
 
   const [activeTab, setActiveTab] = useState<'about' | 'saved' | 'reviews'>('about');
@@ -127,7 +128,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             who_i_want_to_teach: data.who_i_want_to_teach || '',
             availability_days: data.availability_days || [],
             portfolio_urls: data.portfolio_urls || [],
-            cover_url: data.cover_url || ''
+            cover_url: data.cover_url || '',
+            skills: data.skills || []
           });
           fetchReviews(data.id);
         }
@@ -436,6 +438,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     }
   };
 
+  const masteryLevel = useMemo(() => {
+    if (!profile) return '';
+    if (profile.role === 'mentor') return isRtl ? 'מנטור מומחה' : 'Master Mentor';
+    const verifiedSkills = (formData.skills || []).filter(s => s.verified).length;
+    if (verifiedSkills >= 5) return isRtl ? 'בעל מקצוע (Journeyman)' : 'Journeyman';
+    if (verifiedSkills >= 2) return isRtl ? 'מתלמד שנה ב\'' : 'Year 2 Apprentice';
+    return isRtl ? 'מתלמד מתחיל' : 'Junior Apprentice';
+  }, [profile?.role, formData.skills, isRtl]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -492,40 +503,39 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      {isMyProfile && completionPercentage < 100 && (
-        <div className="bg-blue-600 text-white p-6 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="space-y-1 text-center md:text-start relative z-10">
-            <h3 className="text-xl font-black flex items-center gap-2 justify-center md:justify-start">
-              <Star className="text-yellow-400 fill-yellow-400 animate-bounce" size={24} />
-              {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
-            </h3>
-            <p className="text-blue-100 font-medium">{isRtl ? 'פרופיל מלא עוזר לך לקבל יותר פניות והצעות.' : 'A complete profile helps you get more inquiries and offers.'}</p>
-          </div>
-          <div className="flex items-center gap-6 w-full md:w-auto relative z-10">
-            <div className="flex-1 md:w-48 h-3 bg-blue-400/30 rounded-full overflow-hidden border border-white/10">
-              <div className="h-full bg-white transition-all duration-1000" style={{ width: `${completionPercentage}%` }} />
+      {/* Mastery Journey Indicator */}
+      <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-white/10">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-2 text-center md:text-start">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+              <ShieldCheck size={12} />
+              {isRtl ? 'סטטוס מקצועי מאומת' : 'Verified Professional Status'}
             </div>
-            <span className="font-black text-2xl">{completionPercentage}%</span>
+            <h2 className="text-4xl font-black tracking-tight">{masteryLevel}</h2>
+            <p className="text-slate-400 font-medium text-lg">
+              {isMentor 
+                ? (isRtl ? 'מכשיר את דור העתיד של בעלי המקצוע בישראל.' : 'Training the next generation of Israeli tradespeople.') 
+                : (isRtl ? 'בדרך להפוך לבעל מקצוע עצמאי ומיומן.' : 'On the path to becoming a skilled independent professional.')}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-8 w-full md:w-auto">
+            <div className="flex-1 md:w-64 space-y-3">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <span>{isRtl ? 'התקדמות למאסטרי' : 'Mastery Progress'}</span>
+                <span>{isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%`}</span>
+              </div>
+              <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-white/5 p-1">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
+                  style={{ width: isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%` }} 
+                />
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
-      {isMyProfile && completionPercentage === 100 && (
-        <div className="bg-emerald-600 text-white p-6 rounded-[2.5rem] shadow-xl flex items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <ShieldCheck size={28} />
-            </div>
-            <div>
-              <h3 className="text-xl font-black">{isRtl ? 'פרופיל מושלם!' : 'Perfect Profile!'}</h3>
-              <p className="text-emerald-100 font-medium">{isRtl ? 'אתה נראה מקצוען אמיתי. עכשיו כולם יכולים להכיר אותך.' : 'You look like a true pro. Now everyone can get to know you.'}</p>
-            </div>
-          </div>
-          <Star className="text-yellow-400 fill-yellow-400 hidden md:block" size={32} />
-        </div>
-      )}
+      </div>
 
       {/* Header Card */}
       <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-xl">
@@ -779,6 +789,114 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     <p className="text-gray-500 font-medium leading-relaxed">
                       {(isMentor ? profile.who_i_want_to_teach : profile.what_i_want_to_learn) || (isRtl ? 'עדיין לא נוסף מידע.' : 'No information added yet.')}
                     </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Trade Passport / Skills */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-10 shadow-sm space-y-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 -z-10" />
+                
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
+                      Official Document
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 flex items-center gap-3">
+                      <Briefcase size={32} className="text-slate-900" />
+                      {isRtl ? 'דרכון מקצועי' : 'Trade Passport'}
+                    </h2>
+                    <p className="text-slate-500 font-medium max-w-md">
+                      {isRtl ? 'ריכוז מיומנויות טכניות שאומתו בשטח על ידי מנטורים מוסמכים.' : 'A collection of technical competencies verified in the field by certified mentors.'}
+                    </p>
+                  </div>
+                  {isMyProfile && (
+                    <button 
+                      onClick={() => {
+                        const name = prompt(isRtl ? 'שם המיומנות:' : 'Skill Name:');
+                        if (name) {
+                          const newSkills = [...(formData.skills || []), { name, level: 'Level 1', verified: false }];
+                          setFormData({ ...formData, skills: newSkills });
+                          handleSave('skills', newSkills);
+                        }
+                      }}
+                      className="p-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {formData.skills && formData.skills.length > 0 ? (
+                    formData.skills.map((skill, i) => (
+                      <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-xl hover:border-emerald-200 transition-all duration-500">
+                        <div className="flex items-center gap-5">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${skill.verified ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                            {skill.verified ? <ShieldCheck size={28} /> : <Hammer size={28} />}
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-900 text-lg">{skill.name}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-200/50 px-2 py-0.5 rounded-md">{skill.level}</span>
+                              {skill.verified && (
+                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                  {isRtl ? 'מאומת בשטח' : 'Field Verified'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {isMyProfile ? (
+                          <button 
+                            onClick={() => {
+                              const newSkills = formData.skills.filter((_, idx) => idx !== i);
+                              setFormData({ ...formData, skills: newSkills });
+                              handleSave('skills', newSkills);
+                            }}
+                            className="p-2 text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        ) : (
+                          myProfile?.role === 'mentor' && !skill.verified && (
+                            <button 
+                              onClick={async () => {
+                                if (!user) return;
+                                const newSkills = [...formData.skills];
+                                newSkills[i] = { ...newSkills[i], verified: true, verified_by: user.id };
+                                
+                                const { error } = await supabase
+                                  .from('profiles')
+                                  .update({ skills: newSkills })
+                                  .eq('id', profile.id);
+                                
+                                if (error) {
+                                  alert(isRtl ? 'שגיאה בעדכון הפרופיל.' : 'Error updating profile.');
+                                } else {
+                                  setFormData({ ...formData, skills: newSkills });
+                                  alert(isRtl ? 'המיומנות אומתה בהצלחה!' : 'Skill verified successfully!');
+                                }
+                              }}
+                              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-1.5"
+                            >
+                              <ShieldCheck size={12} />
+                              {isRtl ? 'אמת מיומנות' : 'Verify Skill'}
+                            </button>
+                          )
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-16 text-center space-y-4 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                        <Hammer className="text-slate-200" size={40} />
+                      </div>
+                      <p className="text-slate-400 font-bold text-lg">
+                        {isRtl ? 'טרם נוספו מיומנויות לדרכון המקצועי.' : 'No skills recorded in the trade passport yet.'}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

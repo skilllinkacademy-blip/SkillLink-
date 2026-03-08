@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Opportunity {
   id: string;
@@ -39,84 +40,127 @@ interface OpportunityCardProps {
 export default function OpportunityCard({ opportunity, isRtl, onDelete, showActions, currentUserId }: OpportunityCardProps) {
   const isMentorOffer = opportunity.type === 'mentor_offer';
   const navigate = useNavigate();
+  const { profile: myProfile } = useAuth();
+
+  const matchScore = useMemo(() => {
+    if (!myProfile) return 0;
+    let score = 0;
+    
+    // Location match
+    if (opportunity.location === myProfile.city || opportunity.location === myProfile.location) {
+      score += 35;
+    } else if (opportunity.location?.includes(myProfile.city || '') || (myProfile.city && opportunity.location?.includes(myProfile.city))) {
+      score += 20;
+    }
+
+    // Role alignment
+    if (opportunity.type === 'mentor_offer' && myProfile.role === 'mentee') score += 25;
+    if (opportunity.type === 'mentee_seeking' && myProfile.role === 'mentor') score += 25;
+
+    // Occupation match
+    if (myProfile.occupation && (
+      opportunity.title.toLowerCase().includes(myProfile.occupation.toLowerCase()) ||
+      opportunity.about_work?.toLowerCase().includes(myProfile.occupation.toLowerCase())
+    )) {
+      score += 30;
+    }
+
+    // Verified bonus
+    if (opportunity.profiles?.is_verified) score += 10;
+
+    return Math.min(100, score);
+  }, [opportunity, myProfile]);
 
   return (
     <Link 
       to={`/app/opportunities/${opportunity.id}`}
-      className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-2xl transition-all group flex flex-col h-full relative block"
+      className="industrial-card group flex flex-col h-full relative block overflow-hidden"
     >
       {/* Image Header */}
-      <div className="h-56 bg-gray-50 relative overflow-hidden">
+      <div className="h-64 bg-slate-100 relative overflow-hidden">
         {opportunity.image_url ? (
           <img 
             src={opportunity.image_url} 
             alt={opportunity.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
-            {isMentorOffer ? <Briefcase size={64} strokeWidth={1.5} /> : <GraduationCap size={64} strokeWidth={1.5} />}
+          <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
+            {isMentorOffer ? <Briefcase size={80} strokeWidth={1} /> : <GraduationCap size={80} strokeWidth={1} />}
           </div>
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
 
         {/* Type Badge */}
-        <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg backdrop-blur-md ${
-          isMentorOffer ? 'bg-blue-600/90 text-white' : 'bg-emerald-600/90 text-white'
+        <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
+          isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
         }`}>
-          {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Mentor Offer' : 'Apprentice Seeking')}
+          {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Master Offer' : 'Apprentice Seeking')}
         </div>
+
+        {/* Match Score Badge */}
+        {matchScore > 0 && (
+          <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-2 rounded-lg bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-2 border border-slate-200 animate-in zoom-in duration-500`}>
+            <Zap size={12} className="text-emerald-500 fill-emerald-500" />
+            <span>{isRtl ? 'התאמה' : 'Match'} {matchScore}%</span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="p-8 flex-1 flex flex-col">
-        <div className="flex-1 space-y-6">
+      <div className="p-8 flex-1 flex flex-col space-y-6">
+        <div className="flex-1 space-y-4">
           <div className="space-y-2">
-            <h3 className="text-2xl font-black text-gray-900 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+            <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
               {opportunity.title}
             </h3>
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                <MapPin size={14} />
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                <MapPin size={14} className="text-slate-300" />
                 <span>{opportunity.location || opportunity.profiles?.city || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                <Clock size={14} />
+              <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                <Clock size={14} className="text-slate-300" />
                 <span>{opportunity.work_hours || (isRtl ? 'גמיש' : 'Flexible')}</span>
               </div>
-              {opportunity.availability_days && (
-                <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>
-                    {Array.isArray(opportunity.availability_days) 
-                      ? opportunity.availability_days.join(', ') 
-                      : opportunity.availability_days}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
-          {(opportunity.pay_amount || opportunity.desired_salary) && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-2xl text-sm font-black shadow-sm border border-blue-100">
-              <DollarSign size={16} strokeWidth={2.5} />
-              <span>
-                {isMentorOffer 
-                  ? `${opportunity.pay_amount} / ${opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : opportunity.pay_period === 'day' ? (isRtl ? 'יום' : 'day') : (isRtl ? 'חודש' : 'mo')}`
-                  : `${isRtl ? 'שכר מבוקש:' : 'Desired:'} ${opportunity.desired_salary}`}
-              </span>
+          {/* Learning Focus / About */}
+          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <GraduationCap size={14} className="text-slate-300" />
+              {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
             </div>
-          )}
+            <p className="text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed">
+              {isMentorOffer ? (opportunity.about_work || opportunity.who_i_want_to_teach) : opportunity.what_i_want_to_learn}
+            </p>
+          </div>
+        </div>
 
-          <p className="text-sm text-gray-500 font-medium line-clamp-3 leading-relaxed">
-            {isMentorOffer ? (opportunity.about_work || opportunity.who_i_want_to_teach) : opportunity.what_i_want_to_learn}
-          </p>
+        {/* Financials */}
+        <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+          <div className="space-y-1">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'שכר בסיס' : 'Base Pay'}</div>
+            <div className="text-xl font-black text-slate-900 flex items-center gap-1">
+              <DollarSign size={18} className="text-emerald-500" />
+              {opportunity.pay_amount || opportunity.desired_salary || '---'}
+              <span className="text-[10px] text-slate-400 font-bold">/{opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
+            <div className="text-xl font-black text-slate-900 flex items-center gap-1">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              {isRtl ? 'פעיל' : 'Active'}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-8 border-t border-gray-50 flex items-center justify-between">
+        <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
           <div 
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
@@ -127,24 +171,21 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               }
             }}
           >
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-sm overflow-hidden shadow-inner">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-sm overflow-hidden border border-slate-200">
               {opportunity.profiles?.avatar_url ? (
                 <img src={opportunity.profiles.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 opportunity.profiles?.full_name?.charAt(0) || 'U'
               )}
             </div>
-            <div className="text-xs">
+            <div>
               <div className="flex items-center gap-2">
-                <p className="font-black text-gray-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
+                <p className="text-sm font-black text-slate-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
                 {opportunity.profiles?.is_verified && (
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm">
-                    <ShieldCheck size={10} fill="currentColor" />
-                    {isRtl ? 'מאומת' : 'Verified'}
-                  </span>
+                  <ShieldCheck size={14} className="text-emerald-500 fill-emerald-500/10" />
                 )}
               </div>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Member')}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
             </div>
           </div>
 
@@ -152,14 +193,13 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             {showActions && onDelete && (
               <button 
                 onClick={(e) => { e.preventDefault(); onDelete(opportunity.id); }}
-                className="p-3 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                title={isRtl ? 'מחיקה' : 'Delete'}
+                className="p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
               >
                 <Trash2 size={20} />
               </button>
             )}
-            <div className="p-3 bg-gray-50 text-gray-900 rounded-xl group-hover:bg-black group-hover:text-white transition-all shadow-sm">
-              <ExternalLink size={20} />
+            <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
+              <ArrowRight size={24} />
             </div>
           </div>
         </div>

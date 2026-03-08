@@ -118,30 +118,30 @@ export default function Notifications({ isRtl }: NotificationsProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-500">
+    <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500 py-12 px-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black text-black tracking-tight">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="space-y-3">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">
             {isRtl ? 'התראות' : 'Notifications'}
           </h1>
-          <p className="text-gray-500 font-medium">
+          <p className="text-slate-500 font-medium text-lg">
             {isRtl ? 'הישאר מעודכן בפעילות ברשת ה-SkillLink שלך.' : 'Stay updated with your SkillLink network activities.'}
           </p>
         </div>
-        <div className="flex p-1 bg-gray-100 rounded-2xl shadow-inner">
+        <div className="flex p-1.5 bg-slate-100 rounded-[1.5rem] shadow-inner border border-slate-200">
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-8 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-              activeTab === 'all' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            className={`px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+              activeTab === 'all' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-900'
             }`}
           >
             {isRtl ? 'הכל' : 'All'}
           </button>
           <button
             onClick={() => setActiveTab('unread')}
-            className={`px-8 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-              activeTab === 'unread' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'
+            className={`px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+              activeTab === 'unread' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-900'
             }`}
           >
             {isRtl ? 'לא נקראו' : 'Unread'}
@@ -150,42 +150,45 @@ export default function Notifications({ isRtl }: NotificationsProps) {
       </div>
 
       {/* Notifications List */}
-      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-2xl overflow-hidden min-h-[400px]">
+      <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden min-h-[500px]">
         {loading && notifications.length === 0 ? (
-          <div className="p-24 flex justify-center">
-            <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin rounded-full" />
+          <div className="p-32 flex justify-center">
+            <div className="w-12 h-12 border-4 border-slate-900 border-t-transparent animate-spin rounded-full" />
           </div>
         ) : filteredNotifications.length > 0 ? (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-slate-100">
             {filteredNotifications.map((notification) => (
               <div 
                 key={notification.id}
-                className={`p-6 flex items-start gap-6 transition-all hover:bg-gray-50 group ${!notification.is_read ? 'bg-blue-50/30' : ''}`}
+                className={`p-10 flex items-start gap-8 transition-all hover:bg-slate-50 group relative ${!notification.is_read ? 'bg-slate-50/50' : ''}`}
               >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${!notification.is_read ? 'bg-white' : 'bg-gray-50'}`}>
+                {!notification.is_read && (
+                  <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} bottom-0 w-1.5 bg-slate-900`} />
+                )}
+                <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 shadow-lg border border-slate-100 ${!notification.is_read ? 'bg-white' : 'bg-slate-100'}`}>
                   {getIcon(notification.type)}
                 </div>
-                <div className="flex-1 space-y-1">
+                <div className="flex-1 space-y-3">
                   <div className="flex justify-between items-start">
-                    <h3 className={`font-bold text-gray-900 ${!notification.is_read ? 'text-black' : ''}`}>
+                    <h3 className={`text-xl font-black text-slate-900 ${!notification.is_read ? 'text-slate-900' : 'text-slate-500'}`}>
                       {notification.title}
                     </h3>
-                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
-                      {new Date(notification.created_at).toLocaleDateString()}
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                      {new Date(notification.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                  <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-2xl">
                     {notification.content}
                   </p>
-                  <div className="flex items-center gap-4 pt-2">
+                  <div className="flex flex-wrap items-center gap-6 pt-4">
                     {notification.link && (
                       <Link 
                         to={notification.link}
                         onClick={() => markAsRead(notification.id)}
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:text-emerald-600 flex items-center gap-2 group/link"
                       >
                         {isRtl ? 'צפה בפרטים' : 'View Details'}
-                        <ChevronRight size={12} className="rtl:rotate-180" />
+                        <ChevronRight size={14} className={`rtl:rotate-180 transition-transform group-hover/link:translate-x-1`} />
                       </Link>
                     )}
                     {notification.sender_id && (
@@ -193,16 +196,16 @@ export default function Notifications({ isRtl }: NotificationsProps) {
                         to="/app/messages"
                         state={{ recipientId: notification.sender_id, recipientName: notification.sender?.full_name }}
                         onClick={() => markAsRead(notification.id)}
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                        className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 flex items-center gap-2"
                       >
-                        <MessageSquare size={12} />
+                        <MessageSquare size={14} />
                         {isRtl ? 'שלח הודעה בחזרה' : 'Message Back'}
                       </Link>
                     )}
                     {!notification.is_read && (
                       <button 
                         onClick={() => markAsRead(notification.id)}
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black"
+                        className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors"
                       >
                         {isRtl ? 'סמן כנקרא' : 'Mark as read'}
                       </button>
@@ -211,23 +214,23 @@ export default function Notifications({ isRtl }: NotificationsProps) {
                 </div>
                 <button 
                   onClick={() => deleteNotification(notification.id)}
-                  className="p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-100"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={20} />
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-24 text-center space-y-8">
-            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <Bell className="text-gray-200" size={48} />
+          <div className="p-32 text-center space-y-10">
+            <div className="w-32 h-32 bg-slate-50 rounded-[3rem] flex items-center justify-center mx-auto shadow-inner border border-slate-100 animate-in zoom-in duration-700">
+              <Bell className="text-slate-100" size={64} strokeWidth={1} />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-black text-black tracking-tight">
+            <div className="space-y-4">
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight">
                 {isRtl ? 'הכל מעודכן!' : 'All caught up!'}
               </h2>
-              <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
+              <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed text-lg">
                 {isRtl ? 'אין התראות חדשות כרגע. אנחנו נעדכן אותך כשמשהו חשוב יקרה ברשת שלך.' : 'No new notifications at the moment. We\'ll alert you when something important happens in your network.'}
               </p>
             </div>
@@ -237,8 +240,10 @@ export default function Notifications({ isRtl }: NotificationsProps) {
 
       {/* Footer Settings Link */}
       <div className="text-center">
-        <button className="text-sm font-bold text-gray-400 hover:text-black transition-colors flex items-center gap-2 mx-auto group">
-          <Info size={16} className="group-hover:text-blue-500 transition-colors" />
+        <button className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-all flex items-center gap-3 mx-auto group">
+          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+            <Info size={16} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
+          </div>
           {isRtl ? 'נהל הגדרות התראות' : 'Manage notification settings'}
         </button>
       </div>

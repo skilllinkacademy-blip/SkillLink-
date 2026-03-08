@@ -42,6 +42,7 @@ CREATE TABLE public.profiles (
     availability_days TEXT[],
     cover_url TEXT,
     portfolio_urls TEXT[],
+    skills JSONB DEFAULT '[]'::JSONB,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -55,7 +56,7 @@ CREATE TABLE public.opportunities (
     title TEXT NOT NULL,
     location TEXT DEFAULT 'פתח תקווה',
     work_hours TEXT,
-    beginners_only BOOLEAN DEFAULT TRUE,
+    beginners_only BOOLEAN DEFAULT FALSE,
     pay_amount NUMERIC,
     pay_period TEXT CHECK (pay_period IN ('hour', 'day', 'month')),
     about_work TEXT,
