@@ -158,46 +158,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updated_at: new Date().toISOString(),
         };
 
-        // Recursive helper to handle multiple missing columns or username conflicts
-        const attemptInsert = async (payload: any): Promise<any> => {
-          const { data, error } = await supabase
-            .from('profiles')
-            .insert(payload)
-            .select()
-            .single();
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert(insertPayload)
+          .select()
+          .single();
 
-          if (error) {
-            // If a column is missing in the schema cache, try to remove it and retry
-            if (error.message.includes('column') && error.message.includes('cache')) {
-              const missingColumn = error.message.match(/'([^']+)' column/)?.[1];
-              if (missingColumn && payload[missingColumn] !== undefined) {
-                console.warn(`Column '${missingColumn}' missing in Supabase, retrying insert without it...`);
-                const { [missingColumn]: _, ...nextPayload } = payload;
-                return attemptInsert(nextPayload);
-              }
-            }
-            
-            // Handle username conflict
-            if (error.code === '23505' && error.message.includes('username')) {
-              console.warn('Username conflict, retrying with a new one...');
-              const newUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
-              return attemptInsert({ ...payload, username: newUsername });
-            }
-
-            throw error;
-          }
-          return data;
-        };
-
-        try {
-          const newProfile = await attemptInsert(insertPayload);
-          console.log('AuthContext: Profile created successfully');
-          setProfile(newProfile);
-        } catch (insertError: any) {
-          console.error('AuthContext: Final error inserting profile:', insertError);
+        if (insertError) {
+          console.error('AuthContext: Error inserting profile:', insertError);
           if (insertError.message.includes('profiles') || insertError.message.includes('relation')) {
             setDbError('DATABASE_SETUP_REQUIRED');
           }
+        } else {
+          console.log('AuthContext: Profile created successfully');
+          setProfile(newProfile);
         }
       } else {
         console.log('AuthContext: Profile exists, fetching full data...');
@@ -224,16 +198,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkDatabaseSetup();
         
         if (currentUser && session?.access_token) {
-          // Sync with local backend - Blocking during init to ensure token is ready
+          // Sync with local backend
           try {
             const response = await api.post('/auth/session', { access_token: session.access_token });
-            localStorage.setItem('skilllink_token', response.data.token);
+            if (response.data.token) {
+              localStorage.setItem('skilllink_token', response.data.token);
+            } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
+              console.warn('Backend session sync skipped: Supabase not configured on server');
+            }
             
             // Fire and forget, or handle in background
             ensureProfile(currentUser);
             fetchUnreadCount(currentUser.id);
           } catch (err) {
             console.error('Error syncing session with backend during init:', err);
+            // If sync fails, we still want to try to load the profile from Supabase directly
+            ensureProfile(currentUser);
           }
         }
       } catch (err) {
@@ -265,17 +245,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsSyncing(true);
         try {
           const response = await api.post('/auth/session', { access_token: session.access_token });
-          localStorage.setItem('skilllink_token', response.data.token);
+          if (response.data.token) {
+            localStorage.setItem('skilllink_token', response.data.token);
+          } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
+            console.warn('Backend session sync skipped: Supabase not configured on server');
+          }
         } catch (err) {
           console.error('Error syncing session with backend during state change:', err);
         } finally {
           setIsSyncing(false);
+          // Always ensure profile even if backend sync fails
+          ensureProfile(newUser);
+          fetchUnreadCount(newUser.id);
         }
-
-        // We don't set loading to true here to avoid flickering, 
-        // but we ensure profile data is refreshed
-        ensureProfile(newUser);
-        fetchUnreadCount(newUser.id);
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('skilllink_token');
         setProfile(null);

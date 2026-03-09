@@ -25,6 +25,11 @@ const PORT = 3000;
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+console.log('--- SERVER STARTUP ENV CHECK ---');
+console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'FOUND' : 'MISSING');
+console.log('SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? 'FOUND' : 'MISSING');
+console.log('--------------------------------');
+
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
 }
@@ -305,6 +310,16 @@ async function startServer() {
     }
   });
 
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok',
+      supabase: {
+        url: supabaseUrl ? 'configured' : 'missing',
+        serviceKey: supabaseServiceKey ? 'configured' : 'missing'
+      }
+    });
+  });
+
   // Auth
   app.post('/api/auth/register', async (req, res) => {
     const { name, email, password, role, location, age, trade, bio, goals, availability, lang } = req.body;
@@ -353,6 +368,17 @@ async function startServer() {
   app.post('/api/auth/session', async (req, res) => {
     const { access_token } = req.body;
     if (!access_token) return res.status(400).json({ error: 'Access token required' });
+
+    // Check if Supabase is configured
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.warn('Supabase not configured on server. Skipping session sync.');
+      // We return 200 with a flag so the client knows sync didn't happen but it's not a fatal error
+      return res.json({ 
+        success: false, 
+        error: 'SUPABASE_NOT_CONFIGURED',
+        message: 'Server is missing Supabase credentials' 
+      });
+    }
 
     try {
       // Add a timeout to the Supabase call to prevent hanging
