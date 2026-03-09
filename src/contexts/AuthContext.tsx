@@ -217,13 +217,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkDatabaseSetup();
         
         if (currentUser && session?.access_token) {
-          // Sync with local backend
-          try {
-            const response = await api.post('/auth/session', { access_token: session.access_token });
-            localStorage.setItem('skilllink_token', response.data.token);
-          } catch (err) {
-            console.error('Error syncing session with backend:', err);
-          }
+          // Sync with local backend - Non-blocking to avoid hanging the app
+          api.post('/auth/session', { access_token: session.access_token })
+            .then(response => {
+              localStorage.setItem('skilllink_token', response.data.token);
+            })
+            .catch(err => {
+              console.error('Error syncing session with backend:', err);
+            });
 
           // Fire and forget, or handle in background
           ensureProfile(currentUser);
@@ -246,13 +247,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(newUser);
       
       if (newUser && session?.access_token) {
-        // Sync with local backend
-        try {
-          const response = await api.post('/auth/session', { access_token: session.access_token });
-          localStorage.setItem('skilllink_token', response.data.token);
-        } catch (err) {
-          console.error('Error syncing session with backend:', err);
-        }
+        // Sync with local backend - Non-blocking
+        api.post('/auth/session', { access_token: session.access_token })
+          .then(response => {
+            localStorage.setItem('skilllink_token', response.data.token);
+          })
+          .catch(err => {
+            console.error('Error syncing session with backend:', err);
+          });
 
         // We don't set loading to true here to avoid flickering, 
         // but we ensure profile data is refreshed

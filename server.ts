@@ -24,6 +24,11 @@ const PORT = 3000;
 // Initialize Supabase Admin (Server-side)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Initialize Database
@@ -275,7 +280,14 @@ async function startServer() {
     if (!access_token) return res.status(400).json({ error: 'Access token required' });
 
     try {
-      const { data: { user }, error } = await supabase.auth.getUser(access_token);
+      // Add a timeout to the Supabase call to prevent hanging
+      const userPromise = supabase.auth.getUser(access_token);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Supabase timeout')), 8000)
+      );
+
+      const { data: { user }, error } = await Promise.race([userPromise, timeoutPromise]) as any;
+      
       if (error || !user) throw error || new Error('Invalid token');
 
       // Find or create user in SQLite
@@ -498,10 +510,15 @@ async function startServer() {
     
     const results = db.prepare(query).all(...params);
     // Parse availabilityDays JSON
-    const parsedResults = results.map((r: any) => ({
-      ...r,
-      availability_days: r.availabilityDays ? JSON.parse(r.availabilityDays) : []
-    }));
+    const parsedResults = results.map((r: any) => {
+      let availability_days = [];
+      try {
+        availability_days = r.availabilityDays ? JSON.parse(r.availabilityDays) : [];
+      } catch (e) {
+        console.error('Error parsing availabilityDays:', e);
+      }
+      return { ...r, availability_days };
+    });
     res.json(parsedResults);
   });
 
@@ -528,7 +545,12 @@ async function startServer() {
     if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
     
     // Parse availabilityDays JSON
-    opportunity.availability_days = opportunity.availabilityDays ? JSON.parse(opportunity.availabilityDays) : [];
+    try {
+      opportunity.availability_days = opportunity.availabilityDays ? JSON.parse(opportunity.availabilityDays) : [];
+    } catch (e) {
+      console.error('Error parsing availabilityDays for single opp:', e);
+      opportunity.availability_days = [];
+    }
     res.json(opportunity);
   });
 
@@ -650,7 +672,47 @@ async function startServer() {
     });
   });
 
-  // Vite middleware for development
+  // Admin: Get stats
+  app.get('/api/admin/stats', authenticateToken, (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    try {
+      const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+      const verifiedMentors = db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "mentor" AND verified = 1').get().count;
+      const pendingVerifications = db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "mentor" AND verified = 0').get().count;
+      const totalPosts = db.prepare('SELECT COUNT(*) as count FROM posts').get().count;
+      
+      res.json({
+        totalUsers,
+        verifiedMentors,
+        pendingVerifications,
+        totalPosts
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+  });
+
+  // Admin: Verify user
+  app.post('/api/admin/verify/:id', authenticateToken, (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    const { id } = req.params;
+    const { verified } = req.body;
+    
+    try {
+      db.prepare('UPDATE users SET verified = ? WHERE id = ?').run(verified ? 1 : 0, id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update verification status' });
+    }
+  });
+
+  // --- Static Files & SPA Fallback (MUST BE LAST) ---
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -678,46 +740,6 @@ async function startServer() {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   }
-
-  // Admin: Verify user
-  app.post('/api/admin/verify/:id', authenticateToken, (req: any, res) => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-    
-    const { id } = req.params;
-    const { verified } = req.body;
-    
-    try {
-      db.prepare('UPDATE users SET verified = ? WHERE id = ?').run(verified ? 1 : 0, id);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to update verification status' });
-    }
-  });
-
-  // Admin: Get stats
-  app.get('/api/admin/stats', authenticateToken, (req: any, res) => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-    
-    try {
-      const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
-      const verifiedMentors = db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "mentor" AND verified = 1').get().count;
-      const pendingVerifications = db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "mentor" AND verified = 0').get().count;
-      const totalPosts = db.prepare('SELECT COUNT(*) as count FROM posts').get().count;
-      
-      res.json({
-        totalUsers,
-        verifiedMentors,
-        pendingVerifications,
-        totalPosts
-      });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch stats' });
-    }
-  });
 
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -178,9 +178,15 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     try {
       let imageUrl = imagePreview;
 
-      // Note: Image upload to Supabase storage is still kept for now if configured, 
-      // but we should ideally move this to the custom backend too.
-      // For now, let's assume imagePreview is a URL or handle it simply.
+      // Convert image to base64 if it's a new file
+      if (imageFile) {
+        imageUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+      }
 
       const opportunityData = {
         type,
