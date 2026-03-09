@@ -129,13 +129,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if profile exists
       const { data: existing, error: fetchError } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id')
         .eq('id', user.id)
         .maybeSingle();
 
       if (fetchError) {
-        console.error('AuthContext: Error fetching profile:', fetchError);
-        if (fetchError.message.includes('profiles')) {
+        console.error('AuthContext: Error checking for existing profile:', fetchError);
+        if (fetchError.message.includes('profiles') || fetchError.message.includes('relation')) {
           setDbError('DATABASE_SETUP_REQUIRED');
         }
         return;
@@ -147,38 +147,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const metadata = user.user_metadata || {};
         const generatedUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
         
-        const { data: newProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            username: generatedUsername,
-            full_name: metadata.full_name || 'User',
-            role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
-            location: metadata.location || 'פתח תקווה',
-            phone: metadata.phone || '',
-            occupation: metadata.occupation,
-            years_experience: metadata.years_experience,
-            workload: metadata.workload,
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+        const insertPayload: any = {
+          id: user.id,
+          username: generatedUsername,
+          full_name: metadata.full_name || 'User',
+          role: metadata.role || (metadata.isAdmin ? 'admin' : 'mentee'),
+          location: metadata.location || 'פתח תקווה',
+          occupation: metadata.occupation,
+          years_experience: metadata.years_experience,
+          updated_at: new Date().toISOString(),
+        };
 
-        if (insertError) {
-          console.error('AuthContext: Error inserting profile:', insertError);
-          if (insertError.message.includes('profiles')) {
+        // Recursive helper to handle multiple missing columns or username conflicts
+        const attemptInsert = async (payload: any): Promise<any> => {
+          const { data, error } = await supabase
+            .from('profiles')
+            .insert(payload)
+            .select()
+            .single();
+
+          if (error) {
+            // If a column is missing in the schema cache, try to remove it and retry
+            if (error.message.includes('column') && error.message.includes('cache')) {
+              const missingColumn = error.message.match(/'([^']+)' column/)?.[1];
+              if (missingColumn && payload[missingColumn] !== undefined) {
+                console.warn(`Column '${missingColumn}' missing in Supabase, retrying insert without it...`);
+                const { [missingColumn]: _, ...nextPayload } = payload;
+                return attemptInsert(nextPayload);
+              }
+            }
+            
+            // Handle username conflict
+            if (error.code === '23505' && error.message.includes('username')) {
+              console.warn('Username conflict, retrying with a new one...');
+              const newUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
+              return attemptInsert({ ...payload, username: newUsername });
+            }
+
+            throw error;
+          }
+          return data;
+        };
+
+        try {
+          const newProfile = await attemptInsert(insertPayload);
+          console.log('AuthContext: Profile created successfully');
+          setProfile(newProfile);
+        } catch (insertError: any) {
+          console.error('AuthContext: Final error inserting profile:', insertError);
+          if (insertError.message.includes('profiles') || insertError.message.includes('relation')) {
             setDbError('DATABASE_SETUP_REQUIRED');
           }
-          throw insertError;
         }
-        console.log('AuthContext: Profile created successfully');
-        setProfile(newProfile);
       } else {
         console.log('AuthContext: Profile exists, fetching full data...');
         await fetchProfile(user.id);
       }
     } catch (err: any) {
-      console.error('AuthContext: Error in ensureProfile:', err.message);
+      console.error('AuthContext: Unexpected error in ensureProfile:', err.message);
     }
   };
 
@@ -202,14 +228,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const response = await api.post('/auth/session', { access_token: session.access_token });
             localStorage.setItem('skilllink_token', response.data.token);
+            
+            // Fire and forget, or handle in background
+            ensureProfile(currentUser);
+            fetchUnreadCount(currentUser.id);
           } catch (err) {
             console.error('Error syncing session with backend during init:', err);
-            // If sync fails, we might want to sign out or handle it
           }
-
-          // Fire and forget, or handle in background
-          ensureProfile(currentUser);
-          fetchUnreadCount(currentUser.id);
         }
       } catch (err) {
         console.error('Error during auth initialization:', err);
@@ -228,6 +253,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(newUser);
       
       if (newUser && session?.access_token) {
+        // Only sync if the token is different from what we have
+        const currentToken = localStorage.getItem('skilllink_token');
+        if (currentToken && event === 'INITIAL_SESSION') {
+          // Skip redundant sync on initial session if we already have a token
+          // (Actually, better to sync once to be sure, but let's avoid parallel calls)
+          return;
+        }
+
         // Sync with local backend
         setIsSyncing(true);
         try {
@@ -243,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // but we ensure profile data is refreshed
         ensureProfile(newUser);
         fetchUnreadCount(newUser.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('skilllink_token');
         setProfile(null);
         setUnreadMessagesCount(0);

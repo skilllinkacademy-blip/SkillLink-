@@ -274,7 +274,28 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        // If a column is missing in the schema cache, try to remove it and retry
+        if (error.message.includes('column') && error.message.includes('cache')) {
+          const missingColumn = error.message.match(/'([^']+)' column/)?.[1];
+          if (missingColumn && updatePayload[missingColumn] !== undefined) {
+            console.warn(`Column '${missingColumn}' missing in Supabase, retrying without it...`);
+            const { [missingColumn]: _, ...newPayload } = updatePayload;
+            const { error: retryError } = await supabase
+              .from('profiles')
+              .update({
+                ...newPayload,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', user.id);
+            if (retryError) throw retryError;
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
       await refreshProfile();
     } catch (err: any) {
       console.error('Error updating profile:', err.message);

@@ -29,7 +29,13 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  }
+});
 
 // Initialize Database
 const db = new Database('skilllink.db');
@@ -40,12 +46,20 @@ try {
   const userTableInfo = db.prepare("PRAGMA table_info(users)").all();
   const hasGoals = userTableInfo.some((col: any) => col.name === 'goals');
   const hasAvailability = userTableInfo.some((col: any) => col.name === 'availability');
+  const hasPhone = userTableInfo.some((col: any) => col.name === 'phone');
+  const hasWorkload = userTableInfo.some((col: any) => col.name === 'workload');
   
   if (!hasGoals) {
     db.prepare("ALTER TABLE users ADD COLUMN goals TEXT").run();
   }
   if (!hasAvailability) {
     db.prepare("ALTER TABLE users ADD COLUMN availability TEXT").run();
+  }
+  if (!hasPhone) {
+    db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
+  }
+  if (!hasWorkload) {
+    db.prepare("ALTER TABLE users ADD COLUMN workload TEXT").run();
   }
 
   const tableInfo = db.prepare("PRAGMA table_info(requests)").all();
@@ -77,6 +91,8 @@ db.exec(`
     password TEXT NOT NULL,
     role TEXT NOT NULL,
     location TEXT,
+    phone TEXT,
+    workload TEXT,
     age INTEGER,
     trade TEXT,
     bio TEXT,
@@ -340,14 +356,45 @@ async function startServer() {
 
     try {
       // Add a timeout to the Supabase call to prevent hanging
+      console.log('Syncing session for token starting with:', access_token.substring(0, 10));
+      
+      const decoded = jwt.decode(access_token) as any;
+      if (!decoded || !decoded.sub) {
+        console.error('Invalid token format - no sub');
+        return res.status(400).json({ error: 'Invalid token format' });
+      }
+
       const userPromise = supabase.auth.getUser(access_token);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Supabase timeout')), 8000)
       );
 
-      const { data: { user }, error } = await Promise.race([userPromise, timeoutPromise]) as any;
+      let user;
+      try {
+        const result = await Promise.race([userPromise, timeoutPromise]) as any;
+        if (result.error) throw result.error;
+        user = result.data.user;
+      } catch (err: any) {
+        // If it's a session missing error, we don't need a loud warning, just fallback
+        if (err.message?.includes('session missing')) {
+          console.log('Using admin fallback for session-less request');
+        } else {
+          console.warn('Primary getUser failed, trying admin fallback:', err.message);
+        }
+        
+        // Fallback to admin API if primary fails
+        const { data, error: adminError } = await supabase.auth.admin.getUserById(decoded.sub);
+        if (adminError || !data.user) {
+          console.error('Admin fallback also failed:', adminError?.message || 'User not found');
+          return res.status(401).json({ error: 'Authentication failed' });
+        }
+        user = data.user;
+      }
       
-      if (error || !user) throw error || new Error('Invalid token');
+      if (!user) {
+        console.error('No user resolved');
+        throw new Error('Invalid token');
+      }
 
       // Find or create user in SQLite
       let localUser = db.prepare('SELECT * FROM users WHERE email = ?').get(user.email) as any;
@@ -358,14 +405,16 @@ async function startServer() {
         const finalRole = userCount === 0 ? 'admin' : (user.user_metadata?.role || 'mentee');
 
         const metadata = user.user_metadata || {};
-        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade) VALUES (?, ?, ?, ?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
           metadata.full_name || 'User',
           user.email,
           'supabase-auth-managed', // Placeholder password
           finalRole,
           metadata.location || 'פתח תקווה',
-          metadata.occupation || ''
+          metadata.occupation || '',
+          metadata.phone || '',
+          metadata.workload || 'low'
         );
         localUser = {
           id: result.lastInsertRowid,
