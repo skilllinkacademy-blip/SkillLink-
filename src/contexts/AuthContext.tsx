@@ -49,30 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const checkDatabaseSetup = async () => {
-    if (!isSupabaseConfigured || bypassDbCheck) {
-      setDbError(null);
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('schema_migrations')
-        .select('id')
-        .eq('id', 'initial_setup')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('AuthContext: Database check error:', error);
-        setDbError('DATABASE_SETUP_REQUIRED');
-      } else if (!data) {
-        console.warn('AuthContext: initial_setup record missing in schema_migrations');
-        setDbError('DATABASE_SETUP_REQUIRED');
-      } else {
-        setDbError(null);
-      }
-    } catch (err) {
-      console.error('AuthContext: Unexpected error during DB check:', err);
-      setDbError('DATABASE_SETUP_REQUIRED');
-    }
+    // Disabled intrusive database check as requested by user
+    setDbError(null);
+    return;
   };
 
   const fetchUnreadCount = async (userId: string) => {
