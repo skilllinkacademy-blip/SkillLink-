@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { User, Briefcase, Mail, Lock, MapPin, ChevronRight, AlertCircle, CheckCircle2, ArrowLeft, Award, Rocket, GraduationCap, Presentation, Wrench, Phone } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthProps {
@@ -18,7 +18,6 @@ export default function Auth({ isRtl }: AuthProps) {
   const [role, setRole] = useState<'mentor' | 'mentee' | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showConfigWarning, setShowConfigWarning] = useState(!isSupabaseConfigured);
 
   useEffect(() => {
     const mode = searchParams.get('mode');
@@ -394,28 +393,6 @@ export default function Auth({ isRtl }: AuthProps) {
             </Link>
           </div>
 
-          {showConfigWarning && (
-            <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-[2rem] space-y-4 animate-in fade-in zoom-in duration-500">
-              <div className="flex items-center gap-3 text-amber-800">
-                <AlertCircle className="shrink-0" size={24} />
-                <h3 className="font-black text-lg">{isRtl ? 'חסרים פרטי Supabase' : 'Supabase Credentials Missing'}</h3>
-              </div>
-              <p className="text-sm text-amber-700 font-medium leading-relaxed">
-                {isRtl 
-                  ? 'נראה שפרטי ה-Supabase לא הוגדרו במערכת. האפליקציה משתמשת כרגע בנתוני דמו ולא תוכל לשמור משתמשים אמיתיים.' 
-                  : 'It looks like Supabase credentials are not set. The app is currently using demo data and won\'t be able to save real users.'}
-              </p>
-              <div className="pt-2">
-                <button 
-                  onClick={() => setShowConfigWarning(false)}
-                  className="w-full py-3 bg-amber-200 text-amber-900 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-300 transition-all"
-                >
-                  {isRtl ? 'הבנתי, המשך בכל זאת' : 'I understand, continue anyway'}
-                </button>
-              </div>
-            </div>
-          )}
-
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-red-600 text-sm font-medium animate-shake">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
@@ -424,33 +401,6 @@ export default function Auth({ isRtl }: AuthProps) {
           )}
 
           {isLogin ? renderLogin() : (step === 1 ? renderStep1() : renderStep2())}
-
-          {/* Emergency Reset Button - Only for setup/stuck phase */}
-          <div className="pt-8 mt-8 border-t border-gray-100">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center mb-4">
-              {isRtl ? 'נתקעת? איפוס חירום של מסד הנתונים' : 'Stuck? Emergency Database Reset'}
-            </p>
-            <button
-              onClick={async () => {
-                if (window.confirm(isRtl ? 'זה ימחק את כל הנתונים המקומיים (פרופילים, פוסטים). האם אתה בטוח?' : 'This will wipe all local data (profiles, posts). Are you sure?')) {
-                  try {
-                    const response = await fetch('/api/admin/emergency-reset-sqlite', { method: 'POST' });
-                    if (response.ok) {
-                      alert(isRtl ? 'מסד הנתונים אופס. עכשיו תוכל להירשם כמשתמש הראשון (אדמין).' : 'Database wiped. You can now register as the first user (Admin).');
-                      window.location.reload();
-                    } else {
-                      alert('Reset failed');
-                    }
-                  } catch (e) {
-                    alert('Reset failed');
-                  }
-                }
-              }}
-              className="w-full py-2 text-red-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-600 transition-all"
-            >
-              {isRtl ? 'איפוס מערכת מלא (SQLite)' : 'Full System Reset (SQLite)'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
