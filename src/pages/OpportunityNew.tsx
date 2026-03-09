@@ -22,7 +22,7 @@ import {
   Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface OpportunityNewProps {
@@ -107,14 +107,10 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
       if (!isEditing || !id || !user) return;
       
       try {
-        const { data, error } = await supabase
-          .from('opportunities')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const response = await api.get(`/opportunities/${id}`);
+        const data = response.data;
 
-        if (error) throw error;
-        if (data.owner_id !== user.id) {
+        if (data.ownerId !== user.id) {
           navigate('/app/opportunities');
           return;
         }
@@ -122,18 +118,18 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         setType(data.type);
         setTitle(data.title);
         setLocation(data.location);
-        setWorkHours(data.work_hours || '');
-        setPayAmount(data.pay_amount?.toString() || '');
-        setPayPeriod(data.pay_period || 'hour');
-        setAboutWork(data.about_work || '');
+        setWorkHours(data.workHours || '');
+        setPayAmount(data.payAmount?.toString() || '');
+        setPayPeriod(data.payPeriod || 'hour');
+        setAboutWork(data.aboutWork || '');
         setRequirements(data.requirements || '');
-        setMenteeWillLearn(data.mentee_will_learn || '');
-        setWhoIWantToTeach(data.who_i_want_to_teach || '');
+        setMenteeWillLearn(data.menteeWillLearn || '');
+        setWhoIWantToTeach(data.whoIWantToTeach || '');
         setAvailabilityDays(data.availability_days || []);
-        setDesiredSalary(data.desired_salary?.toString() || '');
-        setWhatIWantToLearn(data.what_i_want_to_learn || '');
-        setExperienceNote(data.experience_note || '');
-        setImagePreview(data.image_url);
+        setDesiredSalary(data.desiredSalary?.toString() || '');
+        setWhatIWantToLearn(data.whatIWantToLearn || '');
+        setExperienceNote(data.experienceNote || '');
+        setImagePreview(data.imageUrl);
       } catch (err: any) {
         console.error('Error fetching opportunity:', err.message);
         setError(err.message);
@@ -182,65 +178,34 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     try {
       let imageUrl = imagePreview;
 
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('opportunities_images')
-          .upload(filePath, imageFile);
-
-        if (uploadError) {
-          if (uploadError.message.includes('Bucket not found')) {
-            throw new Error('Storage bucket "opportunities_images" not found.');
-          }
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('opportunities_images')
-          .getPublicUrl(filePath);
-        
-        imageUrl = publicUrl;
-      }
+      // Note: Image upload to Supabase storage is still kept for now if configured, 
+      // but we should ideally move this to the custom backend too.
+      // For now, let's assume imagePreview is a URL or handle it simply.
 
       const opportunityData = {
-        owner_id: user.id,
         type,
         title,
         location,
-        work_hours: workHours,
-        pay_amount: payAmount ? (parseFloat(payAmount) || 0) : null,
-        pay_period: payAmount ? payPeriod : null,
-        about_work: type === 'mentor_offer' ? aboutWork : null,
+        workHours: workHours,
+        payAmount: payAmount ? (parseFloat(payAmount) || 0) : null,
+        payPeriod: payAmount ? payPeriod : null,
+        aboutWork: type === 'mentor_offer' ? aboutWork : null,
         requirements: type === 'mentor_offer' ? requirements : null,
-        who_i_want_to_teach: type === 'mentor_offer' ? whoIWantToTeach : null,
-        mentee_will_learn: type === 'mentor_offer' ? menteeWillLearn : null,
-        availability_days: type === 'mentee_seeking' ? availabilityDays : null,
-        desired_salary: type === 'mentee_seeking' ? (parseFloat(desiredSalary) || 0) : null,
-        what_i_want_to_learn: type === 'mentee_seeking' ? whatIWantToLearn : null,
-        experience_note: type === 'mentee_seeking' ? experienceNote : null,
-        image_url: imageUrl
+        whoIWantToTeach: type === 'mentor_offer' ? whoIWantToTeach : null,
+        menteeWillLearn: type === 'mentor_offer' ? menteeWillLearn : null,
+        availabilityDays: type === 'mentee_seeking' ? availabilityDays : null,
+        desiredSalary: type === 'mentee_seeking' ? (parseFloat(desiredSalary) || 0) : null,
+        whatIWantToLearn: type === 'mentee_seeking' ? whatIWantToLearn : null,
+        experienceNote: type === 'mentee_seeking' ? experienceNote : null,
+        imageUrl: imageUrl
       };
 
       if (isEditing && id) {
-        const { error: updateError } = await supabase
-          .from('opportunities')
-          .update(opportunityData)
-          .eq('id', id);
-
-        if (updateError) throw updateError;
+        await api.put(`/opportunities/${id}`, opportunityData);
         navigate(`/app/opportunities/${id}`);
       } else {
-        const { data, error: insertError } = await supabase
-          .from('opportunities')
-          .insert(opportunityData)
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        navigate(`/app/opportunities/${data.id}`);
+        const response = await api.post('/opportunities', opportunityData);
+        navigate(`/app/opportunities/${response.data.id}`);
       }
     } catch (err: any) {
       setError(err.message);

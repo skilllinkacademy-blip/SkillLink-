@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, UserPlus, MessageSquare, Briefcase, Star, Heart, ChevronRight, Info, ShieldCheck, Clock, MoreHorizontal, Trash2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -34,43 +34,31 @@ export default function Notifications({ isRtl }: NotificationsProps) {
     if (!user) return;
     fetchNotifications();
 
-    // Subscribe to new notifications
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Note: Real-time notifications are currently not supported in the custom backend 
+    // without additional setup (e.g. polling or WebSockets).
+    // For now, we'll just fetch once.
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
   }, [user]);
 
   const fetchNotifications = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          sender:profiles!sender_id(full_name, avatar_url)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setNotifications(data || []);
+      const response = await api.get('/notifications');
+      
+      // Transform data to match frontend expectations
+      const transformedData = response.data.map((n: any) => ({
+        ...n,
+        is_read: n.isRead === 1,
+        created_at: n.createdAt,
+        sender: {
+          full_name: n.senderName,
+          avatar_url: n.senderAvatar
+        }
+      }));
+      
+      setNotifications(transformedData || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -80,11 +68,7 @@ export default function Notifications({ isRtl }: NotificationsProps) {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', id);
-      
+      await api.put(`/notifications/${id}/read`);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -93,11 +77,7 @@ export default function Notifications({ isRtl }: NotificationsProps) {
 
   const deleteNotification = async (id: string) => {
     try {
-      await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', id);
-      
+      await api.delete(`/notifications/${id}`);
       setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (error) {
       console.error('Error deleting notification:', error);

@@ -9,17 +9,28 @@ interface Opportunity {
   type: 'mentor_offer' | 'mentee_seeking';
   title: string;
   location: string;
-  work_hours: string;
+  work_hours?: string;
+  workHours?: string;
   pay_amount?: number;
+  payAmount?: number;
   pay_period?: string;
+  payPeriod?: string;
   desired_salary?: number;
+  desiredSalary?: number;
   image_url?: string;
+  imageUrl?: string;
   created_at: string;
-  owner_id: string;
+  createdAt?: string;
+  owner_id?: string;
+  ownerId?: string;
   about_work?: string;
+  aboutWork?: string;
   what_i_want_to_learn?: string;
+  whatIWantToLearn?: string;
   who_i_want_to_teach?: string;
+  whoIWantToTeach?: string;
   availability_days?: string[];
+  availabilityDays?: string[];
   profiles?: {
     full_name: string;
     avatar_url?: string;
@@ -43,6 +54,15 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   const navigate = useNavigate();
   const { profile: myProfile } = useAuth();
 
+  const imageUrl = opportunity.image_url || opportunity.imageUrl;
+  const workHours = opportunity.work_hours || opportunity.workHours;
+  const payAmount = opportunity.pay_amount || opportunity.payAmount;
+  const payPeriod = opportunity.pay_period || opportunity.payPeriod;
+  const desiredSalary = opportunity.desired_salary || opportunity.desiredSalary;
+  const aboutWork = opportunity.about_work || opportunity.aboutWork;
+  const whoIWantToTeach = opportunity.who_i_want_to_teach || opportunity.whoIWantToTeach;
+  const whatIWantToLearn = opportunity.what_i_want_to_learn || opportunity.whatIWantToLearn;
+
   const matchScore = useMemo(() => {
     const { score } = calculateMatchScore(opportunity, myProfile, isRtl);
     return score;
@@ -55,9 +75,9 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
     >
       {/* Image Header */}
       <div className="h-64 bg-slate-100 relative overflow-hidden">
-        {opportunity.image_url ? (
+        {imageUrl ? (
           <img 
-            src={opportunity.image_url} 
+            src={imageUrl} 
             alt={opportunity.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             referrerPolicy="no-referrer"
@@ -100,7 +120,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                 <Clock size={12} sm:size={14} className="text-slate-300" />
-                <span>{opportunity.work_hours || (isRtl ? 'גמיש' : 'Flexible')}</span>
+                <span>{workHours || (isRtl ? 'גמיש' : 'Flexible')}</span>
               </div>
             </div>
           </div>
@@ -112,7 +132,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
             </div>
             <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed">
-              {isMentorOffer ? (opportunity.about_work || opportunity.who_i_want_to_teach) : opportunity.what_i_want_to_learn}
+              {isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn}
             </p>
           </div>
         </div>
@@ -123,8 +143,8 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             <div className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'שכר בסיס' : 'Base Pay'}</div>
             <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
               <DollarSign size={16} sm:size={18} className="text-emerald-500" />
-              {opportunity.pay_amount || opportunity.desired_salary || '---'}
-              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
+              {payAmount || desiredSalary || '---'}
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{payPeriod === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
             </div>
           </div>
           <div className="space-y-0.5 sm:space-y-1">

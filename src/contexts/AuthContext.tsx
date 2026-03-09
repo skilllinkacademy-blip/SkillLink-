@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import api from '../lib/api';
 
 interface Profile {
   id: string;
@@ -215,7 +216,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(currentUser);
         checkDatabaseSetup();
         
-        if (currentUser) {
+        if (currentUser && session?.access_token) {
+          // Sync with local backend
+          try {
+            const response = await api.post('/auth/session', { access_token: session.access_token });
+            localStorage.setItem('skilllink_token', response.data.token);
+          } catch (err) {
+            console.error('Error syncing session with backend:', err);
+          }
+
           // Fire and forget, or handle in background
           ensureProfile(currentUser);
           fetchUnreadCount(currentUser.id);
@@ -236,12 +245,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser = session?.user ?? null;
       setUser(newUser);
       
-      if (newUser) {
+      if (newUser && session?.access_token) {
+        // Sync with local backend
+        try {
+          const response = await api.post('/auth/session', { access_token: session.access_token });
+          localStorage.setItem('skilllink_token', response.data.token);
+        } catch (err) {
+          console.error('Error syncing session with backend:', err);
+        }
+
         // We don't set loading to true here to avoid flickering, 
         // but we ensure profile data is refreshed
         ensureProfile(newUser);
         fetchUnreadCount(newUser.id);
       } else {
+        localStorage.removeItem('skilllink_token');
         setProfile(null);
         setUnreadMessagesCount(0);
         setUnreadNotificationsCount(0);

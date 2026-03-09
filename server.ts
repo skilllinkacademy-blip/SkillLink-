@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import multer from 'multer';
 import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
@@ -19,6 +20,11 @@ const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'skilllink-secret-key-2026';
 const PORT = 3000;
+
+// Initialize Supabase Admin (Server-side)
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Initialize Database
 const db = new Database('skilllink.db');
@@ -132,6 +138,51 @@ db.exec(`
     FOREIGN KEY (mentorId) REFERENCES users (id)
   );
 
+  CREATE TABLE IF NOT EXISTS opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ownerId INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    location TEXT DEFAULT 'פתח תקווה',
+    workHours TEXT,
+    payAmount REAL,
+    payPeriod TEXT,
+    aboutWork TEXT,
+    requirements TEXT,
+    whoIWantToTeach TEXT,
+    menteeWillLearn TEXT,
+    availabilityDays TEXT, -- JSON string
+    desiredSalary REAL,
+    whatIWantToLearn TEXT,
+    experienceNote TEXT,
+    imageUrl TEXT,
+    status TEXT DEFAULT 'active',
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ownerId) REFERENCES users (id)
+  );
+
+  CREATE TABLE IF NOT EXISTS saved_opportunities (
+    userId INTEGER NOT NULL,
+    opportunityId INTEGER NOT NULL,
+    PRIMARY KEY (userId, opportunityId),
+    FOREIGN KEY (userId) REFERENCES users (id),
+    FOREIGN KEY (opportunityId) REFERENCES opportunities (id)
+  );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    senderId INTEGER,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT,
+    isRead INTEGER DEFAULT 0,
+    link TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users (id),
+    FOREIGN KEY (senderId) REFERENCES users (id)
+  );
+
   CREATE TABLE IF NOT EXISTS ratings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     requestId INTEGER NOT NULL,
@@ -217,6 +268,44 @@ async function startServer() {
     if (!user) return res.status(404).json({ error: 'User not found' });
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
+  });
+
+  app.post('/api/auth/session', async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'Access token required' });
+
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(access_token);
+      if (error || !user) throw error || new Error('Invalid token');
+
+      // Find or create user in SQLite
+      let localUser = db.prepare('SELECT * FROM users WHERE email = ?').get(user.email) as any;
+      
+      if (!localUser) {
+        const metadata = user.user_metadata || {};
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade) VALUES (?, ?, ?, ?, ?, ?)');
+        const result = stmt.run(
+          metadata.full_name || 'User',
+          user.email,
+          'supabase-auth-managed', // Placeholder password
+          metadata.role || 'mentee',
+          metadata.location || 'פתח תקווה',
+          metadata.occupation || ''
+        );
+        localUser = {
+          id: result.lastInsertRowid,
+          name: metadata.full_name || 'User',
+          email: user.email,
+          role: metadata.role || 'mentee'
+        };
+      }
+
+      const token = jwt.sign({ id: localUser.id, name: localUser.name, email: localUser.email, role: localUser.role }, JWT_SECRET);
+      res.json({ token, user: localUser });
+    } catch (error: any) {
+      console.error('Session sync error:', error);
+      res.status(401).json({ error: 'Unauthorized' });
+    }
   });
 
   // Profiles
@@ -381,6 +470,166 @@ async function startServer() {
     const { requestId, toId, professional, teaching, workEthic, reliability, comment } = req.body;
     const stmt = db.prepare('INSERT INTO ratings (requestId, fromId, toId, professional, teaching, workEthic, reliability, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     stmt.run(requestId, req.user.id, toId, professional, teaching, workEthic, reliability, comment);
+    res.json({ success: true });
+  });
+
+  // Opportunities
+  app.get('/api/opportunities', authenticateToken, (req: any, res) => {
+    const { type, q } = req.query;
+    let query = `
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified,
+      (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
+      FROM opportunities o
+      JOIN users u ON o.ownerId = u.id
+      WHERE o.status = 'active'
+    `;
+    const params: any[] = [req.user.id];
+
+    if (type && type !== 'all') {
+      query += ' AND o.type = ?';
+      params.push(type);
+    }
+    if (q) {
+      query += ' AND (o.title LIKE ? OR o.location LIKE ? OR o.aboutWork LIKE ?)';
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    }
+
+    query += ' ORDER BY o.createdAt DESC';
+    
+    const results = db.prepare(query).all(...params);
+    // Parse availabilityDays JSON
+    const parsedResults = results.map((r: any) => ({
+      ...r,
+      availability_days: r.availabilityDays ? JSON.parse(r.availabilityDays) : []
+    }));
+    res.json(parsedResults);
+  });
+
+  app.get('/api/opportunities/me', authenticateToken, (req: any, res) => {
+    const results = db.prepare(`
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar
+      FROM opportunities o
+      JOIN users u ON o.ownerId = u.id
+      WHERE o.ownerId = ?
+      ORDER BY o.createdAt DESC
+    `).all(req.user.id);
+    res.json(results);
+  });
+
+  app.get('/api/opportunities/:id', authenticateToken, (req: any, res) => {
+    const opportunity = db.prepare(`
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified,
+      (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
+      FROM opportunities o
+      JOIN users u ON o.ownerId = u.id
+      WHERE o.id = ?
+    `).get(req.user.id, req.params.id) as any;
+
+    if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
+    
+    // Parse availabilityDays JSON
+    opportunity.availability_days = opportunity.availabilityDays ? JSON.parse(opportunity.availabilityDays) : [];
+    res.json(opportunity);
+  });
+
+  app.post('/api/opportunities', authenticateToken, (req: any, res) => {
+    const { 
+      type, title, location, workHours, payAmount, payPeriod, 
+      aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
+      availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl 
+    } = req.body;
+
+    const stmt = db.prepare(`
+      INSERT INTO opportunities (
+        ownerId, type, title, location, workHours, payAmount, payPeriod,
+        aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
+        availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const result = stmt.run(
+      req.user.id, type, title, location, workHours, payAmount, payPeriod,
+      aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
+      JSON.stringify(availabilityDays || []), desiredSalary, whatIWantToLearn, experienceNote, imageUrl
+    );
+
+    res.json({ id: result.lastInsertRowid });
+  });
+
+  app.put('/api/opportunities/:id', authenticateToken, (req: any, res) => {
+    const opp = db.prepare('SELECT ownerId FROM opportunities WHERE id = ?').get(req.params.id) as any;
+    if (!opp) return res.status(404).json({ error: 'Not found' });
+    if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+
+    const fields = [
+      'type', 'title', 'location', 'workHours', 'payAmount', 'payPeriod',
+      'aboutWork', 'requirements', 'whoIWantToTeach', 'menteeWillLearn',
+      'availabilityDays', 'desiredSalary', 'whatIWantToLearn', 'experienceNote', 'imageUrl', 'status'
+    ].filter(f => req.body[f] !== undefined);
+
+    if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+    const setClause = fields.map(f => `${f} = ?`).join(', ');
+    const values = fields.map(f => f === 'availabilityDays' ? JSON.stringify(req.body[f]) : req.body[f]);
+    values.push(req.params.id);
+
+    db.prepare(`UPDATE opportunities SET ${setClause} WHERE id = ?`).run(...values);
+    res.json({ success: true });
+  });
+
+  app.delete('/api/opportunities/:id', authenticateToken, (req: any, res) => {
+    const opp = db.prepare('SELECT ownerId FROM opportunities WHERE id = ?').get(req.params.id) as any;
+    if (!opp) return res.status(404).json({ error: 'Not found' });
+    if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+
+    db.prepare('DELETE FROM opportunities WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  });
+
+  app.post('/api/opportunities/:id/save', authenticateToken, (req: any, res) => {
+    const opportunityId = req.params.id;
+    const userId = req.user.id;
+    const existing = db.prepare('SELECT * FROM saved_opportunities WHERE opportunityId = ? AND userId = ?').get(opportunityId, userId);
+    
+    if (existing) {
+      db.prepare('DELETE FROM saved_opportunities WHERE opportunityId = ? AND userId = ?').run(opportunityId, userId);
+    } else {
+      db.prepare('INSERT INTO saved_opportunities (opportunityId, userId) VALUES (?, ?)').run(opportunityId, userId);
+    }
+    res.json({ success: true });
+  });
+
+  // Notifications
+  app.get('/api/notifications', authenticateToken, (req: any, res) => {
+    const notifications = db.prepare(`
+      SELECT n.*, u.name as senderName, u.avatar as senderAvatar
+      FROM notifications n
+      LEFT JOIN users u ON n.senderId = u.id
+      WHERE n.userId = ?
+      ORDER BY n.createdAt DESC
+    `).all(req.user.id);
+    res.json(notifications);
+  });
+
+  app.post('/api/notifications', authenticateToken, (req: any, res) => {
+    const { userId, type, title, content, link } = req.body;
+    const stmt = db.prepare('INSERT INTO notifications (userId, senderId, type, title, content, link) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(userId, req.user.id, type, title, content, link);
+    res.json({ success: true });
+  });
+
+  app.put('/api/notifications/:id/read', authenticateToken, (req: any, res) => {
+    db.prepare('UPDATE notifications SET isRead = 1 WHERE id = ? AND userId = ?').run(req.params.id, req.user.id);
+    res.json({ success: true });
+  });
+
+  app.put('/api/notifications/read-all', authenticateToken, (req: any, res) => {
+    db.prepare('UPDATE notifications SET isRead = 1 WHERE userId = ?').run(req.user.id);
+    res.json({ success: true });
+  });
+
+  app.delete('/api/notifications/:id', authenticateToken, (req: any, res) => {
+    db.prepare('DELETE FROM notifications WHERE id = ? AND userId = ?').run(req.params.id, req.user.id);
     res.json({ success: true });
   });
 

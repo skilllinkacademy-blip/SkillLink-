@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { Link } from 'react-router-dom';
 
 interface ExploreProps {
@@ -20,34 +20,28 @@ export default function Explore({ isRtl }: ExploreProps) {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .order('updated_at', { ascending: false });
+      const response = await api.get('/search', {
+        params: {
+          q: searchQuery,
+          location: locationQuery,
+          role: roleFilter !== 'all' ? roleFilter : undefined,
+          // experience: experienceFilter, // Not yet supported in backend search
+          // verified: verifiedOnly // Not yet supported in backend search
+        }
+      });
+      
+      // Transform data to match frontend expectations
+      const transformedData = response.data.map((profile: any) => ({
+        ...profile,
+        full_name: profile.name,
+        avatar_url: profile.avatar,
+        occupation: profile.trade,
+        is_verified: profile.verified === 1,
+        username: profile.name?.toLowerCase().replace(/\s+/g, '_'),
+        updated_at: new Date().toISOString() // Placeholder
+      }));
 
-      if (searchQuery) {
-        query = query.or(`full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`);
-      }
-
-      if (locationQuery) {
-        query = query.or(`location.ilike.%${locationQuery}%`);
-      }
-
-      if (roleFilter !== 'all') {
-        query = query.eq('role', roleFilter);
-      }
-
-      if (experienceFilter !== null) {
-        query = query.gte('years_experience', experienceFilter);
-      }
-
-      if (verifiedOnly) {
-        query = query.or('is_verified.eq.true,verification_status.eq.approved');
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setResults(data || []);
+      setResults(transformedData || []);
     } catch (err) {
       console.error('Error searching profiles:', err);
     } finally {

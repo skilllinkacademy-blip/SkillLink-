@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Briefcase, MessageSquare, Search, Filter, MapPin, Clock, DollarSign, ArrowRight, ChevronDown, ShieldCheck } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
 import RadarMap from '../components/RadarMap';
@@ -20,28 +20,33 @@ export default function Home({ isRtl }: HomeProps) {
   useEffect(() => {
     const fetchOpportunities = async () => {
       setLoading(true);
-      let query = supabase
-        .from('opportunities')
-        .select('*, profiles(full_name, avatar_url, occupation, role, is_verified, username)')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('type', filter);
-      }
-      
-      if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,about_work.ilike.%${searchQuery}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
+      try {
+        const response = await api.get('/opportunities', {
+          params: {
+            type: filter,
+            q: searchQuery
+          }
+        });
+        
+        // Transform data to match frontend expectations if needed
+        const transformedData = response.data.map((opp: any) => ({
+          ...opp,
+          profiles: {
+            full_name: opp.ownerName,
+            avatar_url: opp.ownerAvatar,
+            occupation: opp.ownerTrade,
+            role: opp.ownerRole,
+            is_verified: opp.ownerVerified === 1,
+            username: opp.ownerName?.toLowerCase().replace(/\s+/g, '_') // Fallback username
+          }
+        }));
+        
+        setOpportunities(transformedData);
+      } catch (error) {
         console.error('Error fetching opportunities:', error);
-      } else {
-        setOpportunities(data || []);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     const timer = setTimeout(fetchOpportunities, 300);

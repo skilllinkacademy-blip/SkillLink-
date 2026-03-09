@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
 
@@ -27,60 +27,74 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   useEffect(() => {
     const fetchOpportunity = async () => {
       if (!id) return;
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*, profiles(*)')
-        .eq('id', id)
-        .single();
+      try {
+        const response = await api.get(`/opportunities/${id}`);
+        const data = response.data;
+        
+        // Transform data to match frontend expectations
+        const transformedData = {
+          ...data,
+          owner_id: data.ownerId,
+          image_url: data.imageUrl,
+          work_hours: data.workHours,
+          pay_amount: data.payAmount,
+          pay_period: data.payPeriod,
+          about_work: data.aboutWork,
+          who_i_want_to_teach: data.whoIWantToTeach,
+          mentee_will_learn: data.menteeWillLearn,
+          requirements: data.requirements,
+          what_i_want_to_learn: data.whatIWantToLearn,
+          experience_note: data.experienceNote,
+          desired_salary: data.desiredSalary,
+          created_at: data.createdAt,
+          profiles: {
+            full_name: data.ownerName,
+            avatar_url: data.ownerAvatar,
+            occupation: data.ownerTrade,
+            role: data.ownerRole,
+            is_verified: data.ownerVerified === 1,
+            username: data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
+            location: data.location,
+            created_at: data.createdAt
+          }
+        };
 
-      if (error) {
-        console.error('Error fetching opportunity:', error);
-        navigate('/app/opportunities');
-      } else {
-        setOpportunity(data);
+        setOpportunity(transformedData);
+        setIsSaved(data.isSaved === 1);
+
         // Calculate match score if user is logged in
-        if (profile && data) {
-          const { score, breakdown } = calculateMatchScore(data, profile, isRtl);
+        if (profile && transformedData) {
+          const { score, breakdown } = calculateMatchScore(transformedData, profile, isRtl);
           setMatchScore(score);
           setMatchBreakdown(breakdown);
         }
+      } catch (error) {
+        console.error('Error fetching opportunity:', error);
+        navigate('/app/opportunities');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchOpportunity();
   }, [id, navigate, profile]);
-
-  // Removed local calculateMatchScore function as it's now in utils
 
   useEffect(() => {
     const checkStatus = async () => {
       if (!user || !id || !opportunity) return;
       
       try {
-        // Check saved status
-        const { data: savedData } = await supabase
-          .from('saved_opportunities')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('opportunity_id', id)
-          .maybeSingle();
-        
-        if (savedData) {
-          setIsSaved(true);
-        }
-
         // Check if already expressed interest for this specific opportunity
-        const { data: interestData } = await supabase
-          .from('notifications')
-          .select('id')
-          .eq('user_id', opportunity.owner_id)
-          .eq('sender_id', user.id)
-          .eq('type', 'interest')
-          .eq('link', `/app/opportunities/${id}`)
-          .maybeSingle();
+        const response = await api.get('/notifications');
+        const notifications = response.data;
         
-        if (interestData) {
+        const hasInterest = notifications.some((n: any) => 
+          n.senderId === user.id && 
+          n.type === 'interest' && 
+          n.link === `/app/opportunities/${id}`
+        );
+        
+        if (hasInterest) {
           setIsInterested(true);
         }
       } catch (err) {
@@ -135,50 +149,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
     setInteresting(true);
     try {
-      const senderName = profile?.full_name || user.user_metadata?.full_name || (isRtl ? 'משתמש' : 'User');
-      console.log('Sending interest notification from:', senderName, 'to:', opportunity.owner_id);
+      const senderName = profile?.full_name || (isRtl ? 'משתמש' : 'User');
       
-      // First check if a notification already exists to avoid duplicates or RLS issues
-      const { data: existingNotif } = await supabase
-        .from('notifications')
-        .select('id')
-        .eq('user_id', opportunity.owner_id)
-        .eq('sender_id', user.id)
-        .eq('type', 'interest')
-        .eq('link', `/app/opportunities/${opportunity.id}`)
-        .maybeSingle();
-
-      if (existingNotif) {
-        setIsInterested(true);
-        alert(isRtl ? 'כבר הבעת עניין בהזדמנות זו' : 'You have already expressed interest in this opportunity');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: opportunity.owner_id,
-          sender_id: user.id,
-          type: 'interest',
-          title: isRtl ? 'מישהו מעוניין בהזדמנות שלך!' : 'Someone is interested in your opportunity!',
-          content: isRtl 
-            ? `${senderName} התעניין בעבודה "${opportunity.title}", במידה וזה רלוונטי שווה לחזור אליו.`
-            : `${senderName} is interested in "${opportunity.title}". If relevant, it's worth getting back to them.`,
-          link: `/app/opportunities/${opportunity.id}`,
-          is_read: false
-        })
-        .select();
-
-      if (error) {
-        console.error('Supabase error inserting notification:', error);
-        // If it's an RLS error, we might want to inform the user more clearly
-        if (error.code === '42501') {
-          throw new Error(isRtl ? 'אין לך הרשאות לשלוח התראה זו. אנא פנה לתמיכה.' : 'You do not have permission to send this notification. Please contact support.');
-        }
-        throw error;
-      }
+      await api.post('/notifications', {
+        userId: opportunity.owner_id,
+        type: 'interest',
+        title: isRtl ? 'מישהו מעוניין בהזדמנות שלך!' : 'Someone is interested in your opportunity!',
+        content: isRtl 
+          ? `${senderName} התעניין בעבודה "${opportunity.title}", במידה וזה רלוונטי שווה לחזור אליו.`
+          : `${senderName} is interested in "${opportunity.title}". If relevant, it's worth getting back to them.`,
+        link: `/app/opportunities/${opportunity.id}`
+      });
       
-      console.log('Notification inserted successfully:', data);
       setIsInterested(true);
       alert(isRtl ? 'הודעה נשלחה למפרסם ההזדמנות!' : 'Notification sent to the opportunity poster!');
     } catch (error: any) {
@@ -193,19 +175,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     if (!user || !id) return;
     setSaving(true);
     try {
-      if (isSaved) {
-        await supabase
-          .from('saved_opportunities')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('opportunity_id', id);
-        setIsSaved(false);
-      } else {
-        await supabase
-          .from('saved_opportunities')
-          .insert({ user_id: user.id, opportunity_id: id });
-        setIsSaved(true);
-      }
+      await api.post(`/opportunities/${id}/save`);
+      setIsSaved(!isSaved);
     } catch (error) {
       console.error('Error toggling save status:', error);
     } finally {
