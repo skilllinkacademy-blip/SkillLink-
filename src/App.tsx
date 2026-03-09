@@ -22,10 +22,10 @@ import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
+  const { user, loading, isSyncing, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || isSyncing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>

@@ -22,6 +22,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isSyncing: boolean;
   dbError: string | null;
   unreadMessagesCount: number;
   unreadNotificationsCount: number;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
   const [bypassDbCheck, setBypassDbCheck] = useState(() => {
     return typeof window !== 'undefined' && localStorage.getItem('bypass_db_check') === 'true';
@@ -196,14 +198,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkDatabaseSetup();
         
         if (currentUser && session?.access_token) {
-          // Sync with local backend - Non-blocking to avoid hanging the app
-          api.post('/auth/session', { access_token: session.access_token })
-            .then(response => {
-              localStorage.setItem('skilllink_token', response.data.token);
-            })
-            .catch(err => {
-              console.error('Error syncing session with backend:', err);
-            });
+          // Sync with local backend - Blocking during init to ensure token is ready
+          try {
+            const response = await api.post('/auth/session', { access_token: session.access_token });
+            localStorage.setItem('skilllink_token', response.data.token);
+          } catch (err) {
+            console.error('Error syncing session with backend during init:', err);
+            // If sync fails, we might want to sign out or handle it
+          }
 
           // Fire and forget, or handle in background
           ensureProfile(currentUser);
@@ -212,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Error during auth initialization:', err);
       } finally {
-        // We set loading to false as soon as we have the session
+        // We set loading to false as soon as we have attempted the sync
         setLoading(false);
       }
     };
@@ -226,14 +228,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(newUser);
       
       if (newUser && session?.access_token) {
-        // Sync with local backend - Non-blocking
-        api.post('/auth/session', { access_token: session.access_token })
-          .then(response => {
-            localStorage.setItem('skilllink_token', response.data.token);
-          })
-          .catch(err => {
-            console.error('Error syncing session with backend:', err);
-          });
+        // Sync with local backend
+        setIsSyncing(true);
+        try {
+          const response = await api.post('/auth/session', { access_token: session.access_token });
+          localStorage.setItem('skilllink_token', response.data.token);
+        } catch (err) {
+          console.error('Error syncing session with backend during state change:', err);
+        } finally {
+          setIsSyncing(false);
+        }
 
         // We don't set loading to true here to avoid flickering, 
         // but we ensure profile data is refreshed
@@ -348,6 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session, 
       profile, 
       loading, 
+      isSyncing,
       dbError: bypassDbCheck ? null : dbError, 
       unreadMessagesCount,
       unreadNotificationsCount,

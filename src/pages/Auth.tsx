@@ -401,6 +401,33 @@ export default function Auth({ isRtl }: AuthProps) {
           )}
 
           {isLogin ? renderLogin() : (step === 1 ? renderStep1() : renderStep2())}
+
+          {/* Emergency Reset Button - Only for setup/stuck phase */}
+          <div className="pt-8 mt-8 border-t border-gray-100">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center mb-4">
+              {isRtl ? 'נתקעת? איפוס חירום של מסד הנתונים' : 'Stuck? Emergency Database Reset'}
+            </p>
+            <button
+              onClick={async () => {
+                if (window.confirm(isRtl ? 'זה ימחק את כל הנתונים המקומיים (פרופילים, פוסטים). האם אתה בטוח?' : 'This will wipe all local data (profiles, posts). Are you sure?')) {
+                  try {
+                    const response = await fetch('/api/admin/emergency-reset-sqlite', { method: 'POST' });
+                    if (response.ok) {
+                      alert(isRtl ? 'מסד הנתונים אופס. עכשיו תוכל להירשם כמשתמש הראשון (אדמין).' : 'Database wiped. You can now register as the first user (Admin).');
+                      window.location.reload();
+                    } else {
+                      alert('Reset failed');
+                    }
+                  } catch (e) {
+                    alert('Reset failed');
+                  }
+                }
+              }}
+              className="w-full py-2 text-red-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-600 transition-all"
+            >
+              {isRtl ? 'איפוס מערכת מלא (SQLite)' : 'Full System Reset (SQLite)'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
