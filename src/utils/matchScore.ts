@@ -28,32 +28,65 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
   const details: string[] = [];
 
   // 1. Location Match (40 points)
-  const oppCity = (opportunity.location || opportunity.profiles?.location || '').toLowerCase();
-  const myCity = (myProfile.location || '').toLowerCase();
+  const oppCity = (opportunity.location || opportunity.profiles?.location || '').trim().toLowerCase();
+  const myCity = (myProfile.location || '').trim().toLowerCase();
 
-  if (oppCity && myCity && oppCity === myCity) {
-    locationScore = 40;
-    details.push(isRtl ? 'מיקום זהה - מושלם לעבודה קרובה' : 'Same location - perfect for local work');
-  } else if (oppCity && myCity && (oppCity.includes(myCity) || myCity.includes(oppCity))) {
-    locationScore = 25;
-    details.push(isRtl ? 'מיקום קרוב או באזור' : 'Location is nearby or in the same area');
+  if (oppCity && myCity) {
+    if (oppCity === myCity) {
+      locationScore = 40;
+      details.push(isRtl ? 'מיקום זהה - מושלם לעבודה קרובה' : 'Same location - perfect for local work');
+    } else if (oppCity.includes(myCity) || myCity.includes(oppCity)) {
+      locationScore = 30;
+      details.push(isRtl ? 'מיקום קרוב מאוד' : 'Location is very close');
+    } else {
+      // Check for common regions or nearby cities (simplified)
+      const regions = [
+        ['תל אביב', 'רמת גן', 'גבעתיים', 'חולון', 'בת ים', 'בני ברק'],
+        ['פתח תקווה', 'ראש העין', 'הוד השרון', 'כפר סבא', 'רעננה'],
+        ['ירושלים', 'מבשרת ציון', 'מעלה אדומים', 'בית שמש'],
+        ['חיפה', 'קריות', 'נשר', 'טירת כרמל'],
+        ['ראשון לציון', 'נס ציונה', 'רחובות', 'לוד', 'רמלה']
+      ];
+      
+      const sameRegion = regions.find(r => r.some(c => oppCity.includes(c.toLowerCase())) && r.some(c => myCity.includes(c.toLowerCase())));
+      
+      if (sameRegion) {
+        locationScore = 25;
+        details.push(isRtl ? 'באותו אזור גיאוגרפי' : 'In the same geographic area');
+      } else {
+        locationScore = 5;
+        details.push(isRtl ? 'מיקום מרוחק' : 'Location is far away');
+      }
+    }
   } else {
-    locationScore = 5;
-    details.push(isRtl ? 'מיקום מרוחק' : 'Location is far away');
+    locationScore = 15; // Neutral if one is missing
+    details.push(isRtl ? 'מיקום לא צוין - בדוק בפרטים' : 'Location not specified - check details');
   }
 
   // 2. Role & Occupation Alignment (30 points)
-  if (opportunity.type === 'mentor_offer' && myProfile.role === 'mentee') {
+  const isMentorOffer = opportunity.type === 'mentor_offer';
+  const isMenteeSeeking = opportunity.type === 'mentee_seeking';
+  
+  if (isMentorOffer && myProfile.role === 'mentee') {
     roleScore += 15;
-  } else if (opportunity.type === 'mentee_seeking' && myProfile.role === 'mentor') {
+  } else if (isMenteeSeeking && myProfile.role === 'mentor') {
     roleScore += 15;
   }
 
   const oppTitle = (opportunity.title || '').toLowerCase();
+  const oppAbout = (opportunity.about_work || opportunity.aboutWork || '').toLowerCase();
   const myOcc = (myProfile.occupation || '').toLowerCase();
-  if (myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle))) {
+  const myBio = (myProfile.bio || '').toLowerCase();
+  
+  const hasProfessionalMatch = myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc));
+  const hasInterestMatch = myBio && (oppTitle.split(' ').some(word => word.length > 3 && myBio.includes(word)));
+
+  if (hasProfessionalMatch) {
     roleScore += 15;
     details.push(isRtl ? 'התאמה מקצועית גבוהה' : 'High professional alignment');
+  } else if (hasInterestMatch) {
+    roleScore += 10;
+    details.push(isRtl ? 'תחומי עניין דומים' : 'Similar interests');
   } else if (roleScore > 0) {
     details.push(isRtl ? 'סוג תפקיד מתאים' : 'Matching role type');
   }

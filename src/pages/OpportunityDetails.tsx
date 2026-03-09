@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +23,36 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [matchScore, setMatchScore] = useState<number | null>(null);
   const [matchBreakdown, setMatchBreakdown] = useState<MatchBreakdown | null>(null);
   const [showMatchDetails, setShowMatchDetails] = useState(false);
+  const [interestedUsers, setInterestedUsers] = useState<any[]>([]);
+  const [loadingInterests, setLoadingInterests] = useState(false);
+
+  useEffect(() => {
+    if (opportunity && user && opportunity.owner_id === user.id) {
+      fetchInterests();
+    }
+  }, [opportunity, user]);
+
+  const fetchInterests = async () => {
+    setLoadingInterests(true);
+    try {
+      const response = await api.get(`/opportunities/${id}/interests`);
+      setInterestedUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching interests:', error);
+    } finally {
+      setLoadingInterests(false);
+    }
+  };
+
+  const removeInterest = async (userId: string) => {
+    if (!window.confirm(isRtl ? 'האם אתה בטוח שברצונך להסיר את המשתמש מרשימת המעוניינים?' : 'Are you sure you want to remove this user from the interested list?')) return;
+    try {
+      await api.delete(`/opportunities/${id}/interest/${userId}`);
+      setInterestedUsers(prev => prev.filter(u => u.userId !== userId));
+    } catch (error) {
+      console.error('Error removing interest:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchOpportunity = async () => {
@@ -47,13 +77,14 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           experience_note: data.experienceNote,
           desired_salary: data.desiredSalary,
           created_at: data.createdAt,
+          ownerUsername: data.ownerUsername,
           profiles: {
             full_name: data.ownerName,
             avatar_url: data.ownerAvatar,
             occupation: data.ownerTrade,
             role: data.ownerRole,
             is_verified: data.ownerVerified === 1,
-            username: data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
+            username: data.ownerUsername || data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
             location: data.location,
             created_at: data.createdAt
           }
@@ -130,16 +161,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   };
 
   const handleInterested = async () => {
-    console.log('handleInterested called');
-    if (!user || !opportunity) {
-      console.log('Missing user or opportunity');
-      return;
-    }
+    if (!user || !opportunity) return;
     
-    if (interesting || isInterested) {
-      console.log('Already interesting or interested');
-      return;
-    }
+    if (interesting || isInterested) return;
     
     // Prevent self-interest
     if (user.id === opportunity.owner_id) {
@@ -149,6 +173,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
     setInteresting(true);
     try {
+      // 1. Save interest in DB
+      await api.post(`/opportunities/${id}/interest`);
+
       const senderName = profile?.full_name || (isRtl ? 'משתמש' : 'User');
       
       await api.post('/notifications', {
@@ -489,6 +516,69 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
             </div>
+
+            {/* Interested Users (Owner Only) */}
+            {user?.id === opportunity.owner_id && (
+              <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
+                  <span className="px-3 py-1 bg-slate-100 text-slate-900 text-[10px] font-black rounded-full border border-slate-200">
+                    {interestedUsers.length}
+                  </span>
+                </div>
+
+                {loadingInterests ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="animate-spin text-slate-400" size={24} />
+                  </div>
+                ) : interestedUsers.length > 0 ? (
+                  <div className="space-y-4">
+                    {interestedUsers.map((interestedUser) => (
+                      <div key={interestedUser.userId} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group/user">
+                        <div 
+                          className="flex items-center gap-4 cursor-pointer"
+                          onClick={() => navigate(`/app/u/${interestedUser.userUsername || interestedUser.userId}`)}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden border border-slate-300">
+                            {interestedUser.userAvatar ? (
+                              <img src={interestedUser.userAvatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
+                                {interestedUser.userName?.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-900">{interestedUser.userName}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{interestedUser.userTrade || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 opacity-0 group-hover/user:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => navigate('/app/messages', { state: { recipientId: interestedUser.userId, recipientName: interestedUser.userName } })}
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title={isRtl ? 'שלח הודעה' : 'Send Message'}
+                          >
+                            <MessageSquare size={18} />
+                          </button>
+                          <button 
+                            onClick={() => removeInterest(interestedUser.userId)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title={isRtl ? 'התעלם/מחק' : 'Ignore/Delete'}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-slate-400 font-medium italic">
+                    {isRtl ? 'עדיין אין משתמשים שגילו עניין' : 'No interested users yet'}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Trust Score Element */}
             <div className="p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">

@@ -39,6 +39,7 @@ interface Opportunity {
     is_verified?: boolean;
     username?: string;
   };
+  ownerUsername?: string;
 }
 
 interface OpportunityCardProps {
@@ -163,8 +164,9 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (opportunity.profiles?.username) {
-                navigate(`/app/u/${opportunity.profiles.username}`);
+              const profileUsername = opportunity.ownerUsername || opportunity.profiles?.username;
+              if (profileUsername) {
+                navigate(`/app/u/${profileUsername}`);
               }
             }}
           >

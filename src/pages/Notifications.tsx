@@ -54,7 +54,8 @@ export default function Notifications({ isRtl }: NotificationsProps) {
         created_at: n.createdAt,
         sender: {
           full_name: n.senderName,
-          avatar_url: n.senderAvatar
+          avatar_url: n.senderAvatar,
+          username: n.senderUsername
         }
       }));
       
@@ -172,15 +173,25 @@ export default function Notifications({ isRtl }: NotificationsProps) {
                       </Link>
                     )}
                     {notification.sender_id && (
-                      <Link 
-                        to="/app/messages"
-                        state={{ recipientId: notification.sender_id, recipientName: notification.sender?.full_name }}
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 flex items-center gap-2"
-                      >
-                        <MessageSquare size={14} />
-                        {isRtl ? 'שלח הודעה בחזרה' : 'Message Back'}
-                      </Link>
+                      <>
+                        <Link 
+                          to={`/app/u/${notification.sender?.username || notification.sender_id}`}
+                          onClick={() => markAsRead(notification.id)}
+                          className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:text-emerald-600 flex items-center gap-2"
+                        >
+                          <UserPlus size={14} />
+                          {isRtl ? 'צפה בפרופיל' : 'View Profile'}
+                        </Link>
+                        <Link 
+                          to="/app/messages"
+                          state={{ recipientId: notification.sender_id, recipientName: notification.sender?.full_name }}
+                          onClick={() => markAsRead(notification.id)}
+                          className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 flex items-center gap-2"
+                        >
+                          <MessageSquare size={14} />
+                          {isRtl ? 'שלח הודעה' : 'Send Message'}
+                        </Link>
+                      </>
                     )}
                     {!notification.is_read && (
                       <button 

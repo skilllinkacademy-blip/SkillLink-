@@ -4,6 +4,7 @@ import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 
 interface ProfileProps {
   isRtl: boolean;
@@ -235,21 +236,32 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     if (activeTab === 'saved' && user?.id === profile?.id) {
       const fetchSaved = async () => {
         setLoadingSaved(true);
-        const { data, error } = await supabase
-          .from('saved_opportunities')
-          .select(`
-            opportunity_id,
-            opportunities (
-              *,
-              profiles (*)
-            )
-          `)
-          .eq('user_id', user.id);
-        
-        if (!error && data) {
-          setSavedOpportunities(data.map(d => d.opportunities).filter(Boolean));
+        try {
+          const response = await api.get('/opportunities');
+          const saved = response.data.filter((opp: any) => opp.isSaved === 1);
+          
+          // Transform to match frontend expectations
+          const transformedSaved = saved.map((opp: any) => ({
+            ...opp,
+            owner_id: opp.ownerId,
+            image_url: opp.imageUrl,
+            work_hours: opp.workHours,
+            pay_amount: opp.payAmount,
+            pay_period: opp.payPeriod,
+            profiles: {
+              full_name: opp.ownerName,
+              avatar_url: opp.ownerAvatar,
+              occupation: opp.ownerTrade,
+              username: opp.ownerUsername
+            }
+          }));
+          
+          setSavedOpportunities(transformedSaved);
+        } catch (err) {
+          console.error('Error fetching saved opportunities:', err);
+        } finally {
+          setLoadingSaved(false);
         }
-        setLoadingSaved(false);
       };
       fetchSaved();
     }
@@ -266,6 +278,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         delete updatePayload.portfolio_urls;
       }
 
+      // 1. Update SQLite backend
+      try {
+        await api.put('/users/me', updatePayload);
+      } catch (err) {
+        console.error('Error updating SQLite profile:', err);
+      }
+      
+      // 2. Update Supabase
       const { error } = await supabase
         .from('profiles')
         .update({

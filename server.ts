@@ -48,6 +48,7 @@ try {
   const hasAvailability = userTableInfo.some((col: any) => col.name === 'availability');
   const hasPhone = userTableInfo.some((col: any) => col.name === 'phone');
   const hasWorkload = userTableInfo.some((col: any) => col.name === 'workload');
+  const hasUsername = userTableInfo.some((col: any) => col.name === 'username');
   
   if (!hasGoals) {
     db.prepare("ALTER TABLE users ADD COLUMN goals TEXT").run();
@@ -60,6 +61,9 @@ try {
   }
   if (!hasWorkload) {
     db.prepare("ALTER TABLE users ADD COLUMN workload TEXT").run();
+  }
+  if (!hasUsername) {
+    db.prepare("ALTER TABLE users ADD COLUMN username TEXT").run();
   }
 
   const tableInfo = db.prepare("PRAGMA table_info(requests)").all();
@@ -105,6 +109,7 @@ db.exec(`
     lang TEXT DEFAULT 'en',
     verified INTEGER DEFAULT 0,
     avatar TEXT,
+    username TEXT UNIQUE,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -218,6 +223,16 @@ db.exec(`
     FOREIGN KEY (requestId) REFERENCES requests (id),
     FOREIGN KEY (fromId) REFERENCES users (id),
     FOREIGN KEY (toId) REFERENCES users (id)
+  );
+
+  CREATE TABLE IF NOT EXISTS opportunity_interests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    opportunityId INTEGER NOT NULL,
+    userId INTEGER NOT NULL,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(opportunityId, userId),
+    FOREIGN KEY (opportunityId) REFERENCES opportunities (id),
+    FOREIGN KEY (userId) REFERENCES users (id)
   );
 `);
 
@@ -426,7 +441,7 @@ async function startServer() {
         const finalRole = userCount === 0 ? 'admin' : (user.user_metadata?.role || 'mentee');
 
         const metadata = user.user_metadata || {};
-        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload, username) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
           metadata.full_name || 'User',
           user.email,
@@ -435,13 +450,15 @@ async function startServer() {
           metadata.location || 'פתח תקווה',
           metadata.occupation || '',
           metadata.phone || '',
-          metadata.workload || 'low'
+          metadata.workload || 'low',
+          metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`
         );
         localUser = {
           id: result.lastInsertRowid,
           name: metadata.full_name || 'User',
           email: user.email,
-          role: finalRole
+          role: finalRole,
+          username: metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`
         };
       }
 
@@ -455,13 +472,13 @@ async function startServer() {
 
   // Profiles
   app.get('/api/users/:id', authenticateToken, (req: any, res) => {
-    const user = db.prepare('SELECT id, name, email, role, location, age, trade, bio, experience, businessName, teachingPrefs, areaServed, lang, avatar FROM users WHERE id = ?').get(req.params.id) as any;
+    const user = db.prepare('SELECT id, name, email, role, location, age, trade, bio, experience, businessName, teachingPrefs, areaServed, lang, avatar, username FROM users WHERE id = ?').get(req.params.id) as any;
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   });
 
   app.put('/api/users/me', authenticateToken, (req: any, res) => {
-    const fields = Object.keys(req.body).filter(f => ['name', 'bio', 'location', 'age', 'trade', 'experience', 'businessName', 'teachingPrefs', 'areaServed', 'lang', 'avatar'].includes(f));
+    const fields = Object.keys(req.body).filter(f => ['name', 'bio', 'location', 'age', 'trade', 'experience', 'businessName', 'teachingPrefs', 'areaServed', 'lang', 'avatar', 'username'].includes(f));
     if (fields.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
 
     const setClause = fields.map(f => `${f} = ?`).join(', ');
@@ -622,7 +639,7 @@ async function startServer() {
   app.get('/api/opportunities', authenticateToken, (req: any, res) => {
     const { type, q } = req.query;
     let query = `
-      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified,
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername,
       (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id
@@ -668,7 +685,7 @@ async function startServer() {
 
   app.get('/api/opportunities/:id', authenticateToken, (req: any, res) => {
     const opportunity = db.prepare(`
-      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified,
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername,
       (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id
@@ -741,6 +758,42 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  app.get('/api/opportunities/:id/interests', authenticateToken, (req: any, res) => {
+    const opp = db.prepare('SELECT ownerId FROM opportunities WHERE id = ?').get(req.params.id) as any;
+    if (!opp) return res.status(404).json({ error: 'Not found' });
+    if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+
+    const interests = db.prepare(`
+      SELECT i.*, u.name as userName, u.avatar as userAvatar, u.trade as userTrade, u.username as userUsername
+      FROM opportunity_interests i
+      JOIN users u ON i.userId = u.id
+      WHERE i.opportunityId = ?
+      ORDER BY i.createdAt DESC
+    `).all(req.params.id);
+    res.json(interests);
+  });
+
+  app.post('/api/opportunities/:id/interest', authenticateToken, (req: any, res) => {
+    const opportunityId = req.params.id;
+    const userId = req.user.id;
+    
+    try {
+      db.prepare('INSERT OR IGNORE INTO opportunity_interests (opportunityId, userId) VALUES (?, ?)').run(opportunityId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to express interest' });
+    }
+  });
+
+  app.delete('/api/opportunities/:id/interest/:userId', authenticateToken, (req: any, res) => {
+    const opp = db.prepare('SELECT ownerId FROM opportunities WHERE id = ?').get(req.params.id) as any;
+    if (!opp) return res.status(404).json({ error: 'Not found' });
+    if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+
+    db.prepare('DELETE FROM opportunity_interests WHERE opportunityId = ? AND userId = ?').run(req.params.id, req.params.userId);
+    res.json({ success: true });
+  });
+
   app.post('/api/opportunities/:id/save', authenticateToken, (req: any, res) => {
     const opportunityId = req.params.id;
     const userId = req.user.id;
@@ -757,7 +810,7 @@ async function startServer() {
   // Notifications
   app.get('/api/notifications', authenticateToken, (req: any, res) => {
     const notifications = db.prepare(`
-      SELECT n.*, u.name as senderName, u.avatar as senderAvatar
+      SELECT n.*, u.name as senderName, u.avatar as senderAvatar, u.username as senderUsername
       FROM notifications n
       LEFT JOIN users u ON n.senderId = u.id
       WHERE n.userId = ?
