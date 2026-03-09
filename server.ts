@@ -25,11 +25,6 @@ const PORT = 3000;
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-console.log('--- SERVER STARTUP ENV CHECK ---');
-console.log('VITE_SUPABASE_URL:', supabaseUrl ? 'FOUND' : 'MISSING');
-console.log('SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? 'FOUND' : 'MISSING');
-console.log('--------------------------------');
-
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
 }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   ShieldCheck, 
@@ -135,24 +134,6 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
     }
   };
 
-  const handleResetDatabase = async () => {
-    if (!window.confirm(isRtl ? 'אזהרה: פעולה זו תמחק את כל הנתונים המקומיים (פרופילים, פוסטים, הודעות). האם אתה בטוח?' : 'WARNING: This will delete all local data (profiles, posts, messages). Are you sure?')) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.post('/admin/danger-zone/reset');
-      alert(isRtl ? 'מסד הנתונים אופס בהצלחה. כעת עליך למחוק את המשתמשים ב-Supabase Dashboard.' : 'Database reset successfully. Now you must delete users in Supabase Dashboard.');
-      window.location.reload();
-    } catch (err: any) {
-      console.error('Error resetting database:', err);
-      alert(isRtl ? 'שגיאה באיפוס מסד הנתונים' : 'Error resetting database');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (profile?.role !== 'admin') {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
@@ -201,35 +182,6 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
           >
             {isRtl ? 'הכל' : 'All'}
           </button>
-        </div>
-      </div>
-
-      <div className="bg-red-50 rounded-[3rem] border border-red-100 p-10 space-y-6">
-        <div className="flex items-center gap-4 text-red-600">
-          <ShieldAlert size={32} />
-          <h2 className="text-2xl font-black">{isRtl ? 'אזור סכנה' : 'Danger Zone'}</h2>
-        </div>
-        <p className="text-red-700 font-medium">
-          {isRtl 
-            ? 'איפוס הפלטפורמה ימחק את כל הפרופילים, הפוסטים, ההזדמנויות וההודעות ממסד הנתונים המקומי. פעולה זו אינה הפיכה.' 
-            : 'Resetting the platform will delete all profiles, posts, opportunities, and messages from the local database. This action is irreversible.'}
-        </p>
-        <button
-          onClick={handleResetDatabase}
-          disabled={loading}
-          className="px-8 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center gap-2"
-        >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <X size={20} />}
-          {isRtl ? 'אפס את כל הנתונים המקומיים' : 'Reset All Local Data'}
-        </button>
-        <div className="p-4 bg-white/50 rounded-2xl border border-red-200 text-xs text-red-800 font-bold space-y-2">
-          <p>{isRtl ? 'שלבים לניקוי מלא:' : 'Steps for full cleanup:'}</p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>{isRtl ? 'לחץ על הכפתור למעלה לאיפוס הנתונים המקומיים.' : 'Click the button above to reset local data.'}</li>
-            <li>{isRtl ? 'עבור ל-Supabase Dashboard -> Authentication -> Users.' : 'Go to Supabase Dashboard -> Authentication -> Users.'}</li>
-            <li>{isRtl ? 'מחק את כל המשתמשים שם ידנית.' : 'Delete all users there manually.'}</li>
-            <li>{isRtl ? 'כעת תוכל להירשם מחדש עם אותם אימיילים.' : 'Now you can register again with the same emails.'}</li>
-          </ol>
         </div>
       </div>
 

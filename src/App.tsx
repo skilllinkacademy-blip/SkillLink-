@@ -37,42 +37,6 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
     <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
       <Navbar isRtl={isRtl} toggleLang={toggleLang} />
       
-      {dbError === 'DATABASE_SETUP_REQUIRED' && (
-        <div className="bg-red-50 border-b border-red-200 p-4 sticky top-16 z-40">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-red-800">
-              <div className="bg-red-100 p-2 rounded-full">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold">{isRtl ? 'נדרשת הגדרת מסד נתונים' : 'Database Setup Required'}</p>
-                <p className="text-sm opacity-90">
-                  {isRtl 
-                    ? 'נראה שטבלאות ה-Supabase עדיין לא הוגדרו. עליך להריץ את ה-SQL ב-Supabase Dashboard.' 
-                    : 'It looks like Supabase tables are not set up yet. You need to run the SQL in your Supabase Dashboard.'}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={handleBypassDbCheck}
-                className="px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 rounded-lg transition-colors"
-              >
-                {isRtl ? 'התעלם (לא מומלץ)' : 'Ignore (Not recommended)'}
-              </button>
-              <button 
-                onClick={() => window.open('https://supabase.com/dashboard', '_blank')}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-lg shadow-sm transition-colors"
-              >
-                {isRtl ? 'פתח Supabase' : 'Open Supabase'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
         <Routes>
           {/* Public Routes */}

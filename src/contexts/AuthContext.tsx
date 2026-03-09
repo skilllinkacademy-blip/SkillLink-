@@ -23,7 +23,6 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isSyncing: boolean;
-  dbError: string | null;
   unreadMessagesCount: number;
   unreadNotificationsCount: number;
   signOut: () => Promise<void>;
@@ -31,8 +30,6 @@ interface AuthContextType {
   refreshUnreadCount: () => Promise<void>;
   setUnreadMessagesCount: React.Dispatch<React.SetStateAction<number>>;
   setUnreadNotificationsCount: React.Dispatch<React.SetStateAction<number>>;
-  handleBypassDbCheck: () => void;
-  handleForceSignOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,18 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [dbError, setDbError] = useState<string | null>(null);
-  const [bypassDbCheck, setBypassDbCheck] = useState(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('bypass_db_check') === 'true';
-  });
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-
-  const checkDatabaseSetup = async () => {
-    // Disabled intrusive database check as requested by user
-    setDbError(null);
-    return;
-  };
 
   const fetchUnreadCount = async (userId: string) => {
     if (!isSupabaseConfigured) return;
@@ -100,8 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         if (error.code === 'PGRST116') {
           setProfile(null);
-        } else if (error.message.includes('profiles') && error.message.includes('cache')) {
-          setDbError('DATABASE_SETUP_REQUIRED');
         } else {
           console.error('Error fetching profile:', error);
         }
@@ -115,9 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err: any) {
       console.error('Unexpected error fetching profile:', err);
-      if (err.message?.includes('profiles')) {
-        setDbError('DATABASE_SETUP_REQUIRED');
-      }
     }
   };
 
@@ -135,9 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (fetchError) {
         console.error('AuthContext: Error checking for existing profile:', fetchError);
-        if (fetchError.message.includes('profiles') || fetchError.message.includes('relation')) {
-          setDbError('DATABASE_SETUP_REQUIRED');
-        }
         return;
       }
 
@@ -166,9 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (insertError) {
           console.error('AuthContext: Error inserting profile:', insertError);
-          if (insertError.message.includes('profiles') || insertError.message.includes('relation')) {
-            setDbError('DATABASE_SETUP_REQUIRED');
-          }
         } else {
           console.log('AuthContext: Profile created successfully');
           setProfile(newProfile);
@@ -195,7 +171,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        checkDatabaseSetup();
         
         if (currentUser && session?.access_token) {
           // Sync with local backend
@@ -344,23 +319,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) await fetchUnreadCount(user.id);
   };
 
-  const handleBypassDbCheck = () => {
-    localStorage.setItem('bypass_db_check', 'true');
-    setBypassDbCheck(true);
-    setDbError(null);
-  };
-
-  const handleForceSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.clear();
-      window.location.href = '/auth?mode=signup';
-    } catch (err) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
-
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -368,16 +326,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile, 
       loading, 
       isSyncing,
-      dbError: bypassDbCheck ? null : dbError, 
       unreadMessagesCount,
       unreadNotificationsCount,
       signOut, 
       refreshProfile,
       refreshUnreadCount,
       setUnreadMessagesCount,
-      setUnreadNotificationsCount,
-      handleBypassDbCheck,
-      handleForceSignOut
+      setUnreadNotificationsCount
     }}>
       {children}
     </AuthContext.Provider>
