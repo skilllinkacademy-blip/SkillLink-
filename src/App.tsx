@@ -68,11 +68,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
           />
           <Route 
             path="/reset-password" 
-            element={
-              <ProtectedRoute requireAuth={false}>
-                <ResetPassword isRtl={isRtl} />
-              </ProtectedRoute>
-            } 
+            element={<ResetPassword isRtl={isRtl} />} 
           />
           <Route path="/privacy" element={<Privacy isRtl={isRtl} />} />
           <Route path="/terms" element={<Terms isRtl={isRtl} />} />

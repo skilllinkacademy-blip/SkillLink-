@@ -18,9 +18,14 @@ export default function ResetPassword({ isRtl }: ResetPasswordProps) {
   useEffect(() => {
     // Check if we have a session (Supabase should have handled the hash automatically)
     const checkSession = async () => {
+      // Small delay to allow Supabase to process URL hash
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Reset password session check:', !!session);
+      
       if (!session) {
-        setError(isRtl ? 'הקישור פג תוקף או שאינו תקין.' : 'Link expired or invalid.');
+        setError(isRtl ? 'הקישור פג תוקף או שאינו תקין. וודא שהגדרת את ה-Redirect URL ב-Supabase.' : 'Link expired or invalid. Make sure you configured the Redirect URL in Supabase.');
       }
     };
     checkSession();

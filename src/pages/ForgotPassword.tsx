@@ -19,12 +19,16 @@ export default function ForgotPassword({ isRtl }: ForgotPasswordProps) {
     setError(null);
 
     try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log('Reset password redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: redirectUrl,
       });
       if (error) throw error;
       setSuccess(true);
     } catch (err: any) {
+      console.error('Reset password error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
