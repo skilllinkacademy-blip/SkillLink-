@@ -67,8 +67,8 @@ export default function Landing({ isRtl }: LandingProps) {
               
               <p className="text-lg sm:text-xl text-gray-500 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 {isRtl 
-                  ? 'חברו למנטורים מיומנים באינסטלציה, חשמל, נגרות ועוד. התחילו את מסע ההתלמדות שלכם היום עם הדרכה צמודה בשטח.'
-                  : 'Connect with skilled mentors in plumbing, electrical, carpentry and more. Start your apprentice journey today with hands-on field guidance.'}
+                  ? 'חברו למנטורים מיומנים בעיצוב שיער, חשמל, אינסטלציה, נגרות, מכונאות, מיזוג אוויר, ריתוך ועוד מגוון רחב של מקצועות טכניים ויצירתיים. התחילו את מסע ההתלמדות שלכם היום עם הדרכה צמודה בשטח.'
+                  : 'Connect with skilled mentors in hair styling, electrical, plumbing, carpentry, mechanics, HVAC, welding and a wide range of technical and creative trades. Start your apprentice journey today with hands-on field guidance.'}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">

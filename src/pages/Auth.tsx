@@ -362,6 +362,12 @@ export default function Auth({ isRtl }: AuthProps) {
         />
       </div>
 
+      <div className="flex justify-end px-2">
+        <Link to="/forgot-password" size="sm" className="text-xs font-bold text-blue-600 hover:underline">
+          {isRtl ? 'שכחת סיסמה?' : 'Forgot Password?'}
+        </Link>
+      </div>
+
       <button
         type="submit"
         disabled={loading}

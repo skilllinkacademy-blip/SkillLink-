@@ -37,7 +37,7 @@ export default function Home({ isRtl }: HomeProps) {
             occupation: opp.ownerTrade,
             role: opp.ownerRole,
             is_verified: opp.ownerVerified === 1,
-            username: opp.ownerName?.toLowerCase().replace(/\s+/g, '_') // Fallback username
+            username: opp.ownerUsername || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
           }
         }));
         

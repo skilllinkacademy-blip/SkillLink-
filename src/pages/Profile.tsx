@@ -69,14 +69,29 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       try {
         let data;
         if (isPublicView && username) {
+          // Try fetching by username first
           const { data: publicProfile, error: fetchError } = await supabase
             .from('profiles')
             .select('*')
             .eq('username', username)
-            .single();
+            .maybeSingle();
           
           if (fetchError) throw fetchError;
-          data = publicProfile;
+          
+          if (!publicProfile) {
+            // Fallback: Try fetching by ID in case the "username" is actually an ID (legacy links)
+            const { data: fallbackProfile, error: fallbackError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', username)
+              .maybeSingle();
+            
+            if (fallbackError) throw fallbackError;
+            if (!fallbackProfile) throw new Error(isRtl ? 'משתמש לא נמצא' : 'User not found');
+            data = fallbackProfile;
+          } else {
+            data = publicProfile;
+          }
         } else if (myProfile) {
           data = myProfile;
         } else if (user) {
@@ -397,6 +412,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         .eq('id', user.id);
 
       if (updateError) throw updateError;
+      
+      // Update SQLite backend
+      try {
+        await api.put('/users/me', { avatar: publicUrl });
+      } catch (err) {
+        console.error('Error updating SQLite avatar:', err);
+      }
+
       await refreshProfile();
     } catch (err: any) {
       console.error('Error uploading avatar:', err.message);
@@ -412,6 +435,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     try {
       const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
       if (error) throw error;
+
+      // Update SQLite backend
+      try {
+        await api.put('/users/me', { avatar: null });
+      } catch (err) {
+        console.error('Error removing SQLite avatar:', err);
+      }
+
       await refreshProfile();
     } catch (err: any) {
       console.error('Error removing avatar:', err.message);

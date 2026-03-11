@@ -66,6 +66,22 @@ try {
     db.prepare("ALTER TABLE users ADD COLUMN username TEXT").run();
   }
 
+  // Populate missing usernames
+  const usersWithoutUsername = db.prepare("SELECT id, name FROM users WHERE username IS NULL").all();
+  for (const user of usersWithoutUsername as any) {
+    const baseUsername = user.name.toLowerCase().replace(/\s+/g, '_');
+    let username = baseUsername;
+    let counter = 1;
+    
+    // Ensure uniqueness
+    while (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) {
+      username = `${baseUsername}_${counter}`;
+      counter++;
+    }
+    
+    db.prepare("UPDATE users SET username = ? WHERE id = ?").run(username, user.id);
+  }
+
   const tableInfo = db.prepare("PRAGMA table_info(requests)").all();
   const hasMessage = tableInfo.some((col: any) => col.name === 'message');
   const hasStartDate = tableInfo.some((col: any) => col.name === 'startDate');
@@ -434,14 +450,14 @@ async function startServer() {
 
       // Find or create user in SQLite
       let localUser = db.prepare('SELECT * FROM users WHERE email = ?').get(user.email) as any;
+      const metadata = user.user_metadata || {};
       
       if (!localUser) {
         // Check if this is the first user
         const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
-        const finalRole = userCount === 0 ? 'admin' : (user.user_metadata?.role || 'mentee');
+        const finalRole = userCount === 0 ? 'admin' : (metadata.role || 'mentee');
 
-        const metadata = user.user_metadata || {};
-        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload, username) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload, username, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
           metadata.full_name || 'User',
           user.email,
@@ -451,15 +467,35 @@ async function startServer() {
           metadata.occupation || '',
           metadata.phone || '',
           metadata.workload || 'low',
-          metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`
+          metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`,
+          metadata.avatar_url || null
         );
         localUser = {
           id: result.lastInsertRowid,
           name: metadata.full_name || 'User',
           email: user.email,
           role: finalRole,
-          username: metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`
+          username: metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`,
+          avatar: metadata.avatar_url || null
         };
+      } else {
+        // Update existing user with latest metadata from Supabase
+        const updateFields = [];
+        const updateValues = [];
+        
+        if (metadata.full_name) { updateFields.push('name = ?'); updateValues.push(metadata.full_name); }
+        if (metadata.location) { updateFields.push('location = ?'); updateValues.push(metadata.location); }
+        if (metadata.occupation) { updateFields.push('trade = ?'); updateValues.push(metadata.occupation); }
+        if (metadata.phone) { updateFields.push('phone = ?'); updateValues.push(metadata.phone); }
+        if (metadata.username) { updateFields.push('username = ?'); updateValues.push(metadata.username); }
+        if (metadata.avatar_url) { updateFields.push('avatar = ?'); updateValues.push(metadata.avatar_url); }
+        
+        if (updateFields.length > 0) {
+          updateValues.push(localUser.id);
+          db.prepare(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`).run(...updateValues);
+          // Refresh localUser object
+          localUser = db.prepare('SELECT * FROM users WHERE id = ?').get(localUser.id);
+        }
       }
 
       const token = jwt.sign({ id: localUser.id, name: localUser.name, email: localUser.email, role: localUser.role }, JWT_SECRET);
