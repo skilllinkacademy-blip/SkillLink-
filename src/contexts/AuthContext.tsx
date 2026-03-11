@@ -21,6 +21,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  sqliteId: number | null;
   loading: boolean;
   isSyncing: boolean;
   unreadMessagesCount: number;
@@ -38,10 +39,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [sqliteId, setSqliteId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  const fetchSqliteId = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      setSqliteId(response.data.id);
+    } catch (err) {
+      console.error('Error fetching sqliteId:', err);
+    }
+  };
 
   const fetchUnreadCount = async (userId: string) => {
     if (!isSupabaseConfigured) return;
@@ -178,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await api.post('/auth/session', { access_token: session.access_token });
             if (response.data.token) {
               localStorage.setItem('skilllink_token', response.data.token);
+              await fetchSqliteId();
             } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
               console.warn('Backend session sync skipped: Supabase not configured on server');
             }
@@ -213,6 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentToken && event === 'INITIAL_SESSION') {
           // Skip redundant sync on initial session if we already have a token
           // (Actually, better to sync once to be sure, but let's avoid parallel calls)
+          await fetchSqliteId();
           return;
         }
 
@@ -222,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const response = await api.post('/auth/session', { access_token: session.access_token });
           if (response.data.token) {
             localStorage.setItem('skilllink_token', response.data.token);
+            await fetchSqliteId();
           } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
             console.warn('Backend session sync skipped: Supabase not configured on server');
           }
@@ -236,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('skilllink_token');
         setProfile(null);
+        setSqliteId(null);
         setUnreadMessagesCount(0);
         setUnreadNotificationsCount(0);
       }
@@ -324,6 +339,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       session, 
       profile, 
+      sqliteId,
       loading, 
       isSyncing,
       unreadMessagesCount,

@@ -40,6 +40,7 @@ interface Opportunity {
     username?: string;
   };
   ownerUsername?: string;
+  ownerSupabaseId?: string;
 }
 
 interface OpportunityCardProps {
@@ -70,9 +71,9 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   }, [opportunity, myProfile, isRtl]);
 
   return (
-    <Link 
-      to={`/app/opportunities/${opportunity.id}`}
-      className="industrial-card group flex flex-col h-full relative block overflow-hidden"
+    <div 
+      onClick={() => navigate(`/app/opportunities/${opportunity.id}`)}
+      className="industrial-card group flex flex-col h-full relative block overflow-hidden cursor-pointer"
     >
       {/* Image Header */}
       <div className="h-64 bg-slate-100 relative overflow-hidden">
@@ -159,15 +160,11 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
 
         {/* Footer */}
         <div className="pt-4 sm:pt-6 border-t border-slate-100 flex items-center justify-between">
-          <div 
+          <Link 
+            to={`/app/u/${opportunity.ownerUsername || opportunity.profiles?.username || opportunity.ownerSupabaseId}`}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
-              e.preventDefault();
               e.stopPropagation();
-              const profileUsername = opportunity.ownerUsername || opportunity.profiles?.username;
-              if (profileUsername) {
-                navigate(`/app/u/${profileUsername}`);
-              }
             }}
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs sm:text-sm overflow-hidden border border-slate-200">
@@ -186,7 +183,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               </div>
               <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-1 sm:gap-2">
             {showActions && (
@@ -221,6 +218,6 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

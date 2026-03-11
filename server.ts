@@ -49,6 +49,7 @@ try {
   const hasPhone = userTableInfo.some((col: any) => col.name === 'phone');
   const hasWorkload = userTableInfo.some((col: any) => col.name === 'workload');
   const hasUsername = userTableInfo.some((col: any) => col.name === 'username');
+  const hasSupabaseId = userTableInfo.some((col: any) => col.name === 'supabase_id');
   
   if (!hasGoals) {
     db.prepare("ALTER TABLE users ADD COLUMN goals TEXT").run();
@@ -64,6 +65,9 @@ try {
   }
   if (!hasUsername) {
     db.prepare("ALTER TABLE users ADD COLUMN username TEXT").run();
+  }
+  if (!hasSupabaseId) {
+    db.prepare("ALTER TABLE users ADD COLUMN supabase_id TEXT").run();
   }
 
   // Populate missing usernames
@@ -106,6 +110,7 @@ try {
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    supabase_id TEXT UNIQUE,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
@@ -449,46 +454,69 @@ async function startServer() {
       }
 
       // Find or create user in SQLite
-      let localUser = db.prepare('SELECT * FROM users WHERE email = ?').get(user.email) as any;
+      let localUser = db.prepare('SELECT * FROM users WHERE supabase_id = ? OR email = ?').get(user.id, user.email) as any;
       const metadata = user.user_metadata || {};
       
+      // Fetch profile from Supabase to get the correct username
+      let sbProfile: any = null;
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username, full_name, role, location, occupation, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        sbProfile = profileData;
+      } catch (err) {
+        console.warn('Could not fetch Supabase profile during sync:', err);
+      }
+
+      const finalUsername = sbProfile?.username || metadata.username || localUser?.username || `user_${Math.random().toString(36).substring(2, 10)}`;
+      const finalFullName = sbProfile?.full_name || metadata.full_name || localUser?.name || 'User';
+      const finalLocation = sbProfile?.location || metadata.location || localUser?.location || 'פתח תקווה';
+      const finalTrade = sbProfile?.occupation || metadata.occupation || localUser?.trade || '';
+      const finalAvatar = sbProfile?.avatar_url || metadata.avatar_url || localUser?.avatar || null;
+
       if (!localUser) {
         // Check if this is the first user
         const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
-        const finalRole = userCount === 0 ? 'admin' : (metadata.role || 'mentee');
+        const finalRole = userCount === 0 ? 'admin' : (sbProfile?.role || metadata.role || 'mentee');
 
-        const stmt = db.prepare('INSERT INTO users (name, email, password, role, location, trade, phone, workload, username, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO users (supabase_id, name, email, password, role, location, trade, phone, workload, username, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
-          metadata.full_name || 'User',
+          user.id,
+          finalFullName,
           user.email,
           'supabase-auth-managed', // Placeholder password
           finalRole,
-          metadata.location || 'פתח תקווה',
-          metadata.occupation || '',
+          finalLocation,
+          finalTrade,
           metadata.phone || '',
           metadata.workload || 'low',
-          metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`,
-          metadata.avatar_url || null
+          finalUsername,
+          finalAvatar
         );
         localUser = {
           id: result.lastInsertRowid,
-          name: metadata.full_name || 'User',
+          supabase_id: user.id,
+          name: finalFullName,
           email: user.email,
           role: finalRole,
-          username: metadata.username || `user_${Math.random().toString(36).substring(2, 10)}`,
-          avatar: metadata.avatar_url || null
+          username: finalUsername,
+          avatar: finalAvatar
         };
       } else {
-        // Update existing user with latest metadata from Supabase
+        // Update existing user with latest data from Supabase
         const updateFields = [];
         const updateValues = [];
         
-        if (metadata.full_name) { updateFields.push('name = ?'); updateValues.push(metadata.full_name); }
-        if (metadata.location) { updateFields.push('location = ?'); updateValues.push(metadata.location); }
-        if (metadata.occupation) { updateFields.push('trade = ?'); updateValues.push(metadata.occupation); }
+        updateFields.push('supabase_id = ?'); updateValues.push(user.id);
+        updateFields.push('name = ?'); updateValues.push(finalFullName);
+        updateFields.push('location = ?'); updateValues.push(finalLocation);
+        updateFields.push('trade = ?'); updateValues.push(finalTrade);
+        updateFields.push('username = ?'); updateValues.push(finalUsername);
+        updateFields.push('avatar = ?'); updateValues.push(finalAvatar);
+        
         if (metadata.phone) { updateFields.push('phone = ?'); updateValues.push(metadata.phone); }
-        if (metadata.username) { updateFields.push('username = ?'); updateValues.push(metadata.username); }
-        if (metadata.avatar_url) { updateFields.push('avatar = ?'); updateValues.push(metadata.avatar_url); }
         
         if (updateFields.length > 0) {
           updateValues.push(localUser.id);
@@ -682,7 +710,7 @@ async function startServer() {
   app.get('/api/opportunities', authenticateToken, (req: any, res) => {
     const { type, q } = req.query;
     let query = `
-      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername,
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername, u.supabase_id as ownerSupabaseId,
       (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id
@@ -717,7 +745,7 @@ async function startServer() {
 
   app.get('/api/opportunities/me', authenticateToken, (req: any, res) => {
     const results = db.prepare(`
-      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.username as ownerUsername, u.supabase_id as ownerSupabaseId
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id
       WHERE o.ownerId = ?
@@ -728,7 +756,7 @@ async function startServer() {
 
   app.get('/api/opportunities/:id', authenticateToken, (req: any, res) => {
     const opportunity = db.prepare(`
-      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername,
+      SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername, u.supabase_id as ownerSupabaseId,
       (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id

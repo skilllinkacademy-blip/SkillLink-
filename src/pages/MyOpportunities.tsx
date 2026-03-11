@@ -32,7 +32,8 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
         profiles: {
           full_name: opp.ownerName,
           avatar_url: opp.ownerAvatar,
-          occupation: opp.ownerTrade
+          occupation: opp.ownerTrade,
+          username: opp.ownerUsername
         }
       }));
       

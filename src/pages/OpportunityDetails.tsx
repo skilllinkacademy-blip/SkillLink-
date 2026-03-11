@@ -13,7 +13,7 @@ interface OpportunityDetailsProps {
 export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, sqliteId } = useAuth();
   const [opportunity, setOpportunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -27,10 +27,10 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [loadingInterests, setLoadingInterests] = useState(false);
 
   useEffect(() => {
-    if (opportunity && user && opportunity.owner_id === user.id) {
+    if (opportunity && sqliteId && opportunity.owner_id === sqliteId) {
       fetchInterests();
     }
-  }, [opportunity, user]);
+  }, [opportunity, sqliteId]);
 
   const fetchInterests = async () => {
     setLoadingInterests(true);
@@ -84,7 +84,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             occupation: data.ownerTrade,
             role: data.ownerRole,
             is_verified: data.ownerVerified === 1,
-            username: data.ownerUsername || data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
+            username: data.ownerUsername || data.ownerSupabaseId || data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
             location: data.location,
             created_at: data.createdAt
           }
@@ -112,7 +112,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
   useEffect(() => {
     const checkStatus = async () => {
-      if (!user || !id || !opportunity) return;
+      if (!sqliteId || !id || !opportunity) return;
       
       try {
         // Check if already expressed interest for this specific opportunity
@@ -120,7 +120,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         const notifications = response.data;
         
         const hasInterest = notifications.some((n: any) => 
-          n.senderId === user.id && 
+          n.senderId === sqliteId && 
           n.type === 'interest' && 
           n.link === `/app/opportunities/${id}`
         );
@@ -161,12 +161,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   };
 
   const handleInterested = async () => {
-    if (!user || !opportunity) return;
+    if (!sqliteId || !opportunity) return;
     
     if (interesting || isInterested) return;
     
     // Prevent self-interest
-    if (user.id === opportunity.owner_id) {
+    if (sqliteId === opportunity.owner_id) {
       alert(isRtl ? 'אינך יכול להביע עניין בהזדמנות של עצמך' : 'You cannot express interest in your own opportunity');
       return;
     }
@@ -491,13 +491,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           {/* Owner Card */}
           <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
-            <div 
+            <Link 
+              to={`/app/u/${opportunity.profiles?.username || opportunity.ownerSupabaseId}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
-              onClick={() => {
-                if (opportunity.profiles?.username) {
-                  navigate(`/app/u/${opportunity.profiles.username}`);
-                }
-              }}
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
                 {opportunity.profiles?.avatar_url ? (
@@ -515,10 +511,10 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 </div>
                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
-            </div>
+            </Link>
 
             {/* Interested Users (Owner Only) */}
-            {user?.id === opportunity.owner_id && (
+            {sqliteId === opportunity.owner_id && (
               <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
@@ -608,7 +604,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
             
             <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
-              {user?.id === opportunity.owner_id ? (
+              {sqliteId === opportunity.owner_id ? (
                 <button 
                   onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
                   className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
@@ -620,7 +616,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 <>
                   <button 
                     onClick={handleInterested}
-                    disabled={interesting || isInterested || user?.id === opportunity.owner_id}
+                    disabled={interesting || isInterested || sqliteId === opportunity.owner_id}
                     className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
                       isInterested 
                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 

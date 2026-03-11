@@ -33,7 +33,7 @@ interface OpportunityNewProps {
 export default function OpportunityNew({ isRtl, isEditing = false }: OpportunityNewProps) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, sqliteId, loading: authLoading, refreshProfile } = useAuth();
   
   const [step, setStep] = useState(isEditing ? 2 : 1);
   const [subStep, setSubStep] = useState(1);
@@ -104,13 +104,13 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   // Fetch opportunity for editing
   useEffect(() => {
     const fetchOpportunity = async () => {
-      if (!isEditing || !id || !user) return;
+      if (!isEditing || !id || !sqliteId) return;
       
       try {
         const response = await api.get(`/opportunities/${id}`);
         const data = response.data;
 
-        if (data.ownerId !== user.id) {
+        if (data.ownerId !== sqliteId) {
           navigate('/app/opportunities');
           return;
         }
