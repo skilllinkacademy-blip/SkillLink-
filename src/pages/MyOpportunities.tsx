@@ -33,7 +33,7 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
           full_name: opp.ownerName,
           avatar_url: opp.ownerAvatar,
           occupation: opp.ownerTrade,
-          username: opp.ownerUsername
+          username: opp.ownerUsername || opp.ownerSupabaseId
         }
       }));
       

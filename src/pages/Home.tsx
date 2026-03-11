@@ -37,7 +37,7 @@ export default function Home({ isRtl }: HomeProps) {
             occupation: opp.ownerTrade,
             role: opp.ownerRole,
             is_verified: opp.ownerVerified === 1,
-            username: opp.ownerUsername || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
+            username: opp.ownerUsername || opp.ownerSupabaseId || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
           }
         }));
         
@@ -95,13 +95,15 @@ export default function Home({ isRtl }: HomeProps) {
             {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Master or a serious Apprentice to build your professional future.'}
           </p>
         </div>
-        <Link 
-          to="/app/opportunities/new"
-          className="w-full md:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
-        >
-          <Plus size={20} sm:size={24} />
-          {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
-        </Link>
+        {user && (
+          <Link 
+            to="/app/opportunities/new"
+            className="w-full md:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+          >
+            <Plus size={20} />
+            {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
+          </Link>
+        )}
       </div>
 
       {/* Radar Map Section */}
@@ -179,13 +181,22 @@ export default function Home({ isRtl }: HomeProps) {
               {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה המקצועית שלך!' : 'Be the first to post an opportunity in your professional community!'}
             </p>
           </div>
-          <Link 
-            to="/app/opportunities/new"
-            className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
-          >
-            <Plus size={24} />
-            {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
-          </Link>
+          {user ? (
+            <Link 
+              to="/app/opportunities/new"
+              className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+            >
+              <Plus size={24} />
+              {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
+            </Link>
+          ) : (
+            <Link 
+              to="/auth?mode=login"
+              className="px-12 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+            >
+              {isRtl ? 'התחבר לפרסום הצעה' : 'Sign in to Post'}
+            </Link>
+          )}
         </div>
       )}
     </div>

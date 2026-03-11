@@ -102,6 +102,15 @@ try {
   if (!hasType) {
     db.prepare("ALTER TABLE posts ADD COLUMN type TEXT DEFAULT 'Tip'").run();
   }
+
+  const oppTableInfo = db.prepare("PRAGMA table_info(opportunities)").all();
+  const hasStatus = oppTableInfo.some((col: any) => col.name === 'status');
+  if (!hasStatus) {
+    db.prepare("ALTER TABLE opportunities ADD COLUMN status TEXT DEFAULT 'active'").run();
+  } else {
+    // Ensure all existing opportunities are active if they have no status
+    db.prepare("UPDATE opportunities SET status = 'active' WHERE status IS NULL").run();
+  }
 } catch (e) {
   console.error("Migration failed:", e);
 }
@@ -614,7 +623,7 @@ async function startServer() {
   // Search
   app.get('/api/search', authenticateToken, (req: any, res) => {
     const { q, trade, location, role, experience, verified } = req.query;
-    let query = 'SELECT id, name as full_name, role, location, trade as occupation, avatar as avatar_url, businessName, username, verified as is_verified, experience, createdAt as created_at FROM users WHERE 1=1';
+    let query = 'SELECT id, name as full_name, role, location, trade as occupation, avatar as avatar_url, businessName, username, supabase_id, verified as is_verified, experience, createdAt as created_at FROM users WHERE 1=1';
     const params: any[] = [];
 
     if (q) {
@@ -707,8 +716,21 @@ async function startServer() {
   });
 
   // Opportunities
-  app.get('/api/opportunities', authenticateToken, (req: any, res) => {
+  app.get('/api/opportunities', (req: any, res) => {
     const { type, q } = req.query;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let userId: number | null = null;
+
+    if (token) {
+      try {
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch (e) {
+        // Ignore invalid token for public list
+      }
+    }
+
     let query = `
       SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername, u.supabase_id as ownerSupabaseId,
       (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
@@ -716,7 +738,7 @@ async function startServer() {
       JOIN users u ON o.ownerId = u.id
       WHERE o.status = 'active'
     `;
-    const params: any[] = [req.user.id];
+    const params: any[] = [userId];
 
     if (type && type !== 'all') {
       query += ' AND o.type = ?';
@@ -754,14 +776,28 @@ async function startServer() {
     res.json(results);
   });
 
-  app.get('/api/opportunities/:id', authenticateToken, (req: any, res) => {
+  app.get('/api/opportunities/:id', (req: any, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let userId: number | null = null;
+
+    if (token) {
+      try {
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch (e) {
+        // Ignore invalid token for public view
+      }
+    }
+
     const opportunity = db.prepare(`
       SELECT o.*, u.name as ownerName, u.avatar as ownerAvatar, u.trade as ownerTrade, u.role as ownerRole, u.verified as ownerVerified, u.username as ownerUsername, u.supabase_id as ownerSupabaseId,
-      (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved
+      (SELECT COUNT(*) FROM saved_opportunities WHERE opportunityId = o.id AND userId = ?) as isSaved,
+      (SELECT COUNT(*) FROM opportunity_interests WHERE opportunityId = o.id AND userId = ?) as isInterested
       FROM opportunities o
       JOIN users u ON o.ownerId = u.id
       WHERE o.id = ?
-    `).get(req.user.id, req.params.id) as any;
+    `).get(userId, userId, req.params.id) as any;
 
     if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
     
@@ -786,8 +822,8 @@ async function startServer() {
       INSERT INTO opportunities (
         ownerId, type, title, location, workHours, payAmount, payPeriod,
         aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
-        availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
     `);
 
     const result = stmt.run(

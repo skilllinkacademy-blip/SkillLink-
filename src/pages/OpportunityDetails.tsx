@@ -92,6 +92,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
         setOpportunity(transformedData);
         setIsSaved(data.isSaved === 1);
+        setIsInterested(data.isInterested === 1);
 
         // Calculate match score if user is logged in
         if (profile && transformedData) {
@@ -492,7 +493,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
             <Link 
-              to={`/app/u/${opportunity.profiles?.username || opportunity.ownerSupabaseId}`}
+            to={`/app/u/${opportunity.ownerUsername || opportunity.ownerSupabaseId || opportunity.profiles?.username}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
@@ -604,39 +605,49 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
             
             <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
-              {sqliteId === opportunity.owner_id ? (
-                <button 
-                  onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
-                  className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
-                >
-                  <Pencil size={18} />
-                  {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
-                </button>
-              ) : (
-                <>
+              {user ? (
+                sqliteId === opportunity.owner_id ? (
                   <button 
-                    onClick={handleInterested}
-                    disabled={interesting || isInterested || sqliteId === opportunity.owner_id}
-                    className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                      isInterested 
-                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
-                        : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
-                    }`}
+                    onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
+                    className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
-                    {isInterested ? <ShieldCheck size={18} /> : <Heart size={18} />}
-                    {isInterested 
-                      ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent') 
-                      : (isRtl ? 'אני מעוניין!' : "I'm Interested!")}
+                    <Pencil size={18} />
+                    {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
                   </button>
+                ) : (
+                  <>
+                    <button 
+                      onClick={handleInterested}
+                      disabled={interesting || isInterested}
+                      className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+                        isInterested 
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
+                          : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
+                      }`}
+                    >
+                      {isInterested ? <ShieldCheck size={18} /> : <Heart size={18} />}
+                      {isInterested 
+                        ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent') 
+                        : (isRtl ? 'אני מעוניין!' : "I'm Interested!")}
+                    </button>
 
-                  <button 
-                    onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
-                    className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
-                  >
-                    <MessageSquare size={18} />
-                    {isRtl ? 'שלח הודעה' : 'Send Message'}
-                  </button>
-                </>
+                    <button 
+                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
+                      className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    >
+                      <MessageSquare size={18} />
+                      {isRtl ? 'שלח הודעה' : 'Send Message'}
+                    </button>
+                  </>
+                )
+              ) : (
+                <Link 
+                  to="/auth?mode=login"
+                  className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <User size={18} />
+                  {isRtl ? 'התחבר כדי להגיש מועמדות' : 'Sign in to Apply'}
+                </Link>
               )}
             </div>
           </div>

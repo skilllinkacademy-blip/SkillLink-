@@ -64,11 +64,11 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
           {/* Protected App Routes */}
           <Route 
             path="/app/opportunities" 
-            element={
-              <ProtectedRoute>
-                <Home isRtl={isRtl} />
-              </ProtectedRoute>
-            } 
+            element={<Home isRtl={isRtl} />} 
+          />
+          <Route 
+            path="/app/opportunities/:id" 
+            element={<OpportunityDetails isRtl={isRtl} />} 
           />
           <Route 
             path="/app/search" 
@@ -147,14 +147,6 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             element={
               <ProtectedRoute>
                 <OpportunityNew isRtl={isRtl} isEditing={true} />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/app/opportunities/:id" 
-            element={
-              <ProtectedRoute>
-                <OpportunityDetails isRtl={isRtl} />
               </ProtectedRoute>
             } 
           />

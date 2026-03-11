@@ -161,7 +161,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
         {/* Footer */}
         <div className="pt-4 sm:pt-6 border-t border-slate-100 flex items-center justify-between">
           <Link 
-            to={`/app/u/${opportunity.ownerUsername || opportunity.profiles?.username || opportunity.ownerSupabaseId}`}
+            to={`/app/u/${opportunity.ownerUsername || opportunity.ownerSupabaseId || opportunity.profiles?.username}`}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();

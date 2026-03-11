@@ -71,19 +71,19 @@ export default function Landing({ isRtl }: LandingProps) {
                   : 'Connect with skilled mentors in hair styling, electrical, plumbing, carpentry, mechanics, HVAC, welding and a wide range of technical and creative trades. Start your apprentice journey today with hands-on field guidance.'}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Link 
-                  to="/auth?role=mentor" 
+                  to="/auth?mode=signup" 
                   className="w-full sm:w-auto px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-200 flex items-center justify-center gap-3 group active:scale-95"
                 >
-                  {isRtl ? 'הצטרפות כמנטור' : 'Join as Mentor'}
+                  {isRtl ? 'הצטרפות חינם' : 'Join for Free'}
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform rtl:rotate-180" />
                 </Link>
                 <Link 
-                  to="/auth?role=mentee" 
+                  to="/app/opportunities" 
                   className="w-full sm:w-auto px-10 py-5 bg-white text-gray-900 border-2 border-gray-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center active:scale-95"
                 >
-                  {isRtl ? 'הצטרפות כמתלמד' : 'Join as Apprentice'}
+                  {isRtl ? 'צפייה בהזדמנויות' : 'Browse Opportunities'}
                 </Link>
               </div>
               

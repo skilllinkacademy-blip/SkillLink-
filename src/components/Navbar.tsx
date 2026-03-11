@@ -19,14 +19,16 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
     navigate('/');
   };
 
-  const navItems = user ? [
+  const navItems = [
     { icon: Home, label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
-    { icon: Briefcase, label: isRtl ? 'ההזדמנויות שלי' : 'My Opportunities', path: '/app/my-opportunities' },
-    { icon: MessageSquare, label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages' },
-    { icon: Bell, label: isRtl ? 'התראות' : 'Notifications', path: '/app/notifications' },
-    { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
-    ...(profile?.role === 'admin' ? [{ icon: ShieldCheck, label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
-  ] : [];
+    ...(user ? [
+      { icon: Briefcase, label: isRtl ? 'ההזדמנויות שלי' : 'My Opportunities', path: '/app/my-opportunities' },
+      { icon: MessageSquare, label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages' },
+      { icon: Bell, label: isRtl ? 'התראות' : 'Notifications', path: '/app/notifications' },
+      { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
+      ...(profile?.role === 'admin' ? [{ icon: ShieldCheck, label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
+    ] : [])
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
