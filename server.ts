@@ -585,25 +585,32 @@ async function startServer() {
 
   // Search
   app.get('/api/search', authenticateToken, (req: any, res) => {
-    const { q, trade, location, role } = req.query;
-    let query = 'SELECT id, name, role, location, trade, avatar, businessName FROM users WHERE 1=1';
+    const { q, trade, location, role, experience, verified } = req.query;
+    let query = 'SELECT id, name as full_name, role, location, trade as occupation, avatar as avatar_url, businessName, username, verified as is_verified, experience, createdAt as created_at FROM users WHERE 1=1';
     const params: any[] = [];
 
     if (q) {
       query += ' AND (name LIKE ? OR trade LIKE ? OR businessName LIKE ?)';
       params.push(`%${q}%`, `%${q}%`, `%${q}%`);
     }
-    if (trade && trade !== 'All') {
+    if (trade && trade !== 'All' && trade !== 'all') {
       query += ' AND trade = ?';
       params.push(trade);
     }
-    if (location) {
+    if (location && location !== 'All' && location !== 'all') {
       query += ' AND location LIKE ?';
       params.push(`%${location}%`);
     }
-    if (role) {
+    if (role && role !== 'all') {
       query += ' AND role = ?';
       params.push(role);
+    }
+    if (experience) {
+      query += ' AND experience >= ?';
+      params.push(parseInt(experience as string));
+    }
+    if (verified === 'true') {
+      query += ' AND verified = 1';
     }
 
     const results = db.prepare(query).all(...params);

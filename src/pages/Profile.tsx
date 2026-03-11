@@ -81,16 +81,23 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           if (fetchError) throw fetchError;
           
           if (!publicProfile) {
-            // Fallback: Try fetching by ID in case the "username" is actually an ID (legacy links)
-            const { data: fallbackProfile, error: fallbackError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', username)
-              .maybeSingle();
+            // Check if username is a valid UUID before trying to fetch by ID
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
             
-            if (fallbackError) throw fallbackError;
-            if (!fallbackProfile) throw new Error(isRtl ? 'משתמש לא נמצא' : 'User not found');
-            data = fallbackProfile;
+            if (isUuid) {
+              // Fallback: Try fetching by ID in case the "username" is actually an ID (legacy links)
+              const { data: fallbackProfile, error: fallbackError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', username)
+                .maybeSingle();
+              
+              if (fallbackError) throw fallbackError;
+              if (!fallbackProfile) throw new Error(isRtl ? 'משתמש לא נמצא' : 'User not found');
+              data = fallbackProfile;
+            } else {
+              throw new Error(isRtl ? 'משתמש לא נמצא' : 'User not found');
+            }
           } else {
             data = publicProfile;
           }

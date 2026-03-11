@@ -378,15 +378,18 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           <div className="md:col-span-2">
             {renderField(
               type === 'mentor_offer' ? (isRtl ? 'שכר בסיס למתלמד' : 'Base Pay to Apprentice') : (isRtl ? 'שכר מבוקש' : 'Desired Salary'),
-              DollarSign,
+              null,
               <div className="flex gap-3">
-                <input 
-                  type="number" 
-                  placeholder="0"
-                  value={type === 'mentor_offer' ? payAmount : desiredSalary}
-                  onChange={(e) => type === 'mentor_offer' ? setPayAmount(e.target.value) : setDesiredSalary(e.target.value)}
-                  className="flex-1 px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-slate-900 transition-all font-bold outline-none"
-                />
+                <div className="relative flex-1">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">₪</div>
+                  <input 
+                    type="number" 
+                    placeholder="0"
+                    value={type === 'mentor_offer' ? payAmount : desiredSalary}
+                    onChange={(e) => type === 'mentor_offer' ? setPayAmount(e.target.value) : setDesiredSalary(e.target.value)}
+                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-slate-900 transition-all font-bold outline-none"
+                  />
+                </div>
                 {type === 'mentor_offer' && (
                   <select 
                     value={payPeriod}

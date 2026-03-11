@@ -401,13 +401,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   </div>
                   {(opportunity.pay_amount || opportunity.desired_salary) && (
                     <div className="flex items-center gap-2 sm:gap-3 text-slate-900 font-black text-sm sm:text-base">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <DollarSign size={18} />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-lg">
+                        ₪
                       </div>
                       <span className="text-base sm:text-xl">
                         {isMentorOffer 
-                          ? `${opportunity.pay_amount} / ${opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : opportunity.pay_period === 'day' ? (isRtl ? 'יום' : 'day') : (isRtl ? 'חודש' : 'mo')}`
-                          : `${isRtl ? 'שכר מבוקש:' : 'Desired:'} ${opportunity.desired_salary}`}
+                          ? `${opportunity.pay_amount} ₪ / ${opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : opportunity.pay_period === 'day' ? (isRtl ? 'יום' : 'day') : (isRtl ? 'חודש' : 'mo')}`
+                          : `${isRtl ? 'שכר מבוקש:' : 'Desired:'} ${opportunity.desired_salary} ₪`}
                       </span>
                     </div>
                   )}

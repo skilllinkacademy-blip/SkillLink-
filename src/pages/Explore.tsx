@@ -25,23 +25,12 @@ export default function Explore({ isRtl }: ExploreProps) {
           q: searchQuery,
           location: locationQuery,
           role: roleFilter !== 'all' ? roleFilter : undefined,
-          // experience: experienceFilter, // Not yet supported in backend search
-          // verified: verifiedOnly // Not yet supported in backend search
+          experience: experienceFilter || undefined,
+          verified: verifiedOnly || undefined
         }
       });
       
-      // Transform data to match frontend expectations
-      const transformedData = response.data.map((profile: any) => ({
-        ...profile,
-        full_name: profile.name,
-        avatar_url: profile.avatar,
-        occupation: profile.trade,
-        is_verified: profile.verified === 1,
-        username: profile.name?.toLowerCase().replace(/\s+/g, '_'),
-        updated_at: new Date().toISOString() // Placeholder
-      }));
-
-      setResults(transformedData || []);
+      setResults(response.data || []);
     } catch (err) {
       console.error('Error searching profiles:', err);
     } finally {
