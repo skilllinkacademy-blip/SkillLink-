@@ -282,6 +282,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
+    // Mentor verifications updates listener
+    const verificationSubscription = supabase
+      .channel(`verification-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mentor_verifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchProfile(user.id);
+        }
+      )
+      .subscribe();
+
     const messageSubscription = supabase
       .channel(`unread-updates-${user.id}`)
       .on(
@@ -318,6 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       supabase.removeChannel(profileSubscription);
+      supabase.removeChannel(verificationSubscription);
       supabase.removeChannel(messageSubscription);
     };
   }, [user?.id]);

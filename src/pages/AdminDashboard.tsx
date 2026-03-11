@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   ShieldCheck, 
@@ -75,6 +76,7 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     setProcessingId(id);
     try {
+      // 1. Update mentor_verifications in Supabase
       const { error } = await supabase
         .from('mentor_verifications')
         .update({ 
@@ -85,37 +87,60 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
 
       if (error) throw error;
       
-      // If approved, update the profile to mark as verified
-      if (status === 'approved') {
-        const { data: request } = await supabase
-          .from('mentor_verifications')
-          .select('user_id')
-          .eq('id', id)
-          .single();
-        
-        if (request?.user_id) {
+      // Get the user_id for this request
+      const { data: request } = await supabase
+        .from('mentor_verifications')
+        .select('user_id')
+        .eq('id', id)
+        .single();
+      
+      if (request?.user_id) {
+        const supabaseId = request.user_id;
+
+        // 2. Update profiles in Supabase (only is_verified)
+        if (status === 'approved') {
           await supabase
             .from('profiles')
-            .update({ 
-              is_verified: true,
-              verification_status: 'approved'
-            })
-            .eq('id', request.user_id);
+            .update({ is_verified: true })
+            .eq('id', supabaseId);
+        } else {
+          await supabase
+            .from('profiles')
+            .update({ is_verified: false })
+            .eq('id', supabaseId);
         }
-      } else if (status === 'rejected') {
-        const { data: request } = await supabase
-          .from('mentor_verifications')
-          .select('user_id')
-          .eq('id', id)
-          .single();
-        
-        if (request?.user_id) {
-          await supabase
-            .from('profiles')
-            .update({ 
-              verification_status: 'rejected'
-            })
-            .eq('id', request.user_id);
+
+        // 3. Update SQLite via backend
+        try {
+          await api.post(`/admin/verify-supabase/${supabaseId}`, { verified: status === 'approved' });
+        } catch (sqliteErr) {
+          console.error('Error updating SQLite verification:', sqliteErr);
+          // Continue even if SQLite update fails, as Supabase is the primary source
+        }
+
+        // 4. Send notification via backend
+        try {
+          if (status === 'approved') {
+            await api.post(`/admin/notify-supabase/${supabaseId}`, {
+              type: 'verification',
+              title: isRtl ? 'חשבונך אומת!' : 'Account Verified!',
+              content: isRtl 
+                ? 'חשבונך אומת ועכשיו אתה מנטור מוסמך בקהילה. התג הירוק נוסף לפרופיל שלך!' 
+                : 'Your account has been verified and you are now a certified mentor. The green badge has been added to your profile!',
+              link: `/app/u/${supabaseId}`
+            });
+          } else if (status === 'rejected') {
+            await api.post(`/admin/notify-supabase/${supabaseId}`, {
+              type: 'verification',
+              title: isRtl ? 'בקשת האימות נדחתה' : 'Verification Rejected',
+              content: isRtl 
+                ? 'לצערו, לא יכולנו לאמת את המסמכים ששלחת. אנא נסה שוב עם מסמכים ברורים יותר.' 
+                : 'Unfortunately, we could not verify the documents you sent. Please try again with clearer documents.',
+              link: '/app/verify'
+            });
+          }
+        } catch (notifErr) {
+          console.error('Error sending notification:', notifErr);
         }
       }
       

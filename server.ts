@@ -1151,6 +1151,46 @@ async function startServer() {
     }
   });
 
+  // Admin: Verify user by Supabase ID
+  app.post('/api/admin/verify-supabase/:supabaseId', authenticateToken, (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    const { supabaseId } = req.params;
+    const { verified } = req.body;
+    
+    try {
+      db.prepare('UPDATE users SET verified = ? WHERE supabase_id = ?').run(verified ? 1 : 0, supabaseId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating SQLite verification:', error);
+      res.status(500).json({ error: 'Failed to update verification status' });
+    }
+  });
+
+  // Admin: Send notification by Supabase ID
+  app.post('/api/admin/notify-supabase/:supabaseId', authenticateToken, (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    const { supabaseId } = req.params;
+    const { type, title, content, link } = req.body;
+    
+    try {
+      const targetUser = db.prepare('SELECT id FROM users WHERE supabase_id = ?').get(supabaseId) as any;
+      if (!targetUser) return res.status(404).json({ error: 'User not found in SQLite' });
+
+      const stmt = db.prepare('INSERT INTO notifications (userId, senderId, type, title, content, link) VALUES (?, ?, ?, ?, ?, ?)');
+      stmt.run(targetUser.id, req.user.id, type, title, content, link);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      res.status(500).json({ error: 'Failed to send notification' });
+    }
+  });
+
   // --- Static Files & SPA Fallback (MUST BE LAST) ---
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
