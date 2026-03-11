@@ -16,8 +16,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import MyOpportunities from './pages/MyOpportunities';
 import OpportunityNew from './pages/OpportunityNew';
 import OpportunityDetails from './pages/OpportunityDetails';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
@@ -57,18 +55,6 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
                 <Auth isRtl={isRtl} />
               </ProtectedRoute>
             } 
-          />
-          <Route 
-            path="/forgot-password" 
-            element={
-              <ProtectedRoute requireAuth={false}>
-                <ForgotPassword isRtl={isRtl} />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reset-password" 
-            element={<ResetPassword isRtl={isRtl} />} 
           />
           <Route path="/privacy" element={<Privacy isRtl={isRtl} />} />
           <Route path="/terms" element={<Terms isRtl={isRtl} />} />
