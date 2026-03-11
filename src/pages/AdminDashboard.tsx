@@ -96,7 +96,25 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
         if (request?.user_id) {
           await supabase
             .from('profiles')
-            .update({ is_verified: true })
+            .update({ 
+              is_verified: true,
+              verification_status: 'approved'
+            })
+            .eq('id', request.user_id);
+        }
+      } else if (status === 'rejected') {
+        const { data: request } = await supabase
+          .from('mentor_verifications')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+        
+        if (request?.user_id) {
+          await supabase
+            .from('profiles')
+            .update({ 
+              verification_status: 'rejected'
+            })
             .eq('id', request.user_id);
         }
       }

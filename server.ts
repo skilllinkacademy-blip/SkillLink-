@@ -871,7 +871,7 @@ async function startServer() {
     if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
     const interests = db.prepare(`
-      SELECT i.*, u.name as userName, u.avatar as userAvatar, u.trade as userTrade, u.username as userUsername
+      SELECT i.*, u.name as userName, u.avatar as userAvatar, u.trade as userTrade, u.username as userUsername, u.supabase_id as userSupabaseId
       FROM opportunity_interests i
       JOIN users u ON i.userId = u.id
       WHERE i.opportunityId = ?

@@ -78,6 +78,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           desired_salary: data.desiredSalary,
           created_at: data.createdAt,
           ownerUsername: data.ownerUsername,
+          ownerSupabaseId: data.ownerSupabaseId,
           profiles: {
             full_name: data.ownerName,
             avatar_url: data.ownerAvatar,
@@ -493,7 +494,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
             <Link 
-            to={`/app/u/${opportunity.ownerUsername || opportunity.ownerSupabaseId || opportunity.profiles?.username}`}
+            to={`/app/u/${opportunity.ownerSupabaseId || opportunity.ownerUsername || opportunity.profiles?.username}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
@@ -534,7 +535,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       <div key={interestedUser.userId} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group/user">
                         <div 
                           className="flex items-center gap-4 cursor-pointer"
-                          onClick={() => navigate(`/app/u/${interestedUser.userUsername || interestedUser.userId}`)}
+                          onClick={() => navigate(`/app/u/${interestedUser.userSupabaseId || interestedUser.userUsername || interestedUser.userId}`)}
                         >
                           <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden border border-slate-300">
                             {interestedUser.userAvatar ? (
