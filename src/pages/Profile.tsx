@@ -21,6 +21,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const currentProfileId = React.useRef<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -136,26 +138,32 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
         if (data) {
           setProfile(data);
-          setFormData({
-            full_name: data.full_name || '',
-            username: data.username || '',
-            headline: data.headline || '',
-            bio: data.bio || '',
-            location: data.location || '',
-            phone: data.phone || '',
-            occupation: data.occupation || '',
-            years_experience: data.years_experience || 0,
-            workload: data.workload || '',
-            availability: data.availability || '',
-            skills_level: data.skills_level || '',
-            desired_salary: data.desired_salary || 0,
-            what_i_want_to_learn: data.what_i_want_to_learn || '',
-            who_i_want_to_teach: data.who_i_want_to_teach || '',
-            availability_days: data.availability_days || [],
-            portfolio_urls: data.portfolio_urls || [],
-            cover_url: data.cover_url || '',
-            skills: data.skills || []
-          });
+          
+          // Only initialize form data on first load or when switching profiles
+          if (!isInitialized || data.id !== currentProfileId.current) {
+            setFormData({
+              full_name: data.full_name || '',
+              username: data.username || '',
+              headline: data.headline || '',
+              bio: data.bio || '',
+              location: data.location || '',
+              phone: data.phone || '',
+              occupation: data.occupation || '',
+              years_experience: data.years_experience || 0,
+              workload: data.workload || '',
+              availability: data.availability || '',
+              skills_level: data.skills_level || '',
+              desired_salary: data.desired_salary || 0,
+              what_i_want_to_learn: data.what_i_want_to_learn || '',
+              who_i_want_to_teach: data.who_i_want_to_teach || '',
+              availability_days: data.availability_days || [],
+              portfolio_urls: data.portfolio_urls || [],
+              cover_url: data.cover_url || '',
+              skills: data.skills || []
+            });
+            setIsInitialized(true);
+            currentProfileId.current = data.id;
+          }
           fetchReviews(data.id);
         }
       } catch (err: any) {
@@ -284,6 +292,12 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
   const handleSave = async (field?: string, value?: any) => {
     if (!user) return;
+    
+    // Skip if value hasn't changed to avoid redundant updates and race conditions
+    if (field && profile && profile[field] === value) {
+      return;
+    }
+    
     setSaving(true);
     try {
       const updatePayload: any = field ? { [field]: value } : { ...formData };
