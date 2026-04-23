@@ -56,7 +56,7 @@ export default function OnboardingModal({ isRtl }: OnboardingModalProps) {
       title: isRtl ? 'פרסם הזדמנות' : 'Post an Opportunity',
       desc: isRtl
         ? 'ספר לצעירים מה אתה מלמד, מה הם ילמדו, ומה אתה מחפש. זה לוקח 2 דקות.'
-        : 'Tell apprentices what you teach, what they'll learn, and what you're looking for. Takes 2 minutes.',
+        : "Tell apprentices what you teach, what they'll learn, and what you're looking for. Takes 2 minutes.",
       action: { label: isRtl ? 'פרסם עכשיו' : 'Post Now', path: '/app/opportunities/new' },
     },
     {
