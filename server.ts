@@ -23,13 +23,14 @@ const PORT = 3000;
 
 // Initialize Supabase Admin (Server-side)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+const supabase = createClient(supabaseUrl, supabaseServiceKey || 'placeholder', {
   auth: {
     persistSession: false,
     autoRefreshToken: false,

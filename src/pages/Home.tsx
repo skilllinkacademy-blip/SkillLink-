@@ -28,7 +28,6 @@ export default function Home({ isRtl }: HomeProps) {
           }
         });
         
-        // Transform data to match frontend expectations if needed
         const transformedData = response.data.map((opp: any) => ({
           ...opp,
           profiles: {
@@ -53,111 +52,111 @@ export default function Home({ isRtl }: HomeProps) {
     return () => clearTimeout(timer);
   }, [filter, searchQuery]);
 
+  const filterOptions = [
+    { value: 'all', label: isRtl ? 'הכל' : 'All' },
+    { value: 'mentor_offer', label: isRtl ? 'מנטורים' : 'Masters' },
+    { value: 'mentee_seeking', label: isRtl ? 'מתלמדים' : 'Apprentices' },
+  ] as const;
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Verification Banner for Mentors */}
+    <div className="space-y-5 sm:space-y-8 animate-in fade-in duration-500">
+      
+      {/* Verification Banner */}
       {profile?.role === 'mentor' && (profile?.verification_status === 'none' || profile?.verification_status === 'rejected') && (
-        <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl animate-in slide-in-from-top-4 duration-700">
-          <div className="flex items-center gap-4 text-center sm:text-start">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="text-emerald-400" size={24} />
+        <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-2xl animate-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-3 sm:gap-4 text-center sm:text-start">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+              <ShieldCheck className="text-emerald-400" size={20} />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black uppercase tracking-widest">
+              <h3 className="text-sm font-black uppercase tracking-widest">
                 {isRtl ? 'אמת את החשבון שלך' : 'Verify Your Account'}
               </h3>
-              <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                 {isRtl 
-                  ? 'מנטורים מאומתים מקבלים פי 5 יותר פניות וזוכים לאמון הקהילה.' 
-                  : 'Verified mentors get 5x more responses and gain community trust.'}
+                  ? 'מנטורים מאומתים מקבלים פי 5 יותר פניות' 
+                  : 'Verified mentors get 5x more responses'}
               </p>
             </div>
           </div>
           <Link 
             to="/app/verify"
-            className="w-full sm:w-auto px-8 py-3 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all text-center"
+            className="w-full sm:w-auto px-6 py-2.5 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all text-center shrink-0"
           >
-            {isRtl ? 'התחל אימות עכשיו' : 'Start Verification'}
+            {isRtl ? 'התחל אימות' : 'Start Verification'}
           </Link>
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-8">
-        <div className="space-y-2 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-[0.2em]">
             Professional Network
           </div>
-          <h1 className="text-2xl sm:text-5xl font-black text-slate-900 tracking-tight">
-            {isRtl ? 'זירת ההתמחות' : 'The Apprenticeship Arena'}
+          <h1 className="text-xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            {isRtl ? 'זירת ההתמחות' : 'Apprenticeship Arena'}
           </h1>
-          <p className="text-slate-500 font-medium text-sm sm:text-lg">
-            {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Master or a serious Apprentice to build your professional future.'}
+          <p className="text-slate-500 font-medium text-xs sm:text-base hidden sm:block">
+            {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Mentor or a serious Apprentice.'}
           </p>
         </div>
         {user && (
           <Link 
             to="/app/opportunities/new"
-            className="w-full md:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+            className="shrink-0 px-4 sm:px-8 py-3 sm:py-4 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
           >
-            <Plus size={20} />
-            {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
+            <Plus size={16} />
+            <span className="hidden sm:inline">{isRtl ? 'פרסם הצעה' : 'Post Opportunity'}</span>
+            <span className="sm:hidden">{isRtl ? 'פרסם' : 'Post'}</span>
           </Link>
         )}
       </div>
 
-      {/* Radar Map Section */}
+      {/* Radar Map */}
       <RadarMap isRtl={isRtl} opportunities={opportunities} />
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+      {/* Search + Filters */}
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:gap-4">
+        {/* Search */}
         <div className="flex-1 relative group">
-          <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={20} sm:size={24} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={18} />
           <input 
             type="text" 
-            placeholder={isRtl ? 'חפש מקצוע, מיקום או מיומנות...' : 'Search trade, location, or skill...'}
+            placeholder={isRtl ? 'חפש מקצוע, מיקום...' : 'Search trade, location...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-4 sm:py-5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all font-medium shadow-sm outline-none text-sm sm:text-base"
+            className="w-full pl-11 pr-4 py-3.5 sm:py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all font-medium shadow-sm outline-none text-sm"
           />
         </div>
-        <div className="flex p-1 bg-slate-200/50 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
-              filter === 'all' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'הכל' : 'All'}
-          </button>
-          <button
-            onClick={() => setFilter('mentor_offer')}
-            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
-              filter === 'mentor_offer' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'מנטורים' : 'Masters'}
-          </button>
-          <button
-            onClick={() => setFilter('mentee_seeking')}
-            className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shrink-0 ${
-              filter === 'mentee_seeking' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'מתלמדים' : 'Apprentices'}
-          </button>
+
+        {/* Filter pills — horizontal scroll on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar sm:shrink-0">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`px-5 py-3 sm:py-3.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shrink-0 border ${
+                filter === opt.value 
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg' 
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="h-96 bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
+            <div key={i} className="h-72 sm:h-96 bg-slate-50 rounded-2xl sm:rounded-[2.5rem] animate-pulse border border-slate-100" />
           ))}
         </div>
       ) : opportunities.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {opportunities.map((opp) => (
             <div key={opp.id}>
               <OpportunityCard 
@@ -169,36 +168,39 @@ export default function Home({ isRtl }: HomeProps) {
           ))}
         </div>
       ) : (
-        <div className="industrial-card p-24 text-center space-y-8">
-          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
-            <Briefcase className="text-slate-200" size={48} />
+        <div className="industrial-card p-10 sm:p-24 text-center space-y-6 sm:space-y-8">
+          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
+            <Briefcase className="text-slate-200" size={36} />
           </div>
-          <div className="space-y-3">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+          <div className="space-y-2 sm:space-y-3">
+            <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
               {isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}
             </h2>
-            <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
-              {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה המקצועית שלך!' : 'Be the first to post an opportunity in your professional community!'}
+            <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed text-sm sm:text-base">
+              {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה שלך!' : 'Be the first to post an opportunity!'}
             </p>
           </div>
           {user ? (
             <Link 
               to="/app/opportunities/new"
-              className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+              className="px-8 sm:px-12 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto w-fit"
             >
-              <Plus size={24} />
+              <Plus size={20} />
               {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
             </Link>
           ) : (
             <Link 
               to="/auth?mode=login"
-              className="px-12 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+              className="px-8 sm:px-12 py-4 sm:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-3 mx-auto w-fit"
             >
               {isRtl ? 'התחבר לפרסום הצעה' : 'Sign in to Post'}
             </Link>
           )}
         </div>
       )}
+
+      {/* Bottom spacer for mobile tab bar */}
+      <div className="h-4 sm:h-0" />
     </div>
   );
 }
