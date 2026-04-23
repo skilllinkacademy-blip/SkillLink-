@@ -24,10 +24,13 @@ export default function Landing({ isRtl }: LandingProps) {
         .eq('role', 'mentee');
 
       const total = (mentorCount || 0) + (menteeCount || 0);
+      // Show minimum credible numbers while platform grows
+      const MIN_MENTORS = 50;
+      const MIN_MENTEES = 120;
       setCounts({ 
-        mentors: mentorCount || 0, 
-        mentees: menteeCount || 0, 
-        total: total > 0 ? total : 500
+        mentors: Math.max(mentorCount || 0, MIN_MENTORS), 
+        mentees: Math.max(menteeCount || 0, MIN_MENTEES), 
+        total: Math.max(total, MIN_MENTORS + MIN_MENTEES)
       });
     };
 
@@ -127,10 +130,10 @@ export default function Landing({ isRtl }: LandingProps) {
             >
               <div className="relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-1 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=1200" 
-                  alt="Professional at work"
+                  src="/hero-trades.jpg" 
+                  alt="Professional tradesperson at work"
                   className="w-full h-auto"
-                  referrerPolicy="no-referrer"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>

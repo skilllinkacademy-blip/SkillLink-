@@ -249,12 +249,15 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <motion.button
-          whileHover={{ y: -8, scale: 1.02 }}
+          whileHover={profile?.role === 'mentee' ? {} : { y: -8, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { 
+            if (profile?.role === 'mentee') return;
             setType('mentor_offer'); setStep(2);
           }}
-          className="group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-slate-900 bg-white shadow-2xl shadow-slate-100"
+          className={`group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-slate-900 bg-white shadow-2xl shadow-slate-100 ${
+            profile?.role === 'mentee' ? 'opacity-40 cursor-not-allowed' : ''
+          }`}
         >
           <div className="relative z-10 space-y-6">
             <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 ${
@@ -276,12 +279,15 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         </motion.button>
 
         <motion.button
-          whileHover={{ y: -8, scale: 1.02 }}
+          whileHover={profile?.role === 'mentor' ? {} : { y: -8, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { 
+            if (profile?.role === 'mentor') return;
             setType('mentee_seeking'); setStep(2); 
           }}
-          className="group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-emerald-600 bg-white shadow-2xl shadow-emerald-100"
+          className={`group p-10 rounded-[3rem] border-4 text-start transition-all relative overflow-hidden border-emerald-600 bg-white shadow-2xl shadow-emerald-100 ${
+            profile?.role === 'mentor' ? 'opacity-40 cursor-not-allowed' : ''
+          }`}
         >
           <div className="relative z-10 space-y-6">
             <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 ${

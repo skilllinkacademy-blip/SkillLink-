@@ -87,7 +87,7 @@ export default function Auth({ isRtl }: AuthProps) {
         if (signUpError) throw signUpError;
         
         if (data.user) {
-          alert(isRtl ? 'נרשמת בהצלחה! בדוק את המייל לאימות (אם מופעל)' : 'Signed up successfully! Check your email for verification.');
+          navigate('/app/opportunities', { replace: true });
         }
       }
     } catch (err: any) {
@@ -276,12 +276,12 @@ export default function Auth({ isRtl }: AuthProps) {
 
       <div className="relative group">
         <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={17} />
-        <input type="email" required placeholder={isRtl ? 'כתובת אימייל' : 'Email Address'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+        <input type="email" required autoComplete="off" placeholder={isRtl ? 'כתובת אימייל' : 'Email Address'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
       </div>
 
       <div className="relative group">
         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={17} />
-        <input type="password" required placeholder={isRtl ? 'סיסמה (לפחות 6 תווים)' : 'Password (min 6 chars)'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+        <input type="password" required autoComplete="new-password" placeholder={isRtl ? 'סיסמה (לפחות 6 תווים)' : 'Password (min 6 chars)'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
       </div>
 
       <button
@@ -314,12 +314,12 @@ export default function Auth({ isRtl }: AuthProps) {
 
       <div className="relative group">
         <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={17} />
-        <input type="email" required placeholder={isRtl ? 'כתובת אימייל' : 'Email Address'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+        <input type="email" required autoComplete="username" placeholder={isRtl ? 'כתובת אימייל' : 'Email Address'} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
       </div>
 
       <div className="relative group">
         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={17} />
-        <input type="password" required placeholder={isRtl ? 'סיסמה' : 'Password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+        <input type="password" required autoComplete="current-password" placeholder={isRtl ? 'סיסמה' : 'Password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
       </div>
 
       <button

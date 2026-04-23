@@ -744,6 +744,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isRtl ? 'שומר...' : 'Saving...'}
               </div>
             )}
+            {!isMyProfile && user && (
+              <button
+                onClick={() => navigate('/app/messages', { state: { recipientId: profile.id } })}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100"
+              >
+                <Zap size={16} />
+                {isRtl ? 'שלח הודעה' : 'Send Message'}
+              </button>
+            )}
           </div>
 
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">

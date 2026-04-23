@@ -19,9 +19,10 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
     if (!user) return;
     try {
       const response = await api.get('/opportunities/me');
+      const rawData = Array.isArray(response.data) ? response.data : [];
       
       // Transform data to match frontend expectations
-      const transformedData = response.data.map((opp: any) => ({
+      const transformedData = rawData.map((opp: any) => ({
         ...opp,
         owner_id: opp.ownerId,
         image_url: opp.imageUrl,

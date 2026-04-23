@@ -20,9 +20,10 @@ import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
+import OnboardingModal from './components/OnboardingModal';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, isSyncing, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
+  const { user, loading, isSyncing } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -36,6 +37,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
   return (
     <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
       <Navbar isRtl={isRtl} toggleLang={toggleLang} />
+      {user && <OnboardingModal isRtl={isRtl} />}
       
       <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
         <Routes>
