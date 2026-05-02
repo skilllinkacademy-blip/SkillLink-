@@ -1,542 +1,247 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Send, User, ShieldCheck, MessageSquare, TrendingUp, Award, ChevronDown } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Star, ArrowRight, ArrowLeft, Loader2, User as UserIcon, ShieldCheck, Filter, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 import api from '../lib/api';
-import { useAuth } from '../contexts/AuthContext';
 
-interface ReviewsProps {
+interface ReviewsPageProps {
   isRtl: boolean;
-  targetUserId?: string;
-  targetUserName?: string;
-  targetUserAvatar?: string;
-  targetUserOccupation?: string;
 }
 
-interface Review {
-  id: number;
-  rating: number;
-  comment: string;
-  created_at: string;
-  reviewer_name: string;
-  reviewer_avatar?: string;
-  reviewer_occupation?: string;
-  reviewer_verified?: boolean;
-  category?: string;
-}
-
-const CATEGORIES = {
-  he: ['מקצועיות', 'תקשורת', 'אמינות', 'סבלנות', 'ידע מקצועי'],
-  en: ['Professionalism', 'Communication', 'Reliability', 'Patience', 'Expertise'],
-};
-
-function StarRating({
-  value,
-  onChange,
-  size = 28,
-  readonly = false,
-}: {
-  value: number;
-  onChange?: (v: number) => void;
-  size?: number;
-  readonly?: boolean;
-}) {
-  const [hovered, setHovered] = useState(0);
-  return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={readonly}
-          onMouseEnter={() => !readonly && setHovered(star)}
-          onMouseLeave={() => !readonly && setHovered(0)}
-          onClick={() => !readonly && onChange?.(star)}
-          className={`transition-transform ${!readonly ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
-        >
-          <Star
-            size={size}
-            className={`transition-colors ${
-              star <= (hovered || value)
-                ? 'text-amber-400 fill-amber-400'
-                : 'text-slate-200 fill-slate-100'
-            }`}
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div className="industrial-card p-8 space-y-4 animate-pulse">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-slate-100" />
-        <div className="space-y-2 flex-1">
-          <div className="h-4 bg-slate-100 rounded-xl w-32" />
-          <div className="h-3 bg-slate-100 rounded-xl w-20" />
-        </div>
-        <div className="h-4 bg-slate-100 rounded-xl w-24" />
-      </div>
-      <div className="space-y-2">
-        <div className="h-3 bg-slate-100 rounded-xl w-full" />
-        <div className="h-3 bg-slate-100 rounded-xl w-4/5" />
-      </div>
-    </div>
-  );
-}
-
-export default function Reviews({
-  isRtl,
-  targetUserId,
-  targetUserName,
-  targetUserAvatar,
-  targetUserOccupation,
-}: ReviewsProps) {
-  const { user, profile } = useAuth();
-
-  const [reviews, setReviews] = useState<Review[]>([]);
+export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
+  const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+  const [reviewsData, setReviewsData] = useState<{
+    reviews: any[];
+    stats: any;
+    distribution: any[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-
-  // Form state
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [category, setCategory] = useState('');
-
-  const avgRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : null;
-
-  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-    pct:
-      reviews.length > 0
-        ? Math.round((reviews.filter((r) => r.rating === star).length / reviews.length) * 100)
-        : 0,
-  }));
-
-  const fetchReviews = async () => {
-    setLoading(true);
-    try {
-      const endpoint = targetUserId
-        ? `/reviews?targetUserId=${targetUserId}`
-        : '/reviews/me';
-      const res = await api.get(endpoint);
-      setReviews(res.data || []);
-    } catch {
-      setReviews([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [filterRating, setFilterRating] = useState<number | 'all'>('all');
 
   useEffect(() => {
-    fetchReviews();
-  }, [targetUserId]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1. Get profile by username
+        const { data: profileData, error: pError } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, role, verified, occupation')
+          .eq('username', username)
+          .single();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (rating === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await api.post('/reviews', {
-        targetUserId: targetUserId || profile?.supabase_id,
-        rating,
-        comment,
-        category,
-      });
-      setSubmitted(true);
-      setShowForm(false);
-      setRating(0);
-      setComment('');
-      setCategory('');
-      await fetchReviews();
-    } catch (err: any) {
-      setError(err.message || (isRtl ? 'שגיאה בשליחה' : 'Submission error'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+        if (pError) throw pError;
+        setProfile(profileData);
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString(isRtl ? 'he-IL' : 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+        // 2. Get reviews from our custom SQLite endpoint
+        // Wait, SQLite endpoint is local to server.ts. We should use api.get
+        const res = await api.get(`/ratings/user/${profileData.id}`);
+        setReviewsData(res.data);
+      } catch (err) {
+        console.error('Error fetching reviews page data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const cats = isRtl ? CATEGORIES.he : CATEGORIES.en;
+    if (username) fetchData();
+  }, [username]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
+        <p className="text-gray-500 font-bold animate-pulse">{isRtl ? 'טוען ביקורות...' : 'Loading reviews...'}</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="max-w-2xl mx-auto py-20 text-center space-y-6">
+        <h2 className="text-2xl font-black">{isRtl ? 'משתמש לא נמצא' : 'User not found'}</h2>
+        <button onClick={() => navigate(-1)} className="text-blue-600 font-bold flex items-center gap-2 mx-auto">
+          {isRtl ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+          {isRtl ? 'חזרה' : 'Go back'}
+        </button>
+      </div>
+    );
+  }
+
+  const { reviews = [], stats = {}, distribution = [] } = reviewsData || {};
+  const filteredReviews = filterRating === 'all' 
+    ? reviews 
+    : reviews.filter(r => Math.round((r.professional + r.teaching + r.workEthic + r.reliability) / 4) === filterRating);
+
+  const starStats = [5, 4, 3, 2, 1].map(star => {
+    const dist = distribution.find(d => d.stars === star);
+    return {
+      stars: star,
+      count: dist ? dist.count : 0,
+      percentage: stats.total ? Math.round(((dist ? dist.count : 0) / stats.total) * 100) : 0
+    };
+  });
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-10 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-400/10 flex items-center justify-center">
-            <Star size={20} className="text-amber-500 fill-amber-400" />
+      <div className="flex items-center justify-between gap-4">
+        <button onClick={() => navigate(-1)} className="p-3 hover:bg-gray-100 rounded-2xl transition-all">
+          {isRtl ? <ArrowRight size={24} /> : <ArrowLeft size={24} />}
+        </button>
+        <div className="flex-1 text-center">
+          <h1 className="text-3xl font-black">{isRtl ? `ביקורות על ${profile.full_name}` : `Reviews for ${profile.full_name}`}</h1>
+          <p className="text-gray-500 font-medium">{profile.occupation || profile.role}</p>
+        </div>
+        <div className="w-12 h-12" /> {/* Spacer */}
+      </div>
+
+      {/* Summary Section */}
+      <div className="grid md:grid-cols-3 gap-8 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl">
+        {/* Big Number */}
+        <div className="flex flex-col items-center justify-center text-center space-y-2 border-b md:border-b-0 md:border-e border-gray-100 pb-6 md:pb-0">
+          <div className="text-6xl font-black text-black">
+            {stats.overallAvg ? stats.overallAvg.toFixed(1) : '0.0'}
           </div>
-          <div>
-            <h1 className="text-4xl font-black text-black tracking-tight">
-              {isRtl ? 'דירוגים וביקורות' : 'Ratings & Reviews'}
-            </h1>
-            {targetUserName && (
-              <p className="text-slate-400 font-medium text-sm">
-                {isRtl ? `ביקורות על ${targetUserName}` : `Reviews for ${targetUserName}`}
-              </p>
-            )}
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Star 
+                key={s} 
+                size={20} 
+                fill={s <= Math.round(stats.overallAvg || 0) ? "#EAB308" : "none"} 
+                className={s <= Math.round(stats.overallAvg || 0) ? "text-yellow-500" : "text-gray-300"} 
+              />
+            ))}
           </div>
+          <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+            {isRtl ? `${stats.total || 0} חוות דעת` : `${stats.total || 0} Reviews`}
+          </div>
+        </div>
+
+        {/* Categories breakdown */}
+        <div className="space-y-4 px-4 border-b md:border-b-0 md:border-e border-gray-100 pb-6 md:pb-0">
+          <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{isRtl ? 'לפי קטגוריות' : 'By Category'}</h3>
+          {[
+            { label: isRtl ? 'מקצועיות' : 'Professionalism', val: stats.avgProfessional },
+            { label: isRtl ? 'איכות הוראה' : 'Teaching Quality', val: stats.avgTeaching },
+            { label: isRtl ? 'מוסר עבודה' : 'Work Ethic', val: stats.avgWorkEthic },
+            { label: isRtl ? 'אמינות' : 'Reliability', val: stats.avgReliability },
+          ].map(cat => (
+            <div key={cat.label} className="space-y-1">
+              <div className="flex justify-between text-xs font-bold">
+                <span>{cat.label}</span>
+                <span className="text-blue-600">{cat.val ? cat.val.toFixed(1) : '---'}</span>
+              </div>
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(cat.val || 0) * 20}%` }}
+                  className="h-full bg-blue-600 rounded-full"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Stars Breakdown */}
+        <div className="space-y-3 pt-4 md:pt-0">
+           <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{isRtl ? 'פילוח כוכבים' : 'Stars Distribution'}</h3>
+           {starStats.map(item => (
+             <button 
+              key={item.stars} 
+              onClick={() => setFilterRating(filterRating === item.stars ? 'all' : item.stars)}
+              className={`w-full flex items-center gap-3 group transition-all p-1 rounded-lg ${filterRating === item.stars ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+             >
+               <span className="text-xs font-bold w-4">{item.stars}</span>
+               <Star size={12} className="text-yellow-500 fill-current" />
+               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                 <div className="h-full bg-yellow-400" style={{ width: `${item.percentage}%` }} />
+               </div>
+               <span className="text-xs font-medium text-gray-400 w-8">{item.count}</span>
+             </button>
+           ))}
         </div>
       </div>
 
-      {/* Stats Row */}
-      {!loading && reviews.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-        >
-          {/* Big Score */}
-          <div className="industrial-card p-10 flex items-center gap-8">
-            <div className="text-center">
-              <div className="text-7xl font-black text-slate-900 leading-none tracking-tighter">
-                {avgRating}
-              </div>
-              <StarRating value={Math.round(Number(avgRating))} readonly size={22} />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                {reviews.length} {isRtl ? 'ביקורות' : 'Reviews'}
-              </p>
-            </div>
-            <div className="flex-1 space-y-2">
-              {ratingDistribution.map(({ star, count, pct }) => (
-                <div key={star} className="flex items-center gap-3">
-                  <span className="text-[10px] font-black text-slate-400 w-3">{star}</span>
-                  <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />
-                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.7, delay: star * 0.05 }}
-                      className="h-full bg-amber-400 rounded-full"
-                    />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-400 w-6 text-right">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              {
-                icon: TrendingUp,
-                label: isRtl ? 'דירוג ממוצע' : 'Avg Rating',
-                value: avgRating ?? '—',
-                color: 'text-emerald-600',
-                bg: 'bg-emerald-500/10',
-              },
-              {
-                icon: MessageSquare,
-                label: isRtl ? 'סה"כ ביקורות' : 'Total Reviews',
-                value: reviews.length,
-                color: 'text-slate-900',
-                bg: 'bg-slate-100',
-              },
-              {
-                icon: Award,
-                label: isRtl ? '5 כוכבים' : '5 Stars',
-                value: `${ratingDistribution[0].pct}%`,
-                color: 'text-amber-600',
-                bg: 'bg-amber-400/10',
-              },
-              {
-                icon: Star,
-                label: isRtl ? 'ביקורת אחרונה' : 'Last Review',
-                value: reviews[0] ? formatDate(reviews[0].created_at) : '—',
-                color: 'text-blue-600',
-                bg: 'bg-blue-500/10',
-              },
-            ].map((stat, i) => (
-              <div key={i} className="industrial-card p-6 space-y-3">
-                <div className={`w-10 h-10 ${stat.bg} rounded-2xl flex items-center justify-center`}>
-                  <stat.icon size={18} className={stat.color} />
-                </div>
-                <div>
-                  <div className={`text-2xl font-black ${stat.color} tracking-tight`}>{stat.value}</div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Write Review Button / Form */}
-      {user && (
-        <div className="space-y-6">
-          {!showForm && !submitted && (
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95 group"
+      {/* Filter and Content */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-black">{isRtl ? 'כל הביקורות' : 'All Reviews'}</h2>
+          <div className="flex items-center gap-2 text-sm text-gray-500 font-bold">
+            <Filter size={16} />
+            <span>{isRtl ? 'סינון:' : 'Filter:'}</span>
+            <select 
+              value={filterRating} 
+              onChange={(e) => setFilterRating(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="bg-transparent border-none focus:ring-0 cursor-pointer font-black text-blue-600"
             >
-              <Star size={16} className="text-amber-400 fill-amber-400" />
-              {isRtl ? 'כתוב ביקורת' : 'Write a Review'}
-            </button>
-          )}
-
-          {submitted && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-4 px-8 py-5 bg-emerald-50 border-2 border-emerald-100 rounded-[2rem] text-emerald-700 font-black text-sm"
-            >
-              <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <Star size={16} className="text-white fill-white" />
-              </div>
-              {isRtl ? '✅ הביקורת שלך נשלחה בהצלחה!' : '✅ Your review was submitted successfully!'}
-            </motion.div>
-          )}
-
-          <AnimatePresence>
-            {showForm && (
-              <motion.form
-                key="review-form"
-                initial={{ opacity: 0, y: -16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                onSubmit={handleSubmit}
-                className="industrial-card p-10 space-y-8"
-              >
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-                    {isRtl ? 'שתף את חוויתך' : 'Share Your Experience'}
-                  </h3>
-                  <p className="text-slate-400 font-medium text-sm">
-                    {isRtl
-                      ? 'הביקורת שלך עוזרת לבנות קהילה מקצועית אמינה.'
-                      : 'Your review helps build a trustworthy professional community.'}
-                  </p>
-                </div>
-
-                {/* Star Rating */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    {isRtl ? 'דירוג כללי' : 'Overall Rating'}
-                  </label>
-                  <StarRating value={rating} onChange={setRating} size={36} />
-                  {rating > 0 && (
-                    <p className="text-xs font-black text-amber-500 uppercase tracking-widest">
-                      {['', isRtl ? 'גרוע' : 'Poor', isRtl ? 'סביר' : 'Fair', isRtl ? 'טוב' : 'Good', isRtl ? 'מצוין' : 'Great', isRtl ? 'מושלם!' : 'Excellent!'][rating]}
-                    </p>
-                  )}
-                </div>
-
-                {/* Category */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    {isRtl ? 'קטגוריה (אופציונלי)' : 'Category (Optional)'}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {cats.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setCategory(category === cat ? '' : cat)}
-                        className={`px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${
-                          category === cat
-                            ? 'bg-slate-900 text-white border-slate-900'
-                            : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Comment */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    {isRtl ? 'ביקורת כתובה' : 'Written Review'}
-                  </label>
-                  <textarea
-                    rows={4}
-                    required
-                    placeholder={
-                      isRtl
-                        ? 'ספר על החוויה שלך עם המנטור / המתלמד...'
-                        : 'Tell us about your experience with this mentor / apprentice...'
-                    }
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-slate-900 transition-all font-medium outline-none resize-none text-slate-900"
-                  />
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                      {comment.length}/500
-                    </span>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="p-5 bg-red-50 border-2 border-red-100 rounded-[2rem] text-red-600 text-sm font-bold">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors border-2 border-slate-100 hover:border-slate-200"
-                  >
-                    {isRtl ? 'ביטול' : 'Cancel'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting || rating === 0}
-                    className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {submitting ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                    ) : (
-                      <>
-                        <Send size={16} />
-                        {isRtl ? 'שלח ביקורת' : 'Submit Review'}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* Reviews List */}
-      <div className="space-y-8">
-        <div className="flex justify-between items-end px-2">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-            {isRtl ? 'כל הביקורות' : 'All Reviews'}
-          </h2>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-6 py-2 rounded-full border border-slate-200">
-            {reviews.length} {isRtl ? 'ביקורות' : 'Reviews'}
-          </span>
+              <option value="all">{isRtl ? 'הכל' : 'All'}</option>
+              <option value="5">5 כוכבים</option>
+              <option value="4">4 כוכבים</option>
+              <option value="3">3 כוכבים</option>
+              <option value="2">2 כוכבים</option>
+              <option value="1">1 כוכב</option>
+            </select>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : reviews.length === 0 ? (
-          <div className="industrial-card p-24 text-center space-y-8">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
-              <Star className="text-slate-200" size={48} />
+        {filteredReviews.length === 0 ? (
+          <div className="bg-gray-50 p-12 rounded-[2.5rem] text-center space-y-4">
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+              <Star size={32} className="text-gray-200" />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-                {isRtl ? 'אין ביקורות עדיין' : 'No reviews yet'}
-              </h2>
-              <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
-                {isRtl
-                  ? 'היה הראשון להשאיר ביקורת ולעזור לבנות את הקהילה.'
-                  : 'Be the first to leave a review and help build the community.'}
-              </p>
-            </div>
+            <p className="text-gray-500 font-bold">{isRtl ? 'לא נמצאו ביקורות מתאימות' : 'No matching reviews found'}</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {reviews.map((review) => (
-              <motion.div
+          <div className="grid gap-4">
+            {filteredReviews.map((review) => (
+              <motion.div 
+                layout
                 key={review.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="industrial-card p-8 space-y-5 group"
+                className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group"
               >
-                {/* Reviewer Info */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xl overflow-hidden border border-slate-200 shrink-0">
-                      {review.reviewer_avatar ? (
-                        <img
-                          src={review.reviewer_avatar}
-                          alt={review.reviewer_name}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden">
+                      {review.fromAvatar ? (
+                        <img src={review.fromAvatar} alt={review.fromName} className="w-full h-full object-cover" />
                       ) : (
-                        review.reviewer_name?.charAt(0) || <User size={20} />
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                          <UserIcon size={24} />
+                        </div>
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-slate-900 text-base tracking-tight">
-                          {review.reviewer_name}
-                        </span>
-                        {review.reviewer_verified && (
-                          <ShieldCheck size={16} className="text-emerald-600 fill-emerald-500/10" />
+                      <h4 className="font-black text-sm flex items-center gap-1.5">
+                        {review.fromName}
+                        {review.fromVerified === 1 && (
+                          <CheckCircle2 size={14} className="text-blue-500" />
                         )}
-                      </div>
-                      {review.reviewer_occupation && (
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          {review.reviewer_occupation}
-                        </p>
-                      )}
+                      </h4>
+                      <p className="text-xs text-gray-400 font-medium">
+                        {new Date(review.createdAt).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="text-right space-y-1 shrink-0">
-                    <StarRating value={review.rating} readonly size={18} />
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                      {formatDate(review.created_at)}
-                    </p>
+                  <div className="flex items-center gap-1 px-3 py-1 bg-yellow-50 text-yellow-700 rounded-full text-xs font-black">
+                    <Star size={14} className="fill-current" />
+                    {((review.professional + review.teaching + review.workEthic + review.reliability) / 4).toFixed(1)}
                   </div>
                 </div>
+                
+                <p className="text-gray-700 leading-relaxed font-medium">
+                   {review.comment}
+                </p>
 
-                {/* Category Badge */}
-                {review.category && (
-                  <span className="inline-flex items-center px-4 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest border border-slate-200">
-                    {review.category}
+                {/* Tags if any logic used */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-gray-50 text-gray-400 text-[10px] font-black uppercase rounded-lg border border-gray-100">
+                    {isRtl ? 'מאומת' : 'Verified'}
                   </span>
-                )}
-
-                {/* Comment */}
-                <div>
-                  <p
-                    className={`text-slate-600 font-medium leading-relaxed text-sm transition-all ${
-                      expandedId === review.id ? '' : 'line-clamp-3'
-                    }`}
-                  >
-                    {review.comment}
-                  </p>
-                  {review.comment?.length > 180 && (
-                    <button
-                      onClick={() =>
-                        setExpandedId(expandedId === review.id ? null : review.id)
-                      }
-                      className="flex items-center gap-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 hover:text-slate-900 transition-colors"
-                    >
-                      {expandedId === review.id
-                        ? isRtl ? 'הצג פחות' : 'Show less'
-                        : isRtl ? 'קרא עוד' : 'Read more'}
-                      <ChevronDown
-                        size={12}
-                        className={`transition-transform ${expandedId === review.id ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                  )}
                 </div>
               </motion.div>
             ))}

@@ -23,14 +23,13 @@ const PORT = 3000;
 
 // Initialize Supabase Admin (Server-side)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('WARNING: Supabase URL or Service Key is missing. Session sync will not work.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey || 'placeholder', {
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
@@ -41,80 +40,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey || 'placeholder', 
 // Initialize Database
 const db = new Database('skilllink.db');
 db.pragma('journal_mode = WAL');
-
-// Migrations: Add missing columns if they don't exist
-try {
-  const userTableInfo = db.prepare("PRAGMA table_info(users)").all();
-  const hasGoals = userTableInfo.some((col: any) => col.name === 'goals');
-  const hasAvailability = userTableInfo.some((col: any) => col.name === 'availability');
-  const hasPhone = userTableInfo.some((col: any) => col.name === 'phone');
-  const hasWorkload = userTableInfo.some((col: any) => col.name === 'workload');
-  const hasUsername = userTableInfo.some((col: any) => col.name === 'username');
-  const hasSupabaseId = userTableInfo.some((col: any) => col.name === 'supabase_id');
-  
-  if (!hasGoals) {
-    db.prepare("ALTER TABLE users ADD COLUMN goals TEXT").run();
-  }
-  if (!hasAvailability) {
-    db.prepare("ALTER TABLE users ADD COLUMN availability TEXT").run();
-  }
-  if (!hasPhone) {
-    db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
-  }
-  if (!hasWorkload) {
-    db.prepare("ALTER TABLE users ADD COLUMN workload TEXT").run();
-  }
-  if (!hasUsername) {
-    db.prepare("ALTER TABLE users ADD COLUMN username TEXT").run();
-  }
-  if (!hasSupabaseId) {
-    db.prepare("ALTER TABLE users ADD COLUMN supabase_id TEXT").run();
-  }
-
-  // Populate missing usernames
-  const usersWithoutUsername = db.prepare("SELECT id, name FROM users WHERE username IS NULL").all();
-  for (const user of usersWithoutUsername as any) {
-    const baseUsername = user.name.toLowerCase().replace(/\s+/g, '_');
-    let username = baseUsername;
-    let counter = 1;
-    
-    // Ensure uniqueness
-    while (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) {
-      username = `${baseUsername}_${counter}`;
-      counter++;
-    }
-    
-    db.prepare("UPDATE users SET username = ? WHERE id = ?").run(username, user.id);
-  }
-
-  const tableInfo = db.prepare("PRAGMA table_info(requests)").all();
-  const hasMessage = tableInfo.some((col: any) => col.name === 'message');
-  const hasStartDate = tableInfo.some((col: any) => col.name === 'startDate');
-  
-  if (!hasMessage) {
-    db.prepare("ALTER TABLE requests ADD COLUMN message TEXT").run();
-  }
-  if (!hasStartDate) {
-    db.prepare("ALTER TABLE requests ADD COLUMN startDate TEXT").run();
-  }
-
-  const postTableInfo = db.prepare("PRAGMA table_info(posts)").all();
-  const hasType = postTableInfo.some((col: any) => col.name === 'type');
-  if (!hasType) {
-    db.prepare("ALTER TABLE posts ADD COLUMN type TEXT DEFAULT 'Tip'").run();
-  }
-
-  const oppTableInfo = db.prepare("PRAGMA table_info(opportunities)").all();
-  const hasStatus = oppTableInfo.some((col: any) => col.name === 'status');
-  if (!hasStatus) {
-    db.prepare("ALTER TABLE opportunities ADD COLUMN status TEXT DEFAULT 'active'").run();
-  } else {
-    // Ensure all existing opportunities are active if they have no status
-    db.prepare("UPDATE opportunities SET status = 'active' WHERE status IS NULL").run();
-  }
-} catch (e) {
-  console.error("Migration failed:", e);
-}
 
 // Create Tables
 db.exec(`
@@ -139,8 +64,18 @@ db.exec(`
     areaServed TEXT,
     lang TEXT DEFAULT 'en',
     verified INTEGER DEFAULT 0,
+    verificationStatus TEXT DEFAULT 'none', -- none, pending, verified, rejected
     avatar TEXT,
     username TEXT UNIQUE,
+    learningIntent TEXT,
+    preferredDuration TEXT,
+    businessType TEXT,
+    targetAudience TEXT,
+    isBusiness INTEGER DEFAULT 0,
+    businessDescription TEXT,
+    businessLogo TEXT,
+    businessWebsite TEXT,
+    businessSocialLinks TEXT, -- JSON
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -266,6 +201,108 @@ db.exec(`
     FOREIGN KEY (userId) REFERENCES users (id)
   );
 `);
+
+// Migrations: Add missing columns if they don't exist
+try {
+  const userTableInfo = db.prepare("PRAGMA table_info(users)").all();
+  const hasGoals = userTableInfo.some((col: any) => col.name === 'goals');
+  const hasAvailability = userTableInfo.some((col: any) => col.name === 'availability');
+  const hasPhone = userTableInfo.some((col: any) => col.name === 'phone');
+  const hasWorkload = userTableInfo.some((col: any) => col.name === 'workload');
+  const hasUsername = userTableInfo.some((col: any) => col.name === 'username');
+  const hasSupabaseId = userTableInfo.some((col: any) => col.name === 'supabase_id');
+  
+  if (!hasGoals) {
+    db.prepare("ALTER TABLE users ADD COLUMN goals TEXT").run();
+  }
+  if (!hasAvailability) {
+    db.prepare("ALTER TABLE users ADD COLUMN availability TEXT").run();
+  }
+  if (!hasPhone) {
+    db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
+  }
+  if (!hasWorkload) {
+    db.prepare("ALTER TABLE users ADD COLUMN workload TEXT").run();
+  }
+  if (!hasUsername) {
+    db.prepare("ALTER TABLE users ADD COLUMN username TEXT").run();
+  }
+  if (!hasSupabaseId) {
+    db.prepare("ALTER TABLE users ADD COLUMN supabase_id TEXT").run();
+  }
+
+  // Vision Update: User Profiles
+  const hasLearningIntent = userTableInfo.some((col: any) => col.name === 'learningIntent');
+  if (!hasLearningIntent) {
+    db.prepare("ALTER TABLE users ADD COLUMN learningIntent TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN preferredDuration TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN businessType TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN targetAudience TEXT").run();
+  }
+
+  // Business Profile Updates
+  const hasIsBusiness = userTableInfo.some((col: any) => col.name === 'isBusiness');
+  if (!hasIsBusiness) {
+    db.prepare("ALTER TABLE users ADD COLUMN isBusiness INTEGER DEFAULT 0").run();
+    db.prepare("ALTER TABLE users ADD COLUMN businessDescription TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN businessLogo TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN businessWebsite TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN businessSocialLinks TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN verificationStatus TEXT DEFAULT 'none'").run();
+  }
+
+  // Populate missing usernames
+  const usersWithoutUsername = db.prepare("SELECT id, name FROM users WHERE username IS NULL").all();
+  for (const user of usersWithoutUsername as any) {
+    const baseUsername = user.name.toLowerCase().replace(/\s+/g, '_');
+    let username = baseUsername;
+    let counter = 1;
+    
+    // Ensure uniqueness
+    while (db.prepare("SELECT id FROM users WHERE username = ?").get(username)) {
+      username = `${baseUsername}_${counter}`;
+      counter++;
+    }
+    
+    db.prepare("UPDATE users SET username = ? WHERE id = ?").run(username, user.id);
+  }
+
+  const tableInfo = db.prepare("PRAGMA table_info(requests)").all();
+  const hasMessage = tableInfo.some((col: any) => col.name === 'message');
+  const hasStartDate = tableInfo.some((col: any) => col.name === 'startDate');
+  
+  if (!hasMessage) {
+    db.prepare("ALTER TABLE requests ADD COLUMN message TEXT").run();
+  }
+  if (!hasStartDate) {
+    db.prepare("ALTER TABLE requests ADD COLUMN startDate TEXT").run();
+  }
+
+  const postTableInfo = db.prepare("PRAGMA table_info(posts)").all();
+  const hasType = postTableInfo.some((col: any) => col.name === 'type');
+  if (!hasType) {
+    db.prepare("ALTER TABLE posts ADD COLUMN type TEXT DEFAULT 'Tip'").run();
+  }
+
+  const oppTableInfo = db.prepare("PRAGMA table_info(opportunities)").all();
+  const hasStatus = oppTableInfo.some((col: any) => col.name === 'status');
+  if (!hasStatus) {
+    db.prepare("ALTER TABLE opportunities ADD COLUMN status TEXT DEFAULT 'active'").run();
+  } else {
+    // Ensure all existing opportunities are active if they have no status
+    db.prepare("UPDATE opportunities SET status = 'active' WHERE status IS NULL").run();
+  }
+
+  const hasOpportunityType = oppTableInfo.some((col: any) => col.name === 'opportunityType');
+  if (!hasOpportunityType) {
+    db.prepare("ALTER TABLE opportunities ADD COLUMN opportunityType TEXT DEFAULT 'apprenticeship'").run();
+    db.prepare("ALTER TABLE opportunities ADD COLUMN commitmentLevel TEXT DEFAULT 'high'").run();
+    db.prepare("ALTER TABLE opportunities ADD COLUMN learningFocus TEXT").run();
+    db.prepare("ALTER TABLE opportunities ADD COLUMN durationDescription TEXT").run();
+  }
+} catch (e) {
+  console.error("Migration failed:", e);
+}
 
 async function startServer() {
   const app = express();
@@ -406,6 +443,10 @@ async function startServer() {
     res.json(userWithoutPassword);
   });
 
+  app.get('/api/auth/sqlite-id', authenticateToken, (req: any, res) => {
+    res.json({ id: req.user.id });
+  });
+
   app.post('/api/auth/session', async (req, res) => {
     const { access_token } = req.body;
     if (!access_token) return res.status(400).json({ error: 'Access token required' });
@@ -491,7 +532,7 @@ async function startServer() {
         const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
         const finalRole = userCount === 0 ? 'admin' : (sbProfile?.role || metadata.role || 'mentee');
 
-        const stmt = db.prepare('INSERT INTO users (supabase_id, name, email, password, role, location, trade, phone, workload, username, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO users (supabase_id, name, email, password, role, location, trade, phone, workload, username, avatar, learningIntent, preferredDuration, businessType, targetAudience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
           user.id,
           finalFullName,
@@ -503,7 +544,11 @@ async function startServer() {
           metadata.phone || '',
           metadata.workload || 'low',
           finalUsername,
-          finalAvatar
+          finalAvatar,
+          metadata.learning_intent || 'trade',
+          metadata.preferred_duration || 'long',
+          metadata.business_type || '',
+          metadata.target_audience || ''
         );
         localUser = {
           id: result.lastInsertRowid,
@@ -512,7 +557,11 @@ async function startServer() {
           email: user.email,
           role: finalRole,
           username: finalUsername,
-          avatar: finalAvatar
+          avatar: finalAvatar,
+          learningIntent: metadata.learning_intent || 'trade',
+          preferredDuration: metadata.preferred_duration || 'long',
+          businessType: metadata.business_type || '',
+          targetAudience: metadata.target_audience || ''
         };
       } else {
         // Update existing user with latest data from Supabase
@@ -527,7 +576,10 @@ async function startServer() {
         updateFields.push('avatar = ?'); updateValues.push(finalAvatar);
         
         if (metadata.phone) { updateFields.push('phone = ?'); updateValues.push(metadata.phone); }
-        
+        if (metadata.learning_intent) { updateFields.push('learningIntent = ?'); updateValues.push(metadata.learning_intent); }
+        if (metadata.preferred_duration) { updateFields.push('preferredDuration = ?'); updateValues.push(metadata.preferred_duration); }
+        if (metadata.business_type) { updateFields.push('businessType = ?'); updateValues.push(metadata.business_type); }
+
         if (updateFields.length > 0) {
           updateValues.push(localUser.id);
           db.prepare(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`).run(...updateValues);
@@ -623,13 +675,13 @@ async function startServer() {
 
   // Search
   app.get('/api/search', authenticateToken, (req: any, res) => {
-    const { q, trade, location, role, experience, verified } = req.query;
-    let query = 'SELECT id, name as full_name, role, location, trade as occupation, avatar as avatar_url, businessName, username, supabase_id, verified as is_verified, experience, createdAt as created_at FROM users WHERE 1=1';
+    const { q, trade, location, role, experience, verified, isBusiness } = req.query;
+    let query = 'SELECT id, name as full_name, role, location, trade as occupation, avatar as avatar_url, businessName, username, supabase_id, verified as is_verified, experience, isBusiness, createdAt as created_at FROM users WHERE 1=1';
     const params: any[] = [];
 
     if (q) {
-      query += ' AND (name LIKE ? OR trade LIKE ? OR businessName LIKE ?)';
-      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+      query += ' AND (name LIKE ? OR trade LIKE ? OR businessName LIKE ? OR businessDescription LIKE ?)';
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
     }
     if (trade && trade !== 'All' && trade !== 'all') {
       query += ' AND trade = ?';
@@ -649,6 +701,9 @@ async function startServer() {
     }
     if (verified === 'true') {
       query += ' AND verified = 1';
+    }
+    if (isBusiness === 'true' || isBusiness === true) {
+      query += ' AND isBusiness = 1';
     }
 
     const results = db.prepare(query).all(...params);
@@ -708,12 +763,101 @@ async function startServer() {
     }
   });
 
-  // Ratings
+  // Ratings & Reviews
+  // Ratings: Add new review
   app.post('/api/ratings', authenticateToken, (req: any, res) => {
-    const { requestId, toId, professional, teaching, workEthic, reliability, comment } = req.body;
-    const stmt = db.prepare('INSERT INTO ratings (requestId, fromId, toId, professional, teaching, workEthic, reliability, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    stmt.run(requestId, req.user.id, toId, professional, teaching, workEthic, reliability, comment);
-    res.json({ success: true });
+    let { toId, professional, teaching, workEthic, reliability, comment, requestId } = req.body;
+    const fromId = req.user.id;
+
+    if (!toId || !comment) {
+      return res.status(400).json({ error: 'toId and comment are required' });
+    }
+
+    try {
+      // If toId is a supabase UUID, resolve to SQLite ID
+      if (typeof toId === 'string' && toId.length > 20) {
+        const user = db.prepare('SELECT id FROM users WHERE supabase_id = ?').get(toId) as any;
+        if (user) {
+          toId = user.id;
+        } else {
+          return res.status(404).json({ error: 'Recipient not found' });
+        }
+      }
+
+      const stmt = db.prepare(`
+        INSERT INTO ratings (fromId, toId, professional, teaching, workEthic, reliability, comment, requestId)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const result = stmt.run(fromId, toId, professional, teaching, workEthic, reliability, comment, requestId || null);
+      
+      res.json({ success: true, ratingId: result.lastInsertRowid });
+    } catch (error) {
+      console.error('Error adding rating:', error);
+      res.status(500).json({ error: 'Failed to add rating' });
+    }
+  });
+
+  app.get('/api/ratings/user/:id', authenticateToken, (req: any, res) => {
+    try {
+      let targetId = req.params.id;
+      
+      // Resolve supabase UUID to SQLite ID if needed
+      if (targetId.length > 20) {
+        const user = db.prepare('SELECT id FROM users WHERE supabase_id = ?').get(targetId) as any;
+        if (user) {
+          targetId = user.id;
+        } else {
+          // If not found, return empty reviews instead of 404 to avoid breaking UI
+          return res.json({ reviews: [], stats: { total: 0, overallAvg: 0 }, distribution: [] });
+        }
+      }
+
+      const reviews = db.prepare(`
+        SELECT r.*, u.name as fromName, u.avatar as fromAvatar, u.verified as fromVerified
+        FROM ratings r
+        JOIN users u ON r.fromId = u.id
+        WHERE r.toId = ?
+        ORDER BY r.createdAt DESC
+      `).all(targetId);
+
+      // Calculate stats
+      const stats = db.prepare(`
+        SELECT 
+          COUNT(*) as total,
+          AVG(professional) as avgProfessional,
+          AVG(teaching) as avgTeaching,
+          AVG(workEthic) as avgWorkEthic,
+          AVG(reliability) as avgReliability,
+          AVG((professional + teaching + workEthic + reliability) / 4.0) as overallAvg
+        FROM ratings
+        WHERE toId = ?
+      `).get(targetId) as any;
+
+      // Group by stars for overall distribution
+      const distribution = db.prepare(`
+        SELECT CAST(ROUND((professional + teaching + workEthic + reliability) / 4.0) AS INTEGER) as stars, COUNT(*) as count
+        FROM ratings
+        WHERE toId = ?
+        GROUP BY stars
+      `).all(targetId);
+
+      res.json({ reviews, stats, distribution });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+  });
+
+  app.post('/api/admin/verify-user', authenticateToken, (req: any, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    const { userId, status } = req.body; // status: 'verified' or 'rejected'
+    
+    try {
+      const verified = status === 'verified' ? 1 : 0;
+      db.prepare('UPDATE users SET verified = ?, verificationStatus = ? WHERE id = ?').run(verified, status, userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update verification' });
+    }
   });
 
   // Opportunities
@@ -814,21 +958,24 @@ async function startServer() {
 
   app.post('/api/opportunities', authenticateToken, (req: any, res) => {
     const { 
-      type, title, location, workHours, payAmount, payPeriod, 
+      type, opportunity_type, commitment_level, learning_focus, duration_description,
+      title, location, workHours, payAmount, payPeriod, 
       aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
       availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl 
     } = req.body;
 
     const stmt = db.prepare(`
       INSERT INTO opportunities (
-        ownerId, type, title, location, workHours, payAmount, payPeriod,
+        ownerId, type, opportunityType, commitmentLevel, learningFocus, durationDescription,
+        title, location, workHours, payAmount, payPeriod,
         aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
         availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
     `);
 
     const result = stmt.run(
-      req.user.id, type, title, location, workHours, payAmount, payPeriod,
+      req.user.id, type, opportunity_type, commitment_level, learning_focus, duration_description,
+      title, location, workHours, payAmount, payPeriod,
       aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
       JSON.stringify(availabilityDays || []), desiredSalary, whatIWantToLearn, experienceNote, imageUrl
     );
@@ -841,10 +988,17 @@ async function startServer() {
     if (!opp) return res.status(404).json({ error: 'Not found' });
     if (opp.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
+    // Vision update fields mapping
+    if (req.body.opportunity_type !== undefined) req.body.opportunityType = req.body.opportunity_type;
+    if (req.body.commitment_level !== undefined) req.body.commitmentLevel = req.body.commitment_level;
+    if (req.body.learning_focus !== undefined) req.body.learningFocus = req.body.learning_focus;
+    if (req.body.duration_description !== undefined) req.body.durationDescription = req.body.duration_description;
+
     const fields = [
       'type', 'title', 'location', 'workHours', 'payAmount', 'payPeriod',
       'aboutWork', 'requirements', 'whoIWantToTeach', 'menteeWillLearn',
-      'availabilityDays', 'desiredSalary', 'whatIWantToLearn', 'experienceNote', 'imageUrl', 'status'
+      'availabilityDays', 'desiredSalary', 'whatIWantToLearn', 'experienceNote', 'imageUrl', 'status',
+      'opportunityType', 'commitmentLevel', 'learningFocus', 'durationDescription'
     ].filter(f => req.body[f] !== undefined);
 
     if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
@@ -1065,7 +1219,7 @@ async function startServer() {
 
         CREATE TABLE IF NOT EXISTS ratings (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          requestId INTEGER NOT NULL,
+          requestId INTEGER,
           fromId INTEGER NOT NULL,
           toId INTEGER NOT NULL,
           professional INTEGER,

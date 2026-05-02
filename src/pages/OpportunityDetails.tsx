@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2 } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,6 +79,10 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           created_at: data.createdAt,
           ownerUsername: data.ownerUsername,
           ownerSupabaseId: data.ownerSupabaseId,
+          opportunity_type: data.opportunityType,
+          commitment_level: data.commitmentLevel,
+          learning_focus: data.learningFocus,
+          duration_description: data.durationDescription,
           profiles: {
             full_name: data.ownerName,
             avatar_url: data.ownerAvatar,
@@ -256,10 +260,17 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   {isMentorOffer ? <Briefcase size={60} sm:size={100} strokeWidth={1} /> : <GraduationCap size={60} sm:size={100} strokeWidth={1} />}
                 </div>
               )}
-              <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
-                isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
-              }`}>
-                {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Master Offer' : 'Apprentice Seeking')}
+              <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} flex flex-col gap-3`}>
+                <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
+                  isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
+                }`}>
+                  {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Master Offer' : 'Apprentice Seeking')}
+                </div>
+                {opportunity.opportunity_type && (
+                  <div className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/5 bg-white/20 text-white">
+                    {opportunity.opportunity_type === 'apprenticeship' ? (isRtl ? 'חניכה מלאה' : 'Apprenticeship') : (isRtl ? 'עבודה מזדמנת' : 'Project Work')}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -399,8 +410,16 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                       <Clock size={18} />
                     </div>
-                    <span>{opportunity.work_hours}</span>
+                    <span>{opportunity.duration_description || opportunity.work_hours}</span>
                   </div>
+                  {opportunity.commitment_level && (
+                    <div className="flex items-center gap-2 sm:gap-3 text-slate-500 font-bold text-sm sm:text-base">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                        <Zap size={18} />
+                      </div>
+                      <span className="capitalize">{opportunity.commitment_level} {isRtl ? 'התחייבות' : 'Commitment'}</span>
+                    </div>
+                  )}
                   {(opportunity.pay_amount || opportunity.desired_salary) && (
                     <div className="flex items-center gap-2 sm:gap-3 text-slate-900 font-black text-sm sm:text-base">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-lg">
@@ -417,6 +436,15 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 pt-8 sm:pt-12 border-t border-slate-100">
+                {opportunity.learning_focus && (
+                  <div className="col-span-full space-y-4 pb-8 border-b border-slate-100 mb-8">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <GraduationCap size={16} className="text-slate-300" />
+                      {isRtl ? 'מוקד הלמידה' : 'Learning Focus'}
+                    </h3>
+                    <p className="text-slate-900 font-black leading-relaxed text-2xl">{opportunity.learning_focus}</p>
+                  </div>
+                )}
                 {isMentorOffer ? (
                   <>
                     <div className="space-y-4">

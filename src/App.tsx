@@ -11,6 +11,7 @@ import Explore from './pages/Explore';
 import Messaging from './pages/Messaging';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import ReviewsPage from './pages/Reviews';
 import MentorVerify from './pages/MentorVerify';
 import AdminDashboard from './pages/AdminDashboard';
 import MyOpportunities from './pages/MyOpportunities';
@@ -20,10 +21,9 @@ import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
-import OnboardingModal from './components/OnboardingModal';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, isSyncing } = useAuth();
+  const { user, loading, isSyncing, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -37,7 +37,6 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
   return (
     <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
       <Navbar isRtl={isRtl} toggleLang={toggleLang} />
-      {user && <OnboardingModal isRtl={isRtl} />}
       
       <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
         <Routes>
@@ -109,6 +108,14 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             element={
               <ProtectedRoute>
                 <Profile isRtl={isRtl} isPublicView={true} />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/app/u/:username/reviews" 
+            element={
+              <ProtectedRoute>
+                <ReviewsPage isRtl={isRtl} />
               </ProtectedRoute>
             } 
           />

@@ -13,9 +13,22 @@ export default function Explore({ isRtl }: ExploreProps) {
   const [roleFilter, setRoleFilter] = useState<'all' | 'mentor' | 'mentee'>('all');
   const [experienceFilter, setExperienceFilter] = useState<number | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [businessOnly, setBusinessOnly] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const categories = [
+    { id: 'all', label: isRtl ? 'הכל' : 'All' },
+    { id: 'electrician', label: isRtl ? 'חשמל' : 'Electrical' },
+    { id: 'plumbing', label: isRtl ? 'אינסטלציה' : 'Plumbing' },
+    { id: 'carpentry', label: isRtl ? 'נגרות' : 'Carpentry' },
+    { id: 'construction', label: isRtl ? 'בנייה' : 'Construction' },
+    { id: 'hvac', label: isRtl ? 'מיזוג אוויר' : 'HVAC' },
+    { id: 'automotive', label: isRtl ? 'רכב' : 'Automotive' },
+    { id: 'tech', label: isRtl ? 'דיגיטל ועסק' : 'Digital & Biz' },
+  ];
 
   const fetchResults = async () => {
     setLoading(true);
@@ -23,10 +36,12 @@ export default function Explore({ isRtl }: ExploreProps) {
       const response = await api.get('/search', {
         params: {
           q: searchQuery,
+          trade: categoryFilter !== 'all' ? categoryFilter : undefined,
           location: locationQuery,
           role: roleFilter !== 'all' ? roleFilter : undefined,
           experience: experienceFilter || undefined,
-          verified: verifiedOnly || undefined
+          verified: verifiedOnly || undefined,
+          isBusiness: businessOnly || undefined
         }
       });
       
@@ -41,7 +56,7 @@ export default function Explore({ isRtl }: ExploreProps) {
   useEffect(() => {
     const timer = setTimeout(fetchResults, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, locationQuery, roleFilter, experienceFilter, verifiedOnly]);
+  }, [searchQuery, locationQuery, roleFilter, experienceFilter, verifiedOnly, businessOnly, categoryFilter]);
 
   const isRecentlyActive = (updatedAt: string) => {
     const lastActive = new Date(updatedAt);
@@ -61,6 +76,23 @@ export default function Explore({ isRtl }: ExploreProps) {
           <p className="text-gray-500 font-medium">
             {isRtl ? 'מצא מנטורים ומתלמדים לפי תחום עיסוק ומיקום.' : 'Find mentors and apprentices by occupation and location.'}
           </p>
+        </div>
+
+        {/* Category Chips */}
+        <div className="flex overflow-x-auto gap-3 pb-2 no-scrollbar">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setCategoryFilter(cat.id)}
+              className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
+                categoryFilter === cat.id 
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg' 
+                  : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
@@ -137,7 +169,7 @@ export default function Explore({ isRtl }: ExploreProps) {
               </select>
             </div>
 
-            <div className="flex items-center justify-between md:justify-end gap-6">
+            <div className="flex items-center justify-between md:justify-end gap-6 flex-wrap md:flex-nowrap">
               <div className="flex items-center gap-4">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'מאומתים בלבד' : 'Verified Only'}</label>
                 <button 
@@ -147,11 +179,24 @@ export default function Explore({ isRtl }: ExploreProps) {
                   <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${isRtl ? (verifiedOnly ? 'left-1' : 'right-1') : (verifiedOnly ? 'right-1' : 'left-1')}`} />
                 </button>
               </div>
+
+              <div className="flex items-center gap-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'עסקים בלבד' : 'Businesses Only'}</label>
+                <button 
+                  onClick={() => setBusinessOnly(!businessOnly)}
+                  className={`w-14 h-7 rounded-full transition-all relative ${businessOnly ? 'bg-blue-600' : 'bg-slate-200'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${isRtl ? (businessOnly ? 'left-1' : 'right-1') : (businessOnly ? 'right-1' : 'left-1')}`} />
+                </button>
+              </div>
+
               <button 
                 onClick={() => {
                   setRoleFilter('all');
                   setExperienceFilter(null);
                   setVerifiedOnly(false);
+                  setBusinessOnly(false);
+                  setCategoryFilter('all');
                   setSearchQuery('');
                   setLocationQuery('');
                 }}
