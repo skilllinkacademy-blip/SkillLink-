@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck, Zap } from 'lucide-react';
 import api from '../lib/api';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ExploreProps {
   isRtl: boolean;
 }
 
 export default function Explore({ isRtl }: ExploreProps) {
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'mentor' | 'mentee'>('all');
@@ -45,7 +47,15 @@ export default function Explore({ isRtl }: ExploreProps) {
         }
       });
       
-      setResults(response.data || []);
+      const rawResults = response.data || [];
+      
+      if (profile && rawResults.length > 0) {
+        const { getAIProfileRecommendations } = await import('../services/aiService');
+        const aiResults = await getAIProfileRecommendations(profile, rawResults);
+        setResults(aiResults);
+      } else {
+        setResults(rawResults);
+      }
     } catch (err) {
       console.error('Error searching profiles:', err);
     } finally {
@@ -238,6 +248,15 @@ export default function Explore({ isRtl }: ExploreProps) {
                     <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">{isRtl ? 'פעיל כעת' : 'Online'}</span>
                   </div>
                 )}
+
+                {profile.aiScore && profile.aiScore > 50 && (
+                  <div className={`absolute bottom-24 ${isRtl ? 'right-8' : 'left-8'} z-20`}>
+                    <div className="bg-slate-900 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-tighter flex items-center gap-2 shadow-xl">
+                      <Zap size={10} className="fill-yellow-400 text-yellow-400" />
+                      {profile.aiScore}% Match
+                    </div>
+                  </div>
+                )}
                 
                 <div className="relative z-10 space-y-6 flex-1 flex flex-col">
                   <div className="flex items-center gap-5">
@@ -265,7 +284,13 @@ export default function Explore({ isRtl }: ExploreProps) {
                       <span>{profile.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
                     </div>
                     <p className="text-sm text-slate-600 font-medium line-clamp-3 leading-relaxed">
-                      {profile.bio || (isRtl ? 'אין ביוגרפיה עדיין...' : 'No bio yet...')}
+                      {profile.aiReason ? (
+                        <span className="text-slate-900 border-l-2 border-slate-900 pl-3 block italic">
+                          "{profile.aiReason}"
+                        </span>
+                      ) : (
+                        profile.bio || (isRtl ? 'אין ביוגרפיה עדיין...' : 'No bio yet...')
+                      )}
                     </p>
                   </div>
 

@@ -50,7 +50,9 @@ interface Opportunity {
   ownerUsername?: string;
   ownerSupabaseId?: string;
   match_score?: number;
+  matchScore?: number;
   ai_reason?: string | null;
+  aiReason?: string | null;
 }
 
 interface OpportunityCardProps {
@@ -79,6 +81,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   const durationDescription = opportunity.duration_description || opportunity.durationDescription;
 
   const matchScore = useMemo(() => {
+    if (opportunity.matchScore !== undefined) return opportunity.matchScore;
     if (opportunity.match_score !== undefined) return opportunity.match_score;
     const { score } = calculateMatchScore(opportunity, myProfile, isRtl);
     return score;
@@ -92,6 +95,8 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
     };
     return labels[opportunityType];
   }, [opportunityType, isRtl]);
+
+  const aiReason = opportunity.aiReason || opportunity.ai_reason;
 
   return (
     <div 
@@ -159,11 +164,11 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
 
           {/* Learning Focus / About */}
           <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 sm:space-y-2 relative overflow-hidden">
-            {opportunity.ai_reason && (
+            {aiReason && (
               <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-blue-500" />
             )}
             <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-emerald-600">
-               {opportunity.ai_reason ? (
+               {aiReason ? (
                  <span className="flex items-center gap-1.5">
                    <Zap size={12} className="fill-current" />
                    {isRtl ? 'למה זה מתאים לך:' : 'Why it matches you:'}
@@ -176,7 +181,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                )}
             </div>
             <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed italic">
-              {opportunity.ai_reason || (isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn)}
+              {aiReason || (isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn)}
             </p>
           </div>
         </div>

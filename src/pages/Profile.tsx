@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import api from '../lib/api';
+import OpportunityCard from '../components/OpportunityCard';
 
 interface ProfileProps {
   isRtl: boolean;
@@ -1465,38 +1466,49 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
           )}
           {activeTab === 'saved' && (
-            <div className="space-y-6">
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-black text-slate-900">{isRtl ? 'הזדמנויות שמורות' : 'Saved Opportunities'}</h2>
+                  <p className="text-slate-500 text-sm font-medium">{isRtl ? 'הצעות ששמרת לעיון מאוחר' : 'Opportunities you saved for later'}</p>
+                </div>
+              </div>
+              
               {loadingSaved ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="animate-spin text-blue-600" size={32} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-96 bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
+                  ))}
                 </div>
               ) : savedOpportunities.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {savedOpportunities.map(opp => (
-                    <div key={opp.id} className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(`/app/opportunities/${opp.id}`)}>
-                      <h3 className="font-black text-lg mb-2 line-clamp-2">{opp.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                        <MapPin size={14} />
-                        <span>{opp.location}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                          {opp.profiles?.avatar_url ? (
-                            <img src={opp.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-xs font-bold text-gray-500">{opp.profiles?.full_name?.charAt(0) || 'U'}</span>
-                          )}
-                        </div>
-                        <span className="text-sm font-bold">{opp.profiles?.full_name}</span>
-                      </div>
+                    <div key={opp.id}>
+                      <OpportunityCard 
+                        opportunity={opp} 
+                        isRtl={isRtl} 
+                        currentUserId={user?.id}
+                      />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-3xl border border-gray-100">
-                  <Heart size={48} className="mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl font-black text-gray-900 mb-2">{isRtl ? 'אין הזדמנויות שמורות' : 'No saved opportunities'}</h3>
-                  <p className="text-gray-500">{isRtl ? 'הזדמנויות שתשמור יופיעו כאן.' : 'Opportunities you save will appear here.'}</p>
+                <div className="industrial-card p-24 text-center space-y-8">
+                  <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
+                    <Heart className="text-slate-200" size={48} />
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'אין הזדמנויות שמורות' : 'No saved opportunities'}</h2>
+                    <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+                      {isRtl ? 'הזדמנויות שתשמור בפיד יופיעו כאן לצפייה מהירה.' : 'Opportunities you save in the feed will appear here for quick access.'}
+                    </p>
+                  </div>
+                  <Link 
+                    to="/app/opportunities"
+                    className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all inline-flex"
+                  >
+                    {isRtl ? 'חפש הזדמנויות' : 'Browse Opportunities'}
+                  </Link>
                 </div>
               )}
             </div>

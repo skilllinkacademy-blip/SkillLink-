@@ -28,9 +28,14 @@ export default function Home({ isRtl }: HomeProps) {
         const response = await api.get('/opportunities/recommended');
         const rawOpps = response.data;
         
+        if (!Array.isArray(rawOpps)) {
+          console.warn('Recommended opportunities response is not an array:', rawOpps);
+          return;
+        }
+
         // Use AI service to filter and score
-        const { getAIRecommendations } = await import('../services/aiService');
-        const aiRecs = await getAIRecommendations(profile, rawOpps);
+        const { getAIOpportunityRecommendations } = await import('../services/aiService');
+        const aiRecs = await getAIOpportunityRecommendations(profile, rawOpps);
 
         const transformedData = aiRecs.map((opp: any) => ({
           ...opp,

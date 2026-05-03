@@ -51,42 +51,37 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
       const sameRegion = regions.find(r => r.some(c => oppCity.includes(c.toLowerCase())) && r.some(c => myCity.includes(c.toLowerCase())));
       
       if (sameRegion) {
-        locationScore = 25;
+        locationScore = 20;
         details.push(isRtl ? 'באותו אזור גיאוגרפי' : 'In the same geographic area');
       } else {
-        locationScore = 5;
+        locationScore = 0;
         details.push(isRtl ? 'מיקום מרוחק' : 'Location is far away');
       }
     }
   } else {
-    locationScore = 15; // Neutral if one is missing
-    details.push(isRtl ? 'מיקום לא צוין - בדוק בפרטים' : 'Location not specified - check details');
+    locationScore = 0; // Much stricter
+    details.push(isRtl ? 'מיקום לא צוין' : 'Location not specified');
   }
 
   // 2. Role & Occupation Alignment (30 points)
-  const isMentorOffer = opportunity.type === 'mentor_offer';
-  const isMenteeSeeking = opportunity.type === 'mentee_seeking';
+  const isMentorOffer = (opportunity.type || '').includes('mentor');
+  const isMenteeSeeking = (opportunity.type || '').includes('mentee');
   
-  if (isMentorOffer && myProfile.role === 'mentee') {
-    roleScore += 15;
-  } else if (isMenteeSeeking && myProfile.role === 'mentor') {
-    roleScore += 15;
+  const myRole = myProfile.role || '';
+  if (isMentorOffer && myRole === 'mentee') {
+    roleScore += 10;
+  } else if (isMenteeSeeking && myRole === 'mentor') {
+    roleScore += 10;
   }
 
   const oppTitle = (opportunity.title || '').toLowerCase();
   const oppAbout = (opportunity.about_work || opportunity.aboutWork || '').toLowerCase();
+  const oppTrade = (opportunity.trade || opportunity.ownerTrade || '').toLowerCase();
   const myOcc = (myProfile.occupation || '').toLowerCase();
-  const myBio = (myProfile.bio || '').toLowerCase();
   
-  const hasProfessionalMatch = myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc));
-  const hasInterestMatch = myBio && (oppTitle.split(' ').some(word => word.length > 3 && myBio.includes(word)));
-
-  if (hasProfessionalMatch) {
-    roleScore += 15;
+  if (myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc) || oppTrade.includes(myOcc))) {
+    roleScore += 20;
     details.push(isRtl ? 'התאמה מקצועית גבוהה' : 'High professional alignment');
-  } else if (hasInterestMatch) {
-    roleScore += 10;
-    details.push(isRtl ? 'תחומי עניין דומים' : 'Similar interests');
   } else if (roleScore > 0) {
     details.push(isRtl ? 'סוג תפקיד מתאים' : 'Matching role type');
   }

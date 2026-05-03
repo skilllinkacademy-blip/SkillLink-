@@ -38,16 +38,18 @@ function calculateDistance(coord1: [number, number], coord2: [number, number]) {
   return R * c;
 }
 
-export async function getAIRecommendations(userProfile: any, opportunities: any[]) {
+export async function getAIOpportunityRecommendations(userProfile: any, opportunities: any[]) {
   if (!process.env.GEMINI_API_KEY) {
     console.warn('GEMINI_API_KEY is not set. Falling back to basic scoring.');
-    return basicScoring(userProfile, opportunities);
+    return basicOpportunityScoring(userProfile, opportunities);
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   
   // Heuristic filtering for performance: take top 20 based on basic scoring first
-  const candidates = basicScoring(userProfile, opportunities).slice(0, 20);
+  const candidates = Array.isArray(opportunities) ? basicOpportunityScoring(userProfile, opportunities).slice(0, 20) : [];
+
+  if (candidates.length === 0) return [];
 
   const prompt = `
     You are a highly sophisticated recruitment AI for "SkillLink", an Israeli marketplace for professional mentorships and artisanal apprenticeships.
@@ -118,11 +120,83 @@ export async function getAIRecommendations(userProfile: any, opportunities: any[
   }
 }
 
-function basicScoring(userProfile: any, opportunities: any[]) {
+export async function getAIProfileRecommendations(userProfile: any, profiles: any[]) {
+  if (!process.env.GEMINI_API_KEY) {
+    return basicProfileScoring(userProfile, profiles);
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const candidates = Array.isArray(profiles) ? basicProfileScoring(userProfile, profiles).slice(0, 20) : [];
+
+  if (candidates.length === 0) return [];
+
+  const prompt = `
+    You are a professional Israeli mentorship AI for "SkillLink".
+    Compare the current user's profile with a list of potential mentors/apprentices.
+    Find the best professional matches.
+    
+    CRITICAL: 
+    - Same trade (occupation) matches are GOLD (90%+).
+    - If user is "mentee", find "mentor" in same trade.
+    - If user is "mentor", find "mentee" in same trade.
+    - Be strict. If no professional connection, score below 20%.
+
+    User Profile:
+    - Name: ${userProfile.full_name}
+    - Trade: ${userProfile.occupation}
+    - Role: ${userProfile.role}
+    - Bio: ${userProfile.bio}
+
+    Candidates:
+    ${candidates.map(p => `
+      - ID: ${p.id}
+        Name: ${p.full_name}
+        Trade: ${p.occupation}
+        Role: ${p.role}
+        Bio: ${p.bio}
+    `).join('\n')}
+
+    Return JSON array: [{"id": number, "score": number, "reason": string}]. Reason in Hebrew.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.NUMBER },
+              score: { type: Type.NUMBER },
+              reason: { type: Type.STRING }
+            },
+            required: ["id", "score", "reason"]
+          }
+        }
+      }
+    });
+
+    const aiOutput = JSON.parse(response.text);
+    return candidates.map(p => {
+      const rec = aiOutput.find((r: any) => r.id === p.id);
+      return { ...p, aiScore: rec?.score || 10, aiReason: rec?.reason };
+    }).sort((a, b) => b.aiScore - a.aiScore);
+  } catch (error) {
+    console.error('Profile AI Error:', error);
+    return candidates;
+  }
+}
+
+function basicOpportunityScoring(userProfile: any, opportunities: any[]) {
+  if (!Array.isArray(opportunities)) return [];
   const userLatLon = CITY_COORDS[userProfile.location] || [32.0853, 34.7818];
   
   return opportunities.map(opp => {
-    let score = 10; // Start very low
+    let score = 10;
     
     // Trade match - strong signal
     const userTrade = (userProfile.occupation || '').toLowerCase();
@@ -150,4 +224,29 @@ function basicScoring(userProfile: any, opportunities: any[]) {
       distance: Math.round(distance)
     };
   }).sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+}
+
+function basicProfileScoring(userProfile: any, profiles: any[]) {
+  if (!Array.isArray(profiles)) return [];
+  const userLatLon = CITY_COORDS[userProfile.location] || [32.0853, 34.7818];
+  
+  return profiles.map(p => {
+    let score = 10;
+    const userTrade = (userProfile.occupation || '').toLowerCase();
+    const pTrade = (p.occupation || '').toLowerCase();
+    
+    if (userTrade && pTrade && (pTrade.includes(userTrade) || userTrade.includes(pTrade))) {
+      score += 50;
+    }
+    
+    const pLatLon = CITY_COORDS[p.location] || [32.0853, 34.7818];
+    const distance = calculateDistance(userLatLon, pLatLon);
+    if (distance < 20) score += 20;
+
+    // Role match
+    if (userProfile.role === 'mentee' && p.role === 'mentor') score += 15;
+    if (userProfile.role === 'mentor' && p.role === 'mentee') score += 15;
+
+    return { ...p, basicScore: Math.min(100, score), distance: Math.round(distance) };
+  }).sort((a, b) => b.basicScore - a.basicScore);
 }
