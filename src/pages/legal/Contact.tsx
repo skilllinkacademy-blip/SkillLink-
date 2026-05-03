@@ -42,13 +42,23 @@ export default function Contact({ isRtl }: { isRtl: boolean }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+              <div className="flex items-center gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100 transition-all hover:border-emerald-200">
                 <div className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100">
+                  <Phone size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'טלפון ותמיכה' : 'Phone & Support'}</p>
+                  <p className="text-lg font-black text-black" dir="ltr">050-000-0000</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
                   <MapPin size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מיקום' : 'Location'}</p>
-                  <p className="text-lg font-black text-black">{isRtl ? 'ישראל' : 'Israel'}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'כתובת' : 'Address'}</p>
+                  <p className="text-lg font-black text-black">{isRtl ? 'תל אביב, ישראל' : 'Tel Aviv, Israel'}</p>
                 </div>
               </div>
             </div>

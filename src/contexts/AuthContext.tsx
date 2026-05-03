@@ -26,9 +26,11 @@ interface AuthContextType {
   isSyncing: boolean;
   unreadMessagesCount: number;
   unreadNotificationsCount: number;
+  savedCount: number;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
+  refreshSavedCount: () => Promise<void>;
   setUnreadMessagesCount: React.Dispatch<React.SetStateAction<number>>;
   setUnreadNotificationsCount: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -44,14 +46,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
 
   const fetchSqliteId = async () => {
     try {
       const response = await api.get('/auth/me');
       setSqliteId(response.data.id);
+      if (response.data.savedCount !== undefined) {
+        setSavedCount(response.data.savedCount);
+      }
     } catch (err) {
-      console.error('Error fetching sqliteId:', err);
+      console.error('Error fetching sqliteId/savedCount:', err);
     }
+  };
+
+  const refreshSavedCount = async () => {
+    await fetchSqliteId();
   };
 
   const fetchUnreadCount = async (userId: string) => {
@@ -362,9 +372,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSyncing,
       unreadMessagesCount,
       unreadNotificationsCount,
+      savedCount,
       signOut, 
       refreshProfile,
       refreshUnreadCount,
+      refreshSavedCount,
       setUnreadMessagesCount,
       setUnreadNotificationsCount
     }}>

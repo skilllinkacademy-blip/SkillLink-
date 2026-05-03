@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Explore from './pages/Explore';
 import Messaging from './pages/Messaging';
 import Notifications from './pages/Notifications';
+import Inbox from './pages/Inbox';
 import Profile from './pages/Profile';
 import ReviewsPage from './pages/Reviews';
 import MentorVerify from './pages/MentorVerify';
@@ -17,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import MyOpportunities from './pages/MyOpportunities';
 import OpportunityNew from './pages/OpportunityNew';
 import OpportunityDetails from './pages/OpportunityDetails';
+import Saved from './pages/Saved';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
@@ -83,7 +85,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             path="/app/messages" 
             element={
               <ProtectedRoute>
-                <Messaging isRtl={isRtl} />
+                <Inbox isRtl={isRtl} />
               </ProtectedRoute>
             } 
           />
@@ -91,7 +93,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             path="/app/notifications" 
             element={
               <ProtectedRoute>
-                <Notifications isRtl={isRtl} />
+                <Inbox isRtl={isRtl} />
               </ProtectedRoute>
             } 
           />
@@ -140,6 +142,14 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             element={
               <ProtectedRoute>
                 <MyOpportunities isRtl={isRtl} />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/app/saved" 
+            element={
+              <ProtectedRoute>
+                <Saved isRtl={isRtl} />
               </ProtectedRoute>
             } 
           />

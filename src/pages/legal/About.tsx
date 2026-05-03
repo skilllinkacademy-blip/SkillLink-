@@ -19,8 +19,13 @@ export default function About({ isRtl }: { isRtl: boolean }) {
               </h1>
               <p className="text-xl text-gray-500 font-medium leading-relaxed">
                 {isRtl 
-                  ? 'אנחנו בונים את הגשר בין הידע המקצועי של המנטורים לבין התשוקה של הדור הבא.' 
-                  : 'We are building the bridge between the professional knowledge of mentors and the passion of the next generation.'}
+                  ? 'אנחנו בונים את הגשר בין הידע המקצועי של המנטורים לבין התשוקה של הדור הבא. SkillLink הוקמה מתוך הבנה שהמידע המקצועי היקר ביותר נמצא בשטח, אצל בעלי המקצוע המנוסים.' 
+                  : 'We are building the bridge between the professional knowledge of mentors and the passion of the next generation. SkillLink was born out of reality that the most valuable trade knowledge is in the field, with experienced masters.'}
+              </p>
+              <p className="text-lg text-gray-400 font-medium leading-relaxed">
+                {isRtl
+                  ? 'בעולם שבו הכל הופך לדיגיטלי, המקצועות הידיים נשארים עמודי התווך של החברה שלנו. המשימה שלנו היא לוודא שהיידע הזה לא ילך לאיבוד, אלא יעבור הלאה בצורה חכמה, יעילה ומכבדת.'
+                  : 'In a world where everything becomes digital, manual trades remain the pillars of our society. Our mission is to ensure this knowledge isn\'t lost, but passed on intelligently, efficiently and respectfully.'}
               </p>
             </div>
             
@@ -39,9 +44,9 @@ export default function About({ isRtl }: { isRtl: boolean }) {
           <div className="relative">
             <div className="absolute inset-0 bg-blue-600 rounded-[3rem] rotate-3 -z-10 opacity-10 blur-2xl"></div>
             <img 
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1000" 
-              alt="Team" 
-              className="rounded-[3rem] shadow-2xl"
+              src="/skillink_post1_apprentice_v2.png" 
+              alt="Mentorship process in workshop" 
+              className="rounded-[3rem] shadow-2xl w-full object-cover aspect-[4/3]"
               referrerPolicy="no-referrer"
             />
           </div>

@@ -25,47 +25,47 @@ export default function Privacy({ isRtl }: { isRtl: boolean }) {
 
         <div className="prose prose-blue max-w-none space-y-8 text-gray-600 font-medium leading-relaxed">
           <section className="space-y-4">
-            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '1. איסוף מידע' : '1. Information Collection'}</h2>
+            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '1. סוגי המידע הנאספים' : '1. Information Collection'}</h2>
             <p>
               {isRtl 
-                ? 'אנו אוספים מידע שאתה מספק לנו ישירות בעת יצירת חשבון, עדכון הפרופיל שלך, או תקשורת עם משתמשים אחרים. זה כולל את שמך, כתובת האימייל שלך, מספר הטלפון שלך, וכל מידע אחר שתבחר לספק.'
-                : 'We collect information you provide directly to us when you create an account, update your profile, or communicate with other users. This includes your name, email address, phone number, and any other information you choose to provide.'}
+                ? 'אנו אוספים מידע אישי מזהה הכולל שם מלא, כתובת דוא"ל, מספר טלפון, ומידע מקצועי שאתה בוחר לשתף בפרופיל שלך. בנוסף, אנו אוספים מידע טכני כגון כתובת IP, סוג דפדפן ונתוני שימוש לצרכי אבטחה ושיפור השירות.'
+                : 'We collect personally identifiable information including full name, email address, phone number, and professional info you choose to share. Additionally, we collect technical data like IP addresses and usage data for security and service improvement.'}
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '2. שימוש במידע' : '2. How We Use Information'}</h2>
+            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '2. המטרה שלשמה נאסף המידע' : '2. Purpose of Collection'}</h2>
             <p>
               {isRtl 
-                ? 'אנו משתמשים במידע שאנו אוספים כדי לספק, לתחזק ולשפר את השירותים שלנו, כדי לחבר בין מנטורים למתלמדים, וכדי לשלוח לך הודעות ועדכונים.'
-                : 'We use the information we collect to provide, maintain, and improve our services, to connect mentors with apprentices, and to send you notifications and updates.'}
+                ? 'המידע משמש לחיבור בין מנטורים למתלמדים, ניהול התקשורת בתוך הפלטפורמה, אימות זהות המשתמשים, ומניעת שימוש לרעה או הונאה. אנו גם משתמשים במידע כדי לעדכן אותך בהזדמנויות רלוונטיות לפי העדפותיך.'
+                : 'Information is used to connect mentors and apprentices, manage internal communication, verify user identity, and prevent abuse or fraud. We also use it to update you on relevant opportunities based on your preferences.'}
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '3. שיתוף מידע' : '3. Information Sharing'}</h2>
+            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '3. שיתוף מידע עם צדדים שלישיים' : '3. Third-Party Sharing'}</h2>
             <p>
               {isRtl 
-                ? 'איננו מוכרים את המידע האישי שלך לצדדים שלישיים. אנו משתפים מידע עם משתמשים אחרים רק כפי שנדרש כדי להקל על תהליך ההתלמדות (למשל, הצגת הפרופיל הציבורי שלך).'
-                : 'We do not sell your personal information to third parties. We share information with other users only as needed to facilitate the mentorship process (e.g., showing your public profile).'}
+                ? 'SkillLink אינה מוכרת או משכירה את המידע האישי שלך. מידע ישותף רק במקרים של: (א) הסכמה מפורשת שלך, (ב) דרישה חוקית ע"י רשויות המדינה, (ג) הגנה על זכויותיו המשפטיות של האתר במקרה של מחלוקת משפטית.'
+                : 'SkillLink does not sell or rent your personal information. Info is shared only if: (a) explicit consent, (b) legal requirement by authorities, (c) protecting legal rights in case of a dispute.'}
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '4. אבטחה' : '4. Security'}</h2>
+            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '4. אבטחת מידע ושימורו' : '4. Data Security'}</h2>
             <p>
               {isRtl 
-                ? 'אנו נוקטים באמצעים סבירים כדי להגן על המידע האישי שלך מפני אובדן, גניבה ושימוש לרעה.'
-                : 'We take reasonable measures to protect your personal information from loss, theft, and misuse.'}
+                ? 'אנו מיישמים אמצעי אבטחה טכנולוגיים וארגוניים מתקדמים להגנה על המידע שלך. המידע נשמר על שרתי ענן מאובטחים. עם זאת, אין אבטחה מוחלטת באינטרנט והנך מאשר כי אתה מוסר את המידע מרצונך.'
+                : 'We implement advanced technological and organizational security measures. Data is stored on secure cloud servers. However, no internet security is absolute, and you acknowledge providing data voluntarily.'}
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '5. צור קשר' : '5. Contact Us'}</h2>
+            <h2 className="text-xl font-black text-black uppercase tracking-tight">{isRtl ? '5. זכות העיון ומחיקת המידע' : '5. Your Rights'}</h2>
             <p>
               {isRtl 
-                ? 'אם יש לך שאלות לגבי מדיניות הפרטיות שלנו, אנא צור קשר בכתובת: skilllink.academy@gmail.com'
-                : 'If you have any questions about our Privacy Policy, please contact us at: skilllink.academy@gmail.com'}
+                ? 'על פי חוק הגנת הפרטיות, התשמ"א-1981, הנך זכאי לעיין במידע השמור עליך, לבקש את תיקונו או מחיקתו. ניתן לעשות זאת באמצעות הגדרות החשבון או בפנייה לצוות התמיכה שלנו.'
+                : 'According to the Privacy Protection Law, you are entitled to review your saved info, request correction or deletion via account settings or support.'}
             </p>
           </section>
         </div>

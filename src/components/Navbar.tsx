@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, MessageSquare, Bell, User, Globe, Menu, X, LogOut, Briefcase, ShieldCheck } from 'lucide-react';
+import { Home, Search, MessageSquare, Bell, User, Globe, Menu, X, LogOut, Briefcase, ShieldCheck, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface NavbarProps {
@@ -11,7 +11,7 @@ interface NavbarProps {
 export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut, unreadMessagesCount, unreadNotificationsCount } = useAuth();
+  const { user, profile, signOut, unreadMessagesCount, unreadNotificationsCount, savedCount } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -20,14 +20,15 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
   };
 
   const navItems = [
-    { icon: Home, label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
     ...(user ? [
+      { icon: Home, label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
       { icon: Briefcase, label: isRtl ? 'ההזדמנויות שלי' : 'My Opportunities', path: '/app/my-opportunities' },
-      { icon: MessageSquare, label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages' },
-      { icon: Bell, label: isRtl ? 'התראות' : 'Notifications', path: '/app/notifications' },
+      { icon: MessageSquare, label: isRtl ? 'תיבת הודעות' : 'Inbox', path: '/app/messages', count: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
       { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
       ...(profile?.role === 'admin' ? [{ icon: ShieldCheck, label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
-    ] : [])
+    ] : [
+      { icon: Search, label: isRtl ? 'צפה בהזדמנויות' : 'View Opportunities', path: '/app/opportunities' },
+    ])
   ];
 
   return (
@@ -68,7 +69,7 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-4 rtl:space-x-reverse">
-            {navItems.map((item) => (
+            {navItems.map((item: any) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -78,11 +79,10 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
                 }`}
               >
                 <item.icon size={22} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
-                {item.path === '/app/messages' && unreadMessagesCount > 0 && (
-                  <span className="absolute top-1 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
-                )}
-                {item.path === '/app/notifications' && unreadNotificationsCount > 0 && (
-                  <span className="absolute top-1 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
+                {item.count > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                    {item.count}
+                  </span>
                 )}
                 <span className="text-[11px] font-medium mt-0.5">{item.label}</span>
                 {location.pathname === item.path && (
@@ -147,7 +147,7 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
         <div className="md:hidden bg-white border-t border-gray-100 py-4 px-4 space-y-2 animate-in slide-in-from-top duration-200">
           {user ? (
             <>
-              {navItems.map((item) => (
+              {navItems.map((item: any) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -158,11 +158,10 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
                 >
                   <item.icon size={20} />
                   <span className="font-bold">{item.label}</span>
-                  {item.path === '/app/messages' && unreadMessagesCount > 0 && (
-                    <span className="absolute top-3 left-8 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
-                  )}
-                  {item.path === '/app/notifications' && unreadNotificationsCount > 0 && (
-                    <span className="absolute top-3 left-8 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
+                  {item.count > 0 && (
+                    <span className="absolute top-3 left-8 min-w-[20px] h-[20px] px-1 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                      {item.count}
+                    </span>
                   )}
                 </Link>
               ))}

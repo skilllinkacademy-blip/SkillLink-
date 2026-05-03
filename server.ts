@@ -74,11 +74,29 @@ db.exec(`
     isBusiness INTEGER DEFAULT 0,
     businessDescription TEXT,
     businessLogo TEXT,
-    businessWebsite TEXT,
     businessSocialLinks TEXT, -- JSON
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+`);
 
+// Migration for business fields
+try {
+  db.exec('ALTER TABLE users ADD COLUMN isBusiness INTEGER DEFAULT 0');
+} catch (e) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN businessDescription TEXT');
+} catch (e) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN businessLogo TEXT');
+} catch (e) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN businessWebsite TEXT');
+} catch (e) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN businessSocialLinks TEXT');
+} catch (e) {}
+
+db.exec(`
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER NOT NULL,
@@ -177,7 +195,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS ratings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    requestId INTEGER NOT NULL,
+    requestId INTEGER,
     fromId INTEGER NOT NULL,
     toId INTEGER NOT NULL,
     professional INTEGER,
@@ -249,6 +267,19 @@ try {
     db.prepare("ALTER TABLE users ADD COLUMN businessWebsite TEXT").run();
     db.prepare("ALTER TABLE users ADD COLUMN businessSocialLinks TEXT").run();
     db.prepare("ALTER TABLE users ADD COLUMN verificationStatus TEXT DEFAULT 'none'").run();
+  }
+
+  // Vision Update 2: Missing profile fields
+  const hasHeadline = userTableInfo.some((col: any) => col.name === 'headline');
+  if (!hasHeadline) {
+    db.prepare("ALTER TABLE users ADD COLUMN headline TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN skills_level TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN desired_salary REAL").run();
+    db.prepare("ALTER TABLE users ADD COLUMN what_i_want_to_learn TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN who_i_want_to_teach TEXT").run();
+    db.prepare("ALTER TABLE users ADD COLUMN availability_days TEXT").run(); // JSON
+    db.prepare("ALTER TABLE users ADD COLUMN skills TEXT").run(); // JSON
+    db.prepare("ALTER TABLE users ADD COLUMN cover_url TEXT").run();
   }
 
   // Populate missing usernames
@@ -439,8 +470,12 @@ async function startServer() {
   app.get('/api/auth/me', authenticateToken, (req: any, res) => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id) as any;
     if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Get saved count
+    const savedCount = (db.prepare('SELECT COUNT(*) as count FROM saved_opportunities WHERE userId = ?').get(req.user.id) as any).count;
+    
     const { password: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    res.json({ ...userWithoutPassword, savedCount });
   });
 
   app.get('/api/auth/sqlite-id', authenticateToken, (req: any, res) => {
@@ -604,16 +639,56 @@ async function startServer() {
   });
 
   app.put('/api/users/me', authenticateToken, (req: any, res) => {
-    const fields = Object.keys(req.body).filter(f => ['name', 'bio', 'location', 'age', 'trade', 'experience', 'businessName', 'teachingPrefs', 'areaServed', 'lang', 'avatar', 'username'].includes(f));
-    if (fields.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
+    // Map snake_case or legacy fields to SQLite schema
+    const body = { ...req.body };
+    if (body.full_name && !body.name) body.name = body.full_name;
+    if (body.occupation && !body.trade) body.trade = body.occupation;
+    if (body.years_experience !== undefined && body.experience === undefined) body.experience = body.years_experience;
+    
+    const allowedFields = [
+      'name', 'bio', 'location', 'age', 'trade', 'experience', 'businessName', 
+      'teachingPrefs', 'areaServed', 'lang', 'avatar', 'username', 'phone', 
+      'workload', 'goals', 'availability', 'isBusiness', 'businessDescription', 
+      'businessLogo', 'businessSocialLinks', 'businessWebsite', 'learningIntent', 
+      'preferredDuration', 'businessType', 'targetAudience', 'headline',
+      'skills_level', 'desired_salary', 'what_i_want_to_learn', 'who_i_want_to_teach',
+      'availability_days', 'skills', 'cover_url'
+    ];
 
-    const setClause = fields.map(f => `${f} = ?`).join(', ');
-    const values = fields.map(f => req.body[f]);
-    values.push(req.user.id);
+    const fields = Object.keys(body).filter(f => allowedFields.includes(f));
+    
+    if (fields.length === 0) {
+      console.warn('Update attempt with no valid fields. Body keys:', Object.keys(req.body));
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
 
-    const stmt = db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`);
-    stmt.run(...values);
-    res.json({ success: true });
+    try {
+      const setClause = fields.map(f => `${f} = ?`).join(', ');
+      const values = fields.map(f => {
+        const val = body[f];
+        // Special handling for numeric fields
+        if (['experience', 'age'].includes(f)) {
+          const parsed = parseInt(val);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        if (['desired_salary'].includes(f)) {
+          const parsed = parseFloat(val);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        // Handle types that need special care (objects/arrays to JSON strings, booleans to integers)
+        if (typeof val === 'object' && val !== null) return JSON.stringify(val);
+        if (typeof val === 'boolean') return val ? 1 : 0;
+        return val;
+      });
+      values.push(req.user.id);
+
+      const stmt = db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`);
+      stmt.run(...values);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error updating profile in SQLite:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
   });
 
   // Posts
@@ -708,6 +783,41 @@ async function startServer() {
 
     const results = db.prepare(query).all(...params);
     res.json(results);
+  });
+
+  // AI Matching and Recommendations
+  app.get('/api/opportunities/saved', authenticateToken, (req: any, res) => {
+    const saved = db.prepare(`
+      SELECT o.*, u.name as ownerName, u.trade as ownerTrade, u.avatar as authorAvatar, u.supabase_id as ownerSupabaseId, u.username as ownerUsername, u.verified as ownerVerified
+      FROM opportunities o
+      JOIN saved_opportunities s ON o.id = s.opportunityId
+      JOIN users u ON o.ownerId = u.id
+      WHERE s.userId = ?
+    `).all(req.user.id);
+    res.json(saved);
+  });
+
+  app.get('/api/opportunities/recommended', authenticateToken, (req: any, res) => {
+    try {
+      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id) as any;
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // Fetch active opportunities excluding self
+      const opportunities = db.prepare(`
+        SELECT o.*, u.name as ownerName, u.trade as ownerTrade, u.location as ownerLocation, u.avatar as ownerAvatar, u.supabase_id as ownerSupabaseId, u.username as ownerUsername, u.verified as ownerVerified, u.role as ownerRole
+        FROM opportunities o
+        JOIN users u ON o.ownerId = u.id
+        WHERE o.ownerId != ?
+        LIMIT 50
+      `).all(req.user.id) as any[];
+
+      // Basic filtering is now handled mostly on the frontend to comply with Skill requirement
+      // to call Gemini from frontend only. We return a good pool of candidates.
+      res.json(opportunities);
+    } catch (error) {
+      console.error('Recommendation engine error:', error);
+      res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
   });
 
   // Requests & Mentorships

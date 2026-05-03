@@ -57,7 +57,7 @@ export default function Landing({ isRtl }: LandingProps) {
                 {isRtl ? 'הפלטפורמה המובילה למקצועות טכניים' : 'The #1 platform for skilled trades'}
               </div>
               
-              <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-gray-900 leading-[0.9] tracking-tighter">
+              <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black text-gray-900 leading-[0.9] tracking-tighter">
                 {isRtl ? (
                   <>ללמוד ישירות מ<span className="text-blue-600">מקצוענים</span></>
                 ) : (
@@ -124,9 +124,9 @@ export default function Landing({ isRtl }: LandingProps) {
             >
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=1200" 
-                  alt="Professional at work"
-                  className="w-full h-auto"
+                  src="/skillink_post1_apprentice_v2.png" 
+                  alt="Professional mentor teaching apprentice"
+                  className="w-full h-auto object-cover"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -182,14 +182,14 @@ export default function Landing({ isRtl }: LandingProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-6 pt-12">
-                <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Barber teaching apprentice" referrerPolicy="no-referrer" />
-                <img src="https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Plumber teaching" referrerPolicy="no-referrer" />
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-4 sm:space-y-6 lg:pt-12">
+                <img src="/skillink_post2_mentor_v2.png" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Professional mentor teaching student" referrerPolicy="no-referrer" />
+                <img src="/barber_shop.png" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Professional barber workshop" referrerPolicy="no-referrer" />
               </div>
-              <div className="space-y-6">
-                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Social media manager with apprentice" referrerPolicy="no-referrer" />
-                <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Electrician" referrerPolicy="no-referrer" />
+              <div className="space-y-4 sm:space-y-6">
+                <img src="/skillink_post3_general_v2.png" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Trade skills training session" referrerPolicy="no-referrer" />
+                <img src="https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Plumbing mentor teaching student" referrerPolicy="no-referrer" />
               </div>
             </div>
           </div>
@@ -199,9 +199,9 @@ export default function Landing({ isRtl }: LandingProps) {
       {/* Professional Imagery Section */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-black text-black leading-tight">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16 items-center">
+              <div className="space-y-6 sm:space-y-8">
+                <h2 className="text-4xl sm:text-5xl font-black text-black leading-tight">
                 {isRtl ? 'ללמוד מהטובים ביותר, בשטח.' : 'Learn from the best, in the field.'}
               </h2>
               <p className="text-xl text-gray-500 font-medium leading-relaxed">
@@ -233,14 +233,14 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src="https://images.unsplash.com/photo-1632833239869-a37e3a5806d2?auto=format&fit=crop&q=80&w=800" 
-                  alt="HVAC installer" 
+                  src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80&w=800" 
+                  alt="Professional electrician at work" 
                   className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800" 
-                  alt="Electrician" 
+                  src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=800" 
+                  alt="Professional welder teaching student" 
                   className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />

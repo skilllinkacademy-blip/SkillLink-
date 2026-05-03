@@ -13,7 +13,7 @@ interface OpportunityDetailsProps {
 export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile, sqliteId } = useAuth();
+  const { user, profile, sqliteId, refreshSavedCount } = useAuth();
   const [opportunity, setOpportunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -210,6 +210,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     try {
       await api.post(`/opportunities/${id}/save`);
       setIsSaved(!isSaved);
+      refreshSavedCount();
     } catch (error) {
       console.error('Error toggling save status:', error);
     } finally {
@@ -661,7 +662,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     </button>
 
                     <button 
-                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
+                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.ownerSupabaseId, recipientName: opportunity.profiles?.full_name } })}
                       className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       <MessageSquare size={18} />

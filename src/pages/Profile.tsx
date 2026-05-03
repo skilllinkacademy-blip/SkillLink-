@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -262,8 +262,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       const fetchSaved = async () => {
         setLoadingSaved(true);
         try {
-          const response = await api.get('/opportunities');
-          const saved = response.data.filter((opp: any) => opp.isSaved === 1);
+          const response = await api.get('/opportunities/saved');
+          const saved = response.data;
           
           // Transform to match frontend expectations
           const transformedSaved = saved.map((opp: any) => ({
@@ -277,7 +277,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               full_name: opp.ownerName,
               avatar_url: opp.ownerAvatar,
               occupation: opp.ownerTrade,
-              username: opp.ownerUsername
+              username: opp.ownerUsername || opp.ownerSupabaseId
             }
           }));
           
@@ -575,6 +575,50 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
   const isMyProfile = user?.id === profile.id;
   const isMentor = profile.role === 'mentor';
+  const profession = (formData.occupation || '').toLowerCase();
+
+  const getProfilePlaceholder = (fieldName: string) => {
+    const isM = isMentor;
+    if (profession.includes('ספר') || profession.includes('barber')) {
+      return {
+        headline: isM ? 'ספר מומחה לגברים - עיצוב זקן ודירוגים' : 'מתלמד סטאז\'ר לספרות - מחפש להשתלב במספרה',
+        bio: isM ? 'ניסיון של 10 שנים, מתמחה בדירוגים מורכבים ועיצוב זקן קלאסי. מאמין בעבודה מדויקת ושירות ללא פשרות.' : 'בוגר קורס ספרות, מחפש מקום ללמוד בו את העבודה המעשית ולצבור שעות מספריים.',
+        availability: 'זמין בבקרים ושישי, גמיש לשעות נוספות',
+        requirements: isM ? 'מחפש חניך רציני, שרוצה ללמוד את המקצוע באמת ולא מפחד לעבוד קשה' : 'רוצה ללמוד דירוגים גבוהים ושימוש נכון בתער'
+      };
+    }
+    if (profession.includes('חשמל') || profession.includes('electrician')) {
+      return {
+        headline: isM ? 'חשמלאי מוסמך מעל 15 שנה - מומחה ללוחות ותשתיות' : 'סטודנט לחשמל - מחפש לצאת לשטח וללמוד התקנות',
+        bio: isM ? 'מבצע את כל עבודות החשמל לבית ולעסק. הקפדה יתרה על בטיחות ותקני חברת החשמל.' : 'בעל ידע תיאורטי חזק, מחפש ליישם אותו בעבודות השחלה, התקנת נקודות ולוחות.',
+        availability: 'ימים א\'-ה\', 07:00 עד 17:00, זמין לקריאות חירום',
+        requirements: isM ? 'מישהו עם "ראש על הכתפיים", זהירות מקסימלית ויכולת למידה מהירה' : 'מעוניין ללמוד איתור תקלות ותכנון מערכות חשמל חכמות'
+      };
+    }
+    if (profession.includes('נגר') || profession.includes('carpentry')) {
+      return {
+        headline: isM ? 'נגר אומן - מטבחים ורהיטים בהתאמה אישית' : 'חניך נגרות - אוהב עבודה עם עץ ומחפש מנטור',
+        bio: isM ? 'חי ונושם עץ. מתמחה בחיבורים מסורתיים ועיצובים מודרניים. הסדנה שלי בפתח תקווה פתוחה ללמידה.' : 'ידיים טובות, רקע בסיסי בכלי עבודה, רוצה ללמוד נגרות קלאסית ומודרנית.',
+        availability: 'זמין למשרה מלאה בנגרייה',
+        requirements: isM ? 'דיוק, סבלנות ואהבה לחומר. לא מתאים למי שמחפש "קיצורי דרך"' : 'רוצה לדעת להוציא רהיט מושלם מהתכנון ועד הגימור'
+      };
+    }
+    // Default
+    return {
+      headline: isM ? 'מומחה בתחום ה... עם ניסיון עשיר' : 'מעוניין ללמוד ולהתמקצע בתחום ה...',
+      bio: isM ? 'ספר קצת על הניסיון שלך, הפרויקטים שעשית והאני מאמין המקצועי שלך.' : 'ספר למה בחרת במקצוע הזה ומה המטרות שלך לחודשים הקרובים.',
+      availability: 'למשל: בקרים בלבד, גמיש, או זמין למשרה מלאה',
+      requirements: isM ? 'תכונות שאתה מחפש במתלמד שלך' : 'מיומנויות ספציפיות שחשוב לך ללמוד'
+    };
+  };
+
+  const placeholders = getProfilePlaceholder(profession);
+
+  const renderProfileHelper = (text: string) => (
+    <p className="mt-1 text-[10px] font-bold text-slate-400 px-1 animate-in fade-in">
+      {text}
+    </p>
+  );
 
   // Calculate profile completion
   const completionFields = [
@@ -725,14 +769,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               
               <div className="text-lg font-bold text-gray-500 flex items-center gap-2">
                 {isMyProfile ? (
-                  <input 
-                    type="text" 
-                    value={formData.headline} 
-                    onChange={(e) => setFormData({...formData, headline: e.target.value})}
-                    onBlur={() => handleSave('headline', formData.headline)}
-                    placeholder={isRtl ? 'כותרת (למשל: חשמלאי מוסמך)' : 'Headline (e.g. Master Electrician)'}
-                    className="bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg w-full max-w-md transition-all"
-                  />
+                  <div className="flex-1 space-y-1">
+                    <input 
+                      type="text" 
+                      value={formData.headline} 
+                      onChange={(e) => setFormData({...formData, headline: e.target.value})}
+                      onBlur={() => handleSave('headline', formData.headline)}
+                      placeholder={placeholders.headline}
+                      className="bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg w-full transition-all"
+                    />
+                    {renderProfileHelper(isRtl ? 'כותרת מקצועית קצרה שמופיעה בראש הכרטיס שלך.' : 'A short professional headline at the top of your card.')}
+                  </div>
                 ) : (
                   <span>{profile.headline || profile.occupation || (isRtl ? 'משתמש SkillLink' : 'SkillLink User')}</span>
                 )}
@@ -745,6 +792,16 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isRtl ? 'שומר...' : 'Saving...'}
               </div>
             )}
+            
+            {!isMyProfile && (
+              <button 
+                onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
+                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
+              >
+                <MessageSquare size={18} />
+                {isRtl ? 'שלח הודעה' : 'Message'}
+              </button>
+            )}
           </div>
 
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -752,67 +809,82 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               <div className="text-lg font-black text-black">
                 {isMentor ? (
                   isMyProfile ? (
-                    <input 
-                      type="number" 
-                      value={formData.years_experience} 
-                      onChange={(e) => setFormData({...formData, years_experience: parseInt(e.target.value) || 0})}
-                      onBlur={() => handleSave('years_experience', formData.years_experience)}
-                      className="w-16 bg-transparent text-center outline-none"
-                    />
+                    <div className="space-y-1 flex flex-col items-center">
+                      <input 
+                        type="number" 
+                        value={formData.years_experience} 
+                        onChange={(e) => setFormData({...formData, years_experience: parseInt(e.target.value) || 0})}
+                        onBlur={() => handleSave('years_experience', formData.years_experience)}
+                        className="w-16 bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all"
+                      />
+                      {renderProfileHelper(isRtl ? 'ניסיון' : 'Experience')}
+                    </div>
                   ) : (profile.years_experience || 0)
                 ) : (isRtl ? 'מתחיל' : 'Beginner')}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
                 {isMentor ? (isRtl ? 'שנות ניסיון' : 'Years Exp') : (isRtl ? 'רמה' : 'Level')}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">
                 {isMyProfile ? (
-                  <input 
-                    type="text" 
-                    value={formData.location} 
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    onBlur={() => handleSave('location', formData.location)}
-                    className="w-full bg-transparent text-center outline-none"
-                  />
+                  <div className="space-y-1">
+                    <input 
+                      type="text" 
+                      value={formData.location} 
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      onBlur={() => handleSave('location', formData.location)}
+                      placeholder={isRtl ? 'עיר' : 'City'}
+                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
+                    />
+                    {renderProfileHelper(isRtl ? 'מיקום' : 'Location')}
+                  </div>
                 ) : (profile.location || '---')}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'עיר' : 'City'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'עיר' : 'City'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">
                 {isMyProfile ? (
-                  <input 
-                    type="tel" 
-                    value={formData.phone} 
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    onBlur={() => handleSave('phone', formData.phone)}
-                    className="w-full bg-transparent text-center outline-none"
-                  />
+                  <div className="space-y-1">
+                    <input 
+                      type="tel" 
+                      value={formData.phone} 
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      onBlur={() => handleSave('phone', formData.phone)}
+                      placeholder="05x-xxxxxxx"
+                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
+                    />
+                    {renderProfileHelper(isRtl ? 'טלפון' : 'Phone')}
+                  </div>
                 ) : (profile.phone || '---')}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'טלפון' : 'Phone'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'טלפון' : 'Phone'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">
                 {isMyProfile ? (
-                  <input 
-                    type="text" 
-                    value={formData.availability} 
-                    onChange={(e) => setFormData({...formData, availability: e.target.value})}
-                    onBlur={() => handleSave('availability', formData.availability)}
-                    className="w-full bg-transparent text-center outline-none"
-                  />
+                  <div className="space-y-1">
+                    <input 
+                      type="text" 
+                      value={formData.availability} 
+                      onChange={(e) => setFormData({...formData, availability: e.target.value})}
+                      onBlur={() => handleSave('availability', formData.availability)}
+                      placeholder={placeholders.availability}
+                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
+                    />
+                    {renderProfileHelper(isRtl ? 'זמינות' : 'Availability')}
+                  </div>
                 ) : (profile.availability || profile.workload || '---')}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'זמינות' : 'Availability'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'זמינות' : 'Availability'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
               <div className="text-lg font-black text-black">
                 {trustScore}%
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'מדד אמינות' : 'Trust Score'}</div>
             </div>
             <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
               <div className="text-lg font-black text-black flex items-center justify-center gap-1.5">
@@ -825,7 +897,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   <span className="text-gray-400">{isRtl ? 'לאחרונה' : 'Recent'}</span>
                 )}
               </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'סטטוס' : 'Status'}</div>
             </div>
           </div>
         </div>
@@ -834,7 +906,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
+          <div id="profile-tabs" className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
             <button 
               onClick={() => setActiveTab('about')}
               className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
@@ -846,7 +918,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 onClick={() => setActiveTab('saved')}
                 className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
               >
-                {isRtl ? 'מועדפים' : 'Saved'}
+                {isRtl ? 'מועדפים' : 'Saved'} ({savedOpportunities.length})
               </button>
             )}
             <button 
@@ -882,13 +954,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 </div>
 
                 {isMyProfile ? (
-                  <textarea 
-                    value={formData.bio}
-                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                    onBlur={() => handleSave('bio', formData.bio)}
-                    rows={4}
-                    className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
-                  />
+                  <div className="space-y-2">
+                    <textarea 
+                      value={formData.bio}
+                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                      onBlur={() => handleSave('bio', formData.bio)}
+                      rows={4}
+                      placeholder={placeholders.bio}
+                      className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
+                    />
+                    {renderProfileHelper(isRtl ? 'ספר על עצמך, הערכים שלך ומה הביא אותך לתחום.' : 'Tell about yourself, your values and what brought you to the field.')}
+                  </div>
                 ) : (
                   <p className="text-gray-500 font-medium leading-relaxed text-lg">
                     {profile.bio || (isRtl ? 'עדיין לא נוסף תיאור אישי.' : 'No bio added yet.')}
@@ -911,14 +987,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                       <div className="space-y-4 md:col-span-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'תיאור העסק' : 'Business Description'}</label>
                         {isMyProfile ? (
-                          <textarea 
-                            value={formData.businessDescription}
-                            onChange={(e) => setFormData({...formData, businessDescription: e.target.value})}
-                            onBlur={() => handleSave('businessDescription', formData.businessDescription)}
-                            rows={3}
-                            placeholder={isRtl ? 'ספר על העסק שלך, הניסיון והשירותים...' : 'Tell about your business, experience and services...'}
-                            className="w-full p-4 bg-blue-50/30 border border-blue-100 rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
-                          />
+                          <div className="space-y-2">
+                            <textarea 
+                              value={formData.businessDescription}
+                              onChange={(e) => setFormData({...formData, businessDescription: e.target.value})}
+                              onBlur={() => handleSave('businessDescription', formData.businessDescription)}
+                              rows={3}
+                              placeholder={isMentor ? placeholders.bio : (isRtl ? 'ספר על השירותים שאתה מציע כחלק מהעסק שלך...' : 'Tell about the services you offer as part of your business...')}
+                              className="w-full p-4 bg-blue-50/30 border border-blue-100 rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
+                            />
+                            {renderProfileHelper(isRtl ? 'תיאור המקצועיות של העסק שלך.' : 'Professional description of your business.')}
+                          </div>
                         ) : (
                           <p className="text-gray-600 font-medium">{profile.businessDescription || (isRtl ? 'אין תיאור עסק עדיין.' : 'No business description.')}</p>
                         )}
@@ -1447,6 +1526,31 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
           </div>
 
+          {!isMyProfile && (
+            <div className="grid grid-cols-2 gap-4">
+              <Link 
+                to={`/app/u/${profile.username}/reviews`}
+                className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
+              >
+                <Star className="text-yellow-500" size={24} fill="currentColor" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'ביקורות' : 'Reviews'}</span>
+              </Link>
+              <button 
+                onClick={() => {
+                  setActiveTab('reviews');
+                  setShowReviewForm(true);
+                  // Scroll to reviews section
+                  const el = document.getElementById('profile-tabs');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
+              >
+                <Pencil className="text-blue-600" size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'דרג' : 'Rate'}</span>
+              </button>
+            </div>
+          )}
+
           <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-50 rounded-full -z-10"></div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -1531,7 +1635,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                       onChange={(e) => setFormData({...formData, availability: e.target.value})}
                       onBlur={() => handleSave('availability', formData.availability)}
                       className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-orange-200"
-                      placeholder={isRtl ? 'מתי אתה פנוי?' : 'When are you free?'}
+                      placeholder={isRtl ? 'למשל: בקרים בלבד, גמיש, או זמין למשרה מלאה' : 'e.g. Mornings only, flexible, or available full-time'}
                     />
                   ) : (
                     <p className="text-sm font-bold text-black">{profile.availability || profile.workload || (isRtl ? 'לא צוין' : 'Not specified')}</p>

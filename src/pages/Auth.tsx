@@ -182,51 +182,88 @@ export default function Auth({ isRtl }: AuthProps) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <ProgressBar />
       
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-black text-gray-900">{isRtl ? 'בחר את המסלול שלך' : 'Choose your path'}</h2>
+        <p className="text-sm text-gray-500 font-medium">
+          {isRtl ? 'איך תרצה להשתמש ב-SkillLink?' : 'How would you like to use SkillLink?'}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 gap-6">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setRole('mentee')}
-          className={`group p-8 rounded-2xl border-2 text-start transition-all flex items-center justify-between gap-6 ${
+          className={`group p-8 rounded-3xl border-2 text-start transition-all flex flex-col gap-6 relative overflow-hidden ${
             role === 'mentee' 
-              ? 'border-blue-500 bg-white shadow-[0_10px_25px_-5px_rgba(59,130,246,0.15)]' 
+              ? 'border-blue-500 bg-white shadow-[0_20px_50px_-12px_rgba(59,130,246,0.2)]' 
               : 'border-transparent bg-gray-50 hover:bg-gray-100'
           }`}
         >
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
-            role === 'mentee' ? 'text-blue-500' : 'text-gray-300 group-hover:text-gray-400'
-          }`}>
-            <GraduationCap size={48} />
+          <div className="flex items-center gap-6 relative z-10">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 transition-all ${
+              role === 'mentee' ? 'bg-blue-500 text-white shadow-lg' : 'bg-white text-gray-300'
+            }`}>
+              <GraduationCap size={40} />
+            </div>
+            <div className="flex-1 space-y-1">
+              <h3 className="text-xl font-bold text-gray-900">{isRtl ? 'אני מתלמד' : 'I am an Apprentice'}</h3>
+              <p className="text-xs text-gray-400 font-black uppercase tracking-widest leading-none">
+                {isRtl ? 'רוצה ללמוד בשטח' : 'Want to learn in field'}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 space-y-1">
-            <h3 className="text-xl font-bold text-gray-900">{isRtl ? 'אני מתלמד' : 'I am an Apprentice'}</h3>
-            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-              {isRtl ? 'מחפש ללמוד מקצוע מבעל מקצוע מנוסה' : 'Looking to learn a trade from an experienced pro'}
-            </p>
-          </div>
+          
+          <ul className="space-y-2 relative z-10">
+            {[
+              isRtl ? 'למידה מעשית מבעלי מקצוע' : 'Hands-on learning from pros',
+              isRtl ? 'צבירת ניסיון מוכח לתיק העבודות' : 'Proven experience for portfolio',
+              isRtl ? 'אפשרות להעסקה ישירה' : 'Potential for direct hiring'
+            ].map((benefit, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                {benefit}
+              </li>
+            ))}
+          </ul>
         </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setRole('mentor')}
-          className={`group p-8 rounded-2xl border-2 text-start transition-all flex items-center justify-between gap-6 ${
+          className={`group p-8 rounded-3xl border-2 text-start transition-all flex flex-col gap-6 relative overflow-hidden ${
             role === 'mentor' 
-              ? 'border-blue-500 bg-white shadow-[0_10px_25px_-5px_rgba(59,130,246,0.15)]' 
+              ? 'border-emerald-500 bg-white shadow-[0_20px_50px_-12px_rgba(16,185,129,0.2)]' 
               : 'border-transparent bg-gray-50 hover:bg-gray-100'
           }`}
         >
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
-            role === 'mentor' ? 'text-blue-500' : 'text-gray-300 group-hover:text-gray-400'
-          }`}>
-            <Presentation size={48} />
+          <div className="flex items-center gap-6 relative z-10">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 transition-all ${
+              role === 'mentor' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white text-gray-300'
+            }`}>
+              <Presentation size={40} />
+            </div>
+            <div className="flex-1 space-y-1">
+              <h3 className="text-xl font-bold text-gray-900">{isRtl ? 'אני מנטור' : 'I am a Mentor'}</h3>
+              <p className="text-xs text-gray-400 font-black uppercase tracking-widest leading-none">
+                {isRtl ? 'רוצה להכשיר ולהוביל' : 'Want to train & lead'}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 space-y-1">
-            <h3 className="text-xl font-bold text-gray-900">{isRtl ? 'אני מנטור' : 'I am a Mentor'}</h3>
-            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-              {isRtl ? 'בעל מקצוע שרוצה ללמד, להכשיר ולהעסיק' : 'A professional looking to teach, train, and hire'}
-            </p>
-          </div>
+
+          <ul className="space-y-2 relative z-10">
+            {[
+              isRtl ? 'מציאת כוח אדם איכותי ונאמן' : 'Find loyal, high-quality staff',
+              isRtl ? 'בניית המוניטין המקצועי שלך' : 'Build your professional reputation',
+              isRtl ? 'חיבור לקהילת מנטורים מובילים' : 'Connect to top mentor community'
+            ].map((benefit, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {benefit}
+              </li>
+            ))}
+          </ul>
         </motion.button>
       </div>
 
@@ -237,17 +274,20 @@ export default function Auth({ isRtl }: AuthProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             onClick={() => setStep(2)}
-            className="w-full bg-blue-500 text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 group"
+            className={`w-full text-white font-black py-5 rounded-2xl transition-all shadow-2xl flex items-center justify-center gap-3 group active:scale-95 uppercase tracking-widest text-sm ${
+              role === 'mentor' ? 'bg-emerald-600 shadow-emerald-100 hover:bg-emerald-700' : 'bg-blue-600 shadow-blue-100 hover:bg-blue-700'
+            }`}
           >
-            {isRtl ? 'המשך' : 'Continue'}
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1 rtl:rotate-180" />
+            {isRtl ? 'המשך לשלב הבא' : 'Continue to next step'}
+            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 rtl:rotate-180" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      <div className="text-center">
-        <button onClick={() => setIsLogin(true)} className="text-sm font-bold text-gray-400 hover:text-blue-500 transition-colors">
-          {isRtl ? 'כבר יש לך חשבון? התחבר' : 'Already have an account? Log in'}
+      <div className="text-center pt-2">
+        <button onClick={() => setIsLogin(true)} className="text-sm font-bold text-gray-400 hover:text-black transition-colors flex items-center justify-center gap-2 mx-auto">
+          {isRtl ? 'כבר יש לך חשבון? התחבר עכשיו' : 'Already have an account? Log in now'}
+          <ArrowRight size={14} className="rtl:rotate-180" />
         </button>
       </div>
     </div>

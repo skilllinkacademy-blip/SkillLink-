@@ -49,6 +49,8 @@ interface Opportunity {
   };
   ownerUsername?: string;
   ownerSupabaseId?: string;
+  match_score?: number;
+  ai_reason?: string | null;
 }
 
 interface OpportunityCardProps {
@@ -77,6 +79,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   const durationDescription = opportunity.duration_description || opportunity.durationDescription;
 
   const matchScore = useMemo(() => {
+    if (opportunity.match_score !== undefined) return opportunity.match_score;
     const { score } = calculateMatchScore(opportunity, myProfile, isRtl);
     return score;
   }, [opportunity, myProfile, isRtl]);
@@ -155,13 +158,25 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
           </div>
 
           {/* Learning Focus / About */}
-          <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 sm:space-y-2">
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <GraduationCap size={12} sm:size={14} className="text-slate-300" />
-              {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
+          <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 sm:space-y-2 relative overflow-hidden">
+            {opportunity.ai_reason && (
+              <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-blue-500" />
+            )}
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-emerald-600">
+               {opportunity.ai_reason ? (
+                 <span className="flex items-center gap-1.5">
+                   <Zap size={12} className="fill-current" />
+                   {isRtl ? 'למה זה מתאים לך:' : 'Why it matches you:'}
+                 </span>
+               ) : (
+                 <span className="flex items-center gap-1.5 text-slate-400">
+                   <GraduationCap size={12} sm:size={14} className="text-slate-300" />
+                   {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
+                 </span>
+               )}
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed">
-              {isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn}
+            <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed italic">
+              {opportunity.ai_reason || (isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn)}
             </p>
           </div>
         </div>
