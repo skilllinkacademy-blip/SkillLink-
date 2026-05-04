@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield, User as UserIcon, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg } from '../lib/assets';
+import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg, instructionImg, plumbingImg, constructionImg, electricalImg, weldingImg } from '../lib/assets';
 
 interface LandingProps {
   isRtl: boolean;
@@ -91,16 +91,17 @@ export default function Landing({ isRtl }: LandingProps) {
               <div className="flex items-center gap-6 justify-center lg:justify-start pt-4">
                 <div className="flex -space-x-3 rtl:space-x-reverse">
                   {[
-                    apprenticeImg,
-                    mentorImg,
-                    generalImg,
-                    barberShop
+                    resolveAsset('avatar_1'),
+                    resolveAsset('avatar_2'),
+                    resolveAsset('avatar_3'),
+                    resolveAsset('avatar_4'),
+                    resolveAsset('avatar_6')
                   ].map((url, i) => (
                     <img 
                       key={i}
-                      src={url}
+                      src={url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250'}
                       className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover"
-                      alt="User"
+                      alt="Professional User"
                       referrerPolicy="no-referrer"
                     />
                   ))}
@@ -125,9 +126,9 @@ export default function Landing({ isRtl }: LandingProps) {
             >
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src={barberShop} 
-                  alt={isRtl ? 'מנטור ספרות מלמד חניך' : 'Professional barber teaching apprentice'}
-                  className="w-full h-auto object-cover"
+                  src={mentorImg} 
+                  alt={isRtl ? 'מנטור מלמד חניך בשטח' : 'Professional mentor teaching apprentice in the field'}
+                  className="w-full h-auto object-cover aspect-[4/3]"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -188,27 +189,27 @@ export default function Landing({ isRtl }: LandingProps) {
                 <img 
                   src={apprenticeImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
-                  alt="Professional trade education" 
+                  alt={isRtl ? 'חניך לומד ממנטור' : 'Apprentice learning from mentor'} 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src={mentorImg} 
+                  src={plumbingImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
-                  alt="Master carpenter workshop" 
+                  alt={isRtl ? 'עבודת אינסטלציה מקצועית' : 'Professional plumbing work'} 
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div className="space-y-4 sm:space-y-6">
                 <img 
-                  src={generalImg} 
+                  src={electricalImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
-                  alt="Professional electrician service" 
+                  alt={isRtl ? 'חשמלאי בביצוע עבודה' : 'Professional electrician at work'} 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src={apprenticeImg} 
+                  src={instructionImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
-                  alt="Professional tiling instruction" 
+                  alt={isRtl ? 'הדרכה מקצועית בשטח' : 'Professional field instruction'} 
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -251,23 +252,29 @@ export default function Landing({ isRtl }: LandingProps) {
                 </div>
               </div>
             </div>
-            <div className="relative">
-              <div className="grid grid-cols-2 gap-4">
-                <img 
-                  src={mentorImg} 
-                  alt="Craftsmanship workshop" 
-                  className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
-                  referrerPolicy="no-referrer"
-                />
-                <img 
-                  src={barberShop} 
-                  alt="Industrial training" 
-                  className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
-                  referrerPolicy="no-referrer"
-                />
+              <div className="relative">
+                <div className="grid grid-cols-2 gap-4">
+                  <img 
+                    src={generalImg} 
+                    alt={isRtl ? 'עבודה מקצועית בשטח' : 'Professional field work'} 
+                    className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
+                    referrerPolicy="no-referrer"
+                  />
+                  <img 
+                    src={constructionImg} 
+                    alt={isRtl ? 'עבודת בנייה מקצועית' : 'Professional construction work'} 
+                    className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
+                    referrerPolicy="no-referrer"
+                  />
+                  <img 
+                    src={weldingImg} 
+                    alt={isRtl ? 'עבודת ריתוך מקצועית' : 'Professional welding work'} 
+                    className="col-span-2 mt-4 rounded-3xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover aspect-[2/1]"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl -z-10"></div>
               </div>
-              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl -z-10"></div>
-            </div>
           </div>
         </div>
       </section>
@@ -372,3 +379,4 @@ export default function Landing({ isRtl }: LandingProps) {
     </div>
   );
 }
+

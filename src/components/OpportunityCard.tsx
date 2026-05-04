@@ -137,15 +137,19 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
 
         {/* Match Score Badge */}
         {matchScore > 0 && (
-          <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-2 rounded-lg bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-2 border border-slate-200 animate-in zoom-in duration-500`}>
-            <Zap size={12} className="text-emerald-500 fill-emerald-500" />
+          <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-2 rounded-lg bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-2 border border-slate-200 animate-in zoom-in duration-500 ${
+            matchScore > 85 ? 'ring-2 ring-emerald-500 ring-offset-2' : ''
+          }`}>
+            <Zap size={12} className={`${matchScore > 85 ? 'text-emerald-500 fill-emerald-500' : 'text-slate-400'}`} />
             <span>{isRtl ? 'התאמה' : 'Match'} {matchScore}%</span>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-5 sm:p-8 flex-1 flex flex-col space-y-4 sm:space-y-6">
+      <div className={`p-5 sm:p-8 flex-1 flex flex-col space-y-4 sm:space-y-6 transition-colors duration-500 ${
+        matchScore > 85 ? 'bg-emerald-50/30' : ''
+      }`}>
         <div className="flex-1 space-y-3 sm:space-y-4">
           <div className="space-y-1 sm:space-y-2">
             <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">

@@ -48,50 +48,64 @@ function seedDatabase() {
 
   console.log('Seeding SQLite database with professional trade data...');
 
-  // Create Admin/Master users
   const masterPassword = bcrypt.hashSync('master123', 10);
-  
-  // 0. Primary Administrator
-  db.prepare(`
-    INSERT INTO users (name, email, password, role, trade, location, bio, verified, username) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('Admin', 'skilllink.academy@gmail.com', masterPassword, 'admin', 'Management', 'Tel Aviv', 'System Administrator', 1, 'admin_master').lastInsertRowid;
 
-  // 1. Barber Master
-  const barberId = db.prepare(`
-    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('Marco Barber', 'marco@barber.com', masterPassword, 'mentor', 'Barbering', 'Tel Aviv', 'Master barber with 15 years experience.', '/barber_shop.png', 1, 'marco_barber').lastInsertRowid;
+  const mentors = [
+    { name: 'Marco Barber', email: 'marco@barber.com', trade: 'Barbering', loc: 'Tel Aviv', bio: 'Master barber with 15 years experience.', avatar: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?auto=format&fit=crop&q=80&w=250', username: 'marco_barber' },
+    { name: 'Yossi Wood', email: 'yossi@wood.com', trade: 'Carpentry', loc: 'Haifa', bio: 'Professional carpenter creating bespoke wooden furniture.', avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=250', username: 'yossi_wood' },
+    { name: 'Avi Spark', email: 'avi@spark.com', trade: 'Electrical', loc: 'Jerusalem', bio: 'Licensed electrician for smart home installations.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250', username: 'avi_spark' },
+    { name: 'Dan Fixer', email: 'dan@fix.com', trade: 'Construction', loc: 'Beer Sheva', bio: 'Expert in renovations and industrial tiling.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250', username: 'dan_fix' },
+    { name: 'Eli Iron', email: 'eli@iron.com', trade: 'Welding', loc: 'Ashdod', bio: 'Industrial welder specializing in heavy metal structures.', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250', username: 'eli_iron' },
+    { name: 'Roni Turbo', email: 'roni@turbo.com', trade: 'Automotive', loc: 'Holon', bio: 'Master mechanic with a passion for engine tuning.', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=250', username: 'roni_turbo' },
+    { name: 'Meir Water', email: 'meir@water.com', trade: 'Plumbing', loc: 'Ramat Gan', bio: 'Expert in complex piping systems and infrastructure.', avatar: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80&w=250', username: 'meir_water' }
+  ];
 
-  // 2. Carpenter Master
-  const carpenterId = db.prepare(`
-    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('Yossi Wood', 'yossi@wood.com', masterPassword, 'mentor', 'Carpentry', 'Haifa', 'Specialist in custom wood furniture and restorations.', '/skillink_post1_apprentice_v2.png', 1, 'yossi_wood').lastInsertRowid;
+  const opportunities = [
+    { trade: 'Barbering', title: 'Apprenticeship: Modern Barbering Techniques', loc: 'Tel Aviv', about: 'Learn the art of fading, blade work, and shop management.', req: 'High discipline, punctuality.', learn: 'Skin fades, beard grooming.', img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Carpentry', title: 'Master Carpentry: Joinery & Restoration', loc: 'Haifa', about: 'Focus on traditional joinery methods and high-end mahogany restoration.', req: 'Passion for wood, some basic hand-tool experience.', learn: 'Dove-tail joints, wood finishing.', img: 'https://images.unsplash.com/photo-1581447100512-675974a24de7?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Electrical', title: 'Field Training: Residential Electrical Systems', loc: 'Jerusalem', about: 'Join me for site visits, learn wiring and troubleshooting in real-world scenarios.', req: 'Strong safety awareness.', learn: 'Wiring safety, blueprint reading.', img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Construction', title: 'Basics of Industrial Tiling & Renovations', loc: 'Beer Sheva', about: 'Intensive hands-on training for large-scale flooring and wall tiling projects.', req: 'Hard worker, physically fit.', learn: 'Tiling techniques, material mixing.', img: 'https://images.unsplash.com/photo-1541944743827-e04bb645f9ad?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Welding', title: 'Industrial Welding & Metal Fabrication', loc: 'Ashdod', about: 'Professional training in MIG/TIG welding and structural assembly.', req: 'Good eyes, steady hands.', learn: 'Metal cutting, TIG welding.', img: 'https://images.unsplash.com/photo-1504328332780-fe4675203ad4?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Automotive', title: 'Advanced Auto Diagnostics & Repair', loc: 'Holon', about: 'Hands-on experience with modern vehicle electronics and mechanical systems.', req: 'Technical mind, eagerness to learn.', learn: 'Engine tuning, diagnostic tools.', img: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=1000' },
+    { trade: 'Plumbing', title: 'Commercial Plumbing & Infrastructure', loc: 'Ramat Gan', about: 'Master the installation and maintenance of large-scale water and heating systems.', req: 'Reliability, physical ability.', learn: 'Pipe fitting, Leak detection.', img: 'https://images.unsplash.com/photo-1585704032915-c3400ca1f965?auto=format&fit=crop&q=80&w=1000' }
+  ];
 
-  // 3. Electrician Master
-  const electricianId = db.prepare(`
-    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('Avi Spark', 'avi@spark.com', masterPassword, 'mentor', 'Electrical', 'Jerusalem', 'Certified industrial electrician helping the next generation.', '/skillink_post2_mentor_v2.png', 1, 'avi_spark').lastInsertRowid;
+  for (const m of mentors) {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(m.email) as any;
+    let userId = existing?.id;
+    
+    if (!existing) {
+      userId = db.prepare(`
+        INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+      `).run(m.name, m.email, masterPassword, 'mentor', m.trade, m.loc, m.bio, m.avatar, m.username).lastInsertRowid;
+    } else {
+      db.prepare('UPDATE users SET avatar = ?, bio = ?, trade = ? WHERE id = ?').run(m.avatar, m.bio, m.trade, userId);
+    }
 
-  // 4. Construction Master
-  const constructionId = db.prepare(`
-    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('Dan Fixer', 'dan@fix.com', masterPassword, 'mentor', 'Construction', 'Beer Sheva', 'Expert in renovations and industrial tiling.', '/skillink_post3_general_v2.png', 1, 'dan_fix').lastInsertRowid;
+    const opp = opportunities.find(o => o.trade === m.trade);
+    if (opp) {
+      const existingOpp = db.prepare('SELECT id FROM opportunities WHERE ownerId = ? AND title = ?').get(userId, opp.title);
+      if (!existingOpp) {
+        db.prepare(`
+          INSERT INTO opportunities (ownerId, type, title, location, aboutWork, requirements, menteeWillLearn, imageUrl, status) 
+          VALUES (?, 'mentor_offer', ?, ?, ?, ?, ?, ?, 'active')
+        `).run(userId, opp.title, opp.loc, opp.about, opp.req, opp.learn, opp.img);
+      } else {
+        db.prepare('UPDATE opportunities SET imageUrl = ?, location = ? WHERE ownerId = ? AND title = ?').run(opp.img, opp.loc, userId, opp.title);
+      }
+    }
+  }
 
-  // Initial Opportunities
-  const stmt = db.prepare(`
-    INSERT INTO opportunities (
-      ownerId, type, title, location, aboutWork, requirements, menteeWillLearn, imageUrl, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
-  `);
-
-  stmt.run(barberId, 'mentor_offer', 'Apprenticeship: Modern Barbering Techniques', 'Tel Aviv', 'Learn the art of fading, blade work, and shop management in a busy city center studio.', 'High discipline, punctuality, basic creative eye.', 'Skin fades, beard grooming, product knowledge.', '/barber_shop.png');
-  stmt.run(carpenterId, 'mentor_offer', 'Master Carpentry: Joinery & Restoration', 'Haifa', 'Focus on traditional joinery methods and high-end mahogany restoration.', 'Passion for wood, some basic hand-tool experience preferred.', 'Dove-tail joints, wood finishing, reading blueprints.', '/skillink_post1_apprentice_v2.png');
-  stmt.run(electricianId, 'mentor_offer', 'Field Training: Residential Electrical Systems', 'Jerusalem', 'Join me for site visits, learn wiring and troubleshooting in real-world scenarios.', 'Strong safety awareness, willingness to work in field conditions.', 'Wiring safety, blueprint reading, customer service.', '/skillink_post2_mentor_v2.png');
-  stmt.run(constructionId, 'mentor_offer', 'Basics of Industrial Tiling & Renovations', 'Beer Sheva', 'Intensive hands-on training for large-scale flooring and wall tiling projects.', 'Hard worker, physically fit, attentive to details.', 'Tiling techniques, material mixing, space measurement.', '/skillink_post3_general_v2.png');
+  // Ensure Admin exists
+  const adminEmail = 'skilllink.academy@gmail.com';
+  const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+  if (!adminExists) {
+    db.prepare(`
+      INSERT INTO users (name, email, password, role, trade, location, bio, verified, username) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `).run('Admin', adminEmail, masterPassword, 'admin', 'Management', 'Tel Aviv', 'System Administrator', 'admin_master');
+  }
   
   console.log('Database seeded successfully.');
 }

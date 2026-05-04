@@ -1,16 +1,47 @@
 const assetMap: Record<string, string> = {
-  '/barber_shop.png': '/barber_shop.png',
-  '/skillink_post1_apprentice_v2.png': '/skillink_post1_apprentice_v2.png',
-  '/skillink_post2_mentor_v2.png': '/skillink_post2_mentor_v2.png',
-  '/skillink_post3_general_v2.png': '/skillink_post3_general_v2.png',
+  // Trade Images (Rectangles)
+  'trade_barber': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=1200',
+  'trade_carpentry': 'https://images.unsplash.com/photo-1581141849291-1125c7b692b5?auto=format&fit=crop&q=80&w=1200',
+  'trade_electrical': 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200',
+  'trade_construction': 'https://images.unsplash.com/photo-1541888941259-397a618d3637?auto=format&fit=crop&q=80&w=1200',
+  'trade_welding': 'https://images.unsplash.com/photo-1504328332780-fe4675203ad4?auto=format&fit=crop&q=80&w=1200',
+  'trade_mechanic': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=1200',
+  'trade_plumbing': 'https://images.unsplash.com/photo-1504150559433-c516936e9271?auto=format&fit=crop&q=80&w=1200',
+  'trade_mentorship_1': 'https://images.unsplash.com/photo-1589939705384-5185138a04b9?auto=format&fit=crop&q=80&w=1200',
+  'trade_mentorship_2': 'https://images.unsplash.com/photo-1621905252507-b354bcadc0d8?auto=format&fit=crop&q=80&w=1200',
+  'trade_mentorship_3': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1200',
+  'trade_mentorship_4': 'https://images.unsplash.com/photo-1516216628859-9bcceeca13ca?auto=format&fit=crop&q=80&w=1200',
+
+  // Avatars (Circles)
+  'avatar_1': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250',
+  'avatar_2': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250',
+  'avatar_3': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250',
+  'avatar_4': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250',
+  'avatar_5': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250',
+  'avatar_6': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=250',
+  'avatar_7': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'
 };
 
-// Default strings for direct use if needed
+// Map legacy paths for compatibility
+assetMap['/barber_shop.png'] = assetMap['trade_barber'];
+assetMap['/skillink_post1_apprentice_v2.png'] = assetMap['trade_carpentry'];
+assetMap['/skillink_post2_mentor_v2.png'] = assetMap['trade_electrical'];
+assetMap['/skillink_post3_general_v2.png'] = assetMap['trade_construction'];
 
-export const barberShop = "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800";export const apprenticeImg = "https://i.imgur.com/Uhl5AxV.jpg";
-export const apprenticeImg = "https://i.imgur.com/Uhl5AxV.jpg";
-export const mentorImg = "https://i.imgur.com/8x2Qy8x.jpg";
-export const generalImg = "https://i.imgur.com/Uhl5AxV.jpg";
+export const barberShop = assetMap['trade_barber'];
+export const apprenticeImg = assetMap['trade_mentorship_1'];
+export const mentorImg = assetMap['trade_mentorship_2'];
+export const generalImg = assetMap['trade_mentorship_3'];
+export const instructionImg = assetMap['trade_mentorship_4'];
+export const plumbingImg = assetMap['trade_plumbing'];
+export const electricalImg = assetMap['trade_electrical'];
+export const constructionImg = assetMap['trade_construction'];
+export const weldingImg = assetMap['trade_welding'];
+export const mechanicImg = assetMap['trade_mechanic'];
+
+/**
+ * Resolves a path to a properly imported asset if it's one of the default assets.
+ * This ensures that built-in images work correctly in production environments like Vercel.
  */
 export function resolveAsset(path: string | null | undefined): string | null {
   if (!path) return null;

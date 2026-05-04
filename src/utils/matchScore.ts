@@ -78,11 +78,26 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
   const oppAbout = (opportunity.about_work || opportunity.aboutWork || '').toLowerCase();
   const oppTrade = (opportunity.trade || opportunity.ownerTrade || '').toLowerCase();
   const myOcc = (myProfile.occupation || '').toLowerCase();
+  const myIntent = (myProfile.learningIntent || '').toLowerCase();
   
+  // Semantic keyword matching for learning intent
+  if (myIntent) {
+    const intentKeywords = myIntent.split(/[\s,]+/).filter(k => k.length > 2);
+    const matchesIntent = intentKeywords.some(k => 
+      oppTitle.includes(k) || 
+      oppAbout.includes(k) || 
+      oppTrade.includes(k)
+    );
+    if (matchesIntent) {
+      roleScore += 15;
+      details.push(isRtl ? 'מתאים בדיוק למה שאתה רוצה ללמוד' : 'Matches exactly what you want to learn');
+    }
+  }
+
   if (myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc) || oppTrade.includes(myOcc))) {
-    roleScore += 20;
+    roleScore += 15;
     details.push(isRtl ? 'התאמה מקצועית גבוהה' : 'High professional alignment');
-  } else if (roleScore > 0) {
+  } else if (roleScore > 0 && !details.some(d => d.includes('ללמוד') || d.includes('learn'))) {
     details.push(isRtl ? 'סוג תפקיד מתאים' : 'Matching role type');
   }
 

@@ -6,6 +6,7 @@ import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
 import { resolveAsset } from '../lib/assets';
+import { analyzeMatch, SmartMatchAnalysis } from '../services/geminiService';
 
 interface OpportunityDetailsProps {
   isRtl: boolean;
@@ -23,6 +24,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [interesting, setInteresting] = useState(false);
   const [matchScore, setMatchScore] = useState<number | null>(null);
   const [matchBreakdown, setMatchBreakdown] = useState<MatchBreakdown | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<SmartMatchAnalysis | null>(null);
+  const [loadingAi, setLoadingAi] = useState(false);
   const [showMatchDetails, setShowMatchDetails] = useState(false);
   const [interestedUsers, setInterestedUsers] = useState<any[]>([]);
   const [loadingInterests, setLoadingInterests] = useState(false);
@@ -105,6 +108,15 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           const { score, breakdown } = calculateMatchScore(transformedData, profile, isRtl);
           setMatchScore(score);
           setMatchBreakdown(breakdown);
+          
+          // Trigger AI Analysis
+          if (process.env.GEMINI_API_KEY) {
+            setLoadingAi(true);
+            analyzeMatch(transformedData, profile, isRtl).then(analysis => {
+              if (analysis) setAiAnalysis(analysis);
+              setLoadingAi(false);
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching opportunity:', error);
@@ -353,8 +365,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="bg-slate-900 text-white rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 space-y-6 overflow-hidden"
+                      className="bg-slate-900 text-white rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 space-y-8 overflow-hidden"
                     >
+                      {/* Breakdown Stats */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</p>
@@ -384,6 +397,63 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                           </div>
                         </div>
                       </div>
+
+                      {/* AI Insights Section */}
+                      <div className="pt-8 border-t border-slate-800 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
+                              <Zap size={20} className="fill-current text-white" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-black">{isRtl ? 'תובנות AI חכמות' : 'Smart AI Insights'}</h4>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isRtl ? 'ניתוח עומק של ההתאמה שלך' : 'Deep analysis of your fit'}</p>
+                            </div>
+                          </div>
+                          {loadingAi && <Loader2 size={20} className="animate-spin text-blue-500" />}
+                        </div>
+
+                        {aiAnalysis ? (
+                          <div className="space-y-6 animate-in fade-in duration-700">
+                             <div className="p-5 bg-slate-800/50 rounded-2xl border border-slate-700 italic text-slate-300 leading-relaxed">
+                               "{aiAnalysis.explanation}"
+                             </div>
+                             
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div className="space-y-3">
+                                 <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{isRtl ? 'נקודות חוזק' : 'Strengths'}</p>
+                                 <ul className="space-y-2">
+                                   {aiAnalysis.pros.map((pro, i) => (
+                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                                       {pro}
+                                     </li>
+                                   ))}
+                                 </ul>
+                               </div>
+                               <div className="space-y-3">
+                                 <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{isRtl ? 'נקודות לשיפור' : 'Gaps to Note'}</p>
+                                 <ul className="space-y-2">
+                                   {aiAnalysis.cons.map((con, i) => (
+                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                                       {con}
+                                     </li>
+                                   ))}
+                                 </ul>
+                               </div>
+                             </div>
+
+                             <div className="p-4 bg-emerald-600/10 rounded-xl border border-emerald-600/20">
+                               <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{isRtl ? 'עצה מצוות ה-AI' : 'AI Team Advice'}</p>
+                               <p className="text-sm font-medium text-emerald-100">{aiAnalysis.advice}</p>
+                             </div>
+                          </div>
+                        ) : !loadingAi && (
+                          <p className="text-slate-500 text-sm italic">{isRtl ? 'לא ניתן לנתח את ההתאמה כרגע' : 'Match analysis unavailable at the moment'}</p>
+                        )}
+                      </div>
+
                       <div className="pt-6 border-t border-slate-800">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">{isRtl ? 'פירוט נוסף' : 'Additional Details'}</p>
                         <div className="flex flex-wrap gap-2 sm:gap-3">
