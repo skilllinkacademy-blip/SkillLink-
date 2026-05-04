@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { resolveAsset } from '../lib/assets';
 
 interface OpportunityNewProps {
   isRtl: boolean;
@@ -472,7 +473,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
       <div className="max-w-2xl mx-auto industrial-card p-12 space-y-8 bg-white shadow-2xl relative">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-3xl font-black">
-            {profile?.avatar_url ? <img src={profile.avatar_url} className="w-full h-full object-cover rounded-2xl" alt="" /> : profile?.full_name?.charAt(0)}
+            {profile?.avatar_url ? <img src={resolveAsset(profile.avatar_url) || ''} className="w-full h-full object-cover rounded-2xl" alt="" /> : profile?.full_name?.charAt(0)}
           </div>
           <div>
             <h4 className="text-2xl font-black text-slate-900">{title || (isRtl ? 'כותרת לדוגמה' : 'Sample Title')}</h4>

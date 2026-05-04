@@ -13,6 +13,7 @@ import {
   Presentation, 
   Rocket,
   Briefcase,
+  Globe,
   Eye, 
   EyeOff,
   ArrowRight

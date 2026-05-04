@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight, Pencil } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore } from '../utils/matchScore';
+import { resolveAsset } from '../lib/assets';
 
 interface Opportunity {
   id: string;
@@ -107,7 +108,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
       <div className="h-64 bg-slate-100 relative overflow-hidden">
         {imageUrl ? (
           <img 
-            src={imageUrl} 
+            src={resolveAsset(imageUrl) || ''} 
             alt={opportunity.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             referrerPolicy="no-referrer"
@@ -216,7 +217,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs sm:text-sm overflow-hidden border border-slate-200">
               {opportunity.profiles?.avatar_url ? (
-                <img src={opportunity.profiles.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img src={resolveAsset(opportunity.profiles.avatar_url) || ''} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 opportunity.profiles?.full_name?.charAt(0) || 'U'
               )}

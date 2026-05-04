@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import api from '../lib/api';
 import OpportunityCard from '../components/OpportunityCard';
+import { resolveAsset } from '../lib/assets';
 
 interface ProfileProps {
   isRtl: boolean;
@@ -712,7 +713,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             <div className="relative">
               <div className="w-32 h-32 rounded-3xl bg-black border-8 border-white flex items-center justify-center text-white font-black text-4xl shadow-2xl overflow-hidden relative">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+                  <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
                 ) : (
                   profile.full_name?.charAt(0) || 'U'
                 )}

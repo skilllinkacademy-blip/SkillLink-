@@ -4,6 +4,7 @@ import { Search, MessageSquare, Send, Image, MoreHorizontal, User, Info, AlertCi
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getOrCreateConversation, sendMessage as sendChatMessage, fetchMessages as fetchChatMessages } from '../lib/chat';
+import { resolveAsset } from '../lib/assets';
 
 interface Message {
   id: string;
@@ -349,7 +350,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
                 >
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xl relative shrink-0 overflow-hidden border border-slate-200 group-hover:scale-105 transition-transform">
                     {conv.other_user?.avatar_url ? (
-                      <img src={conv.other_user.avatar_url} alt={conv.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={resolveAsset(conv.other_user.avatar_url) || ''} alt={conv.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       conv.other_user?.full_name?.charAt(0) || 'U'
                     )}
@@ -433,7 +434,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
                 </button>
                 <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-xl overflow-hidden shadow-lg group-hover/header:scale-105 transition-transform border border-slate-800">
                   {selectedConversation?.other_user?.avatar_url ? (
-                    <img src={selectedConversation.other_user.avatar_url} alt={selectedConversation.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={resolveAsset(selectedConversation.other_user.avatar_url) || ''} alt={selectedConversation.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     selectedConversation?.other_user?.full_name?.charAt(0) || 'U'
                   )}

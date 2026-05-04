@@ -3,6 +3,7 @@ import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, C
 import api from '../lib/api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { resolveAsset } from '../lib/assets';
 
 interface ExploreProps {
   isRtl: boolean;
@@ -262,7 +263,7 @@ export default function Explore({ isRtl }: ExploreProps) {
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-3xl overflow-hidden border border-slate-200 group-hover:scale-105 transition-transform">
                       {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         profile.full_name?.charAt(0) || 'U'
                       )}

@@ -51,6 +51,12 @@ function seedDatabase() {
   // Create Admin/Master users
   const masterPassword = bcrypt.hashSync('master123', 10);
   
+  // 0. Primary Administrator
+  db.prepare(`
+    INSERT INTO users (name, email, password, role, trade, location, bio, verified, username) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('Admin', 'skilllink.academy@gmail.com', masterPassword, 'admin', 'Management', 'Tel Aviv', 'System Administrator', 1, 'admin_master').lastInsertRowid;
+
   // 1. Barber Master
   const barberId = db.prepare(`
     INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
@@ -623,11 +629,17 @@ async function startServer() {
       const finalLocation = sbProfile?.location || metadata.location || localUser?.location || 'פתח תקווה';
       const finalTrade = sbProfile?.occupation || metadata.occupation || localUser?.trade || '';
       const finalAvatar = sbProfile?.avatar_url || metadata.avatar_url || localUser?.avatar || null;
+      
+      // Email-based admin promotion
+      let finalRole = sbProfile?.role || metadata.role || localUser?.role || 'mentee';
+      if (user.email === 'skilllink.academy@gmail.com') {
+        finalRole = 'admin';
+      }
 
       if (!localUser) {
         // Check if this is the first user
         const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
-        const finalRole = userCount === 0 ? 'admin' : (sbProfile?.role || metadata.role || 'mentee');
+        if (userCount === 0) finalRole = 'admin';
 
         const stmt = db.prepare('INSERT INTO users (supabase_id, name, email, password, role, location, trade, phone, workload, username, avatar, learningIntent, preferredDuration, businessType, targetAudience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         const result = stmt.run(
@@ -671,6 +683,7 @@ async function startServer() {
         updateFields.push('trade = ?'); updateValues.push(finalTrade);
         updateFields.push('username = ?'); updateValues.push(finalUsername);
         updateFields.push('avatar = ?'); updateValues.push(finalAvatar);
+        updateFields.push('role = ?'); updateValues.push(finalRole);
         
         if (metadata.phone) { updateFields.push('phone = ?'); updateValues.push(metadata.phone); }
         if (metadata.learning_intent) { updateFields.push('learningIntent = ?'); updateValues.push(metadata.learning_intent); }

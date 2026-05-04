@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Users, Target, Zap, Heart } from 'lucide-react';
+import { generalImg } from '../../lib/assets';
 
 export default function About({ isRtl }: { isRtl: boolean }) {
   return (
@@ -44,7 +45,7 @@ export default function About({ isRtl }: { isRtl: boolean }) {
           <div className="relative">
             <div className="absolute inset-0 bg-blue-600 rounded-[3rem] rotate-3 -z-10 opacity-10 blur-2xl"></div>
             <img 
-              src="/skillink_post3_general_v2.png" 
+              src={generalImg} 
               alt="Mentorship process in workshop" 
               className="rounded-[3rem] shadow-2xl w-full object-cover aspect-[4/3]"
               referrerPolicy="no-referrer"

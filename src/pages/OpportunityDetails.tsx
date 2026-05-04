@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
+import { resolveAsset } from '../lib/assets';
 
 interface OpportunityDetailsProps {
   isRtl: boolean;
@@ -251,7 +252,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             <div className="h-64 sm:h-96 bg-slate-50 relative overflow-hidden">
               {opportunity.image_url ? (
                 <img 
-                  src={opportunity.image_url} 
+                  src={resolveAsset(opportunity.image_url) || ''} 
                   alt={opportunity.title}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
@@ -528,7 +529,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
                 {opportunity.profiles?.avatar_url ? (
-                  <img src={opportunity.profiles.avatar_url} alt={opportunity.profiles.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={resolveAsset(opportunity.profiles.avatar_url) || ''} alt={opportunity.profiles.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   opportunity.profiles?.full_name?.charAt(0) || 'U'
                 )}
@@ -568,7 +569,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         >
                           <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden border border-slate-300">
                             {interestedUser.userAvatar ? (
-                              <img src={interestedUser.userAvatar} alt="" className="w-full h-full object-cover" />
+                              <img src={resolveAsset(interestedUser.userAvatar) || ''} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
                                 {interestedUser.userName?.charAt(0)}

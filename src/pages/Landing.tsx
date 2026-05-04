@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield, User as UserIcon, Search } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
+import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg } from '../lib/assets';
 
 interface LandingProps {
   isRtl: boolean;
@@ -90,10 +91,10 @@ export default function Landing({ isRtl }: LandingProps) {
               <div className="flex items-center gap-6 justify-center lg:justify-start pt-4">
                 <div className="flex -space-x-3 rtl:space-x-reverse">
                   {[
-                    "/skillink_post1_apprentice_v2.png",
-                    "/skillink_post2_mentor_v2.png",
-                    "/skillink_post3_general_v2.png",
-                    "/barber_shop.png"
+                    apprenticeImg,
+                    mentorImg,
+                    generalImg,
+                    barberShop
                   ].map((url, i) => (
                     <img 
                       key={i}
@@ -124,7 +125,7 @@ export default function Landing({ isRtl }: LandingProps) {
             >
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="/barber_shop.png" 
+                  src={barberShop} 
                   alt={isRtl ? 'מנטור ספרות מלמד חניך' : 'Professional barber teaching apprentice'}
                   className="w-full h-auto object-cover"
                   referrerPolicy="no-referrer"
@@ -185,13 +186,13 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4 sm:space-y-6 lg:pt-12">
                 <img 
-                  src="/skillink_post1_apprentice_v2.png" 
+                  src={apprenticeImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
                   alt="Professional trade education" 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/skillink_post2_mentor_v2.png" 
+                  src={mentorImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
                   alt="Master carpenter workshop" 
                   referrerPolicy="no-referrer"
@@ -199,13 +200,13 @@ export default function Landing({ isRtl }: LandingProps) {
               </div>
               <div className="space-y-4 sm:space-y-6">
                 <img 
-                  src="/skillink_post3_general_v2.png" 
+                  src={generalImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
                   alt="Professional electrician service" 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/skillink_post1_apprentice_v2.png" 
+                  src={apprenticeImg} 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
                   alt="Professional tiling instruction" 
                   referrerPolicy="no-referrer"
@@ -253,13 +254,13 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src="/skillink_post2_mentor_v2.png" 
+                  src={mentorImg} 
                   alt="Craftsmanship workshop" 
                   className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/barber_shop.png" 
+                  src={barberShop} 
                   alt="Industrial training" 
                   className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
