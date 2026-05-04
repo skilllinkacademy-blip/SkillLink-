@@ -25,7 +25,7 @@ import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, isSyncing, dbError, handleBypassDbCheck, handleForceSignOut } = useAuth();
+  const { user, loading, isSyncing } = useAuth();
   const location = useLocation();
 
   if (loading) {

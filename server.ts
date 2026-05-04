@@ -1259,10 +1259,7 @@ async function startServer() {
       if (url.startsWith('/api')) return next();
       
       try {
-        const indexPath = path.resolve(workspaceRoot, 'index.html');
-        if (!fs.existsSync(indexPath)) return next();
-        
-        let template = fs.readFileSync(indexPath, 'utf-8');
+        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
