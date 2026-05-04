@@ -41,6 +41,55 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 const db = new Database('skilllink.db');
 db.pragma('journal_mode = WAL');
 
+// Seed Database Function
+function seedDatabase() {
+  const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
+  if (userCount > 0) return;
+
+  console.log('Seeding SQLite database with professional trade data...');
+
+  // Create Admin/Master users
+  const masterPassword = bcrypt.hashSync('master123', 10);
+  
+  // 1. Barber Master
+  const barberId = db.prepare(`
+    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('Marco Barber', 'marco@barber.com', masterPassword, 'mentor', 'Barbering', 'Tel Aviv', 'Master barber with 15 years experience.', '/barber_shop.png', 1, 'marco_barber').lastInsertRowid;
+
+  // 2. Carpenter Master
+  const carpenterId = db.prepare(`
+    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('Yossi Wood', 'yossi@wood.com', masterPassword, 'mentor', 'Carpentry', 'Haifa', 'Specialist in custom wood furniture and restorations.', '/skillink_post1_apprentice_v2.png', 1, 'yossi_wood').lastInsertRowid;
+
+  // 3. Electrician Master
+  const electricianId = db.prepare(`
+    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('Avi Spark', 'avi@spark.com', masterPassword, 'mentor', 'Electrical', 'Jerusalem', 'Certified industrial electrician helping the next generation.', '/skillink_post2_mentor_v2.png', 1, 'avi_spark').lastInsertRowid;
+
+  // 4. Construction Master
+  const constructionId = db.prepare(`
+    INSERT INTO users (name, email, password, role, trade, location, bio, avatar, verified, username) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('Dan Fixer', 'dan@fix.com', masterPassword, 'mentor', 'Construction', 'Beer Sheva', 'Expert in renovations and industrial tiling.', '/skillink_post3_general_v2.png', 1, 'dan_fix').lastInsertRowid;
+
+  // Initial Opportunities
+  const stmt = db.prepare(`
+    INSERT INTO opportunities (
+      ownerId, type, title, location, aboutWork, requirements, menteeWillLearn, imageUrl, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
+  `);
+
+  stmt.run(barberId, 'mentor_offer', 'Apprenticeship: Modern Barbering Techniques', 'Tel Aviv', 'Learn the art of fading, blade work, and shop management in a busy city center studio.', 'High discipline, punctuality, basic creative eye.', 'Skin fades, beard grooming, product knowledge.', '/barber_shop.png');
+  stmt.run(carpenterId, 'mentor_offer', 'Master Carpentry: Joinery & Restoration', 'Haifa', 'Focus on traditional joinery methods and high-end mahogany restoration.', 'Passion for wood, some basic hand-tool experience preferred.', 'Dove-tail joints, wood finishing, reading blueprints.', '/skillink_post1_apprentice_v2.png');
+  stmt.run(electricianId, 'mentor_offer', 'Field Training: Residential Electrical Systems', 'Jerusalem', 'Join me for site visits, learn wiring and troubleshooting in real-world scenarios.', 'Strong safety awareness, willingness to work in field conditions.', 'Wiring safety, blueprint reading, customer service.', '/skillink_post2_mentor_v2.png');
+  stmt.run(constructionId, 'mentor_offer', 'Basics of Industrial Tiling & Renovations', 'Beer Sheva', 'Intensive hands-on training for large-scale flooring and wall tiling projects.', 'Hard worker, physically fit, attentive to details.', 'Tiling techniques, material mixing, space measurement.', '/skillink_post3_general_v2.png');
+  
+  console.log('Database seeded successfully.');
+}
+
 // Create Tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -333,6 +382,13 @@ try {
   }
 } catch (e) {
   console.error("Migration failed:", e);
+}
+
+// Call seed after setup
+try {
+  seedDatabase();
+} catch (e) {
+  console.error("Seeding failed:", e);
 }
 
 async function startServer() {
@@ -1464,6 +1520,9 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     
+    // Serve public folder as well
+    app.use(express.static(path.join(__dirname, 'public')));
+    
     // SPA fallback for development
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
@@ -1479,6 +1538,7 @@ async function startServer() {
       }
     });
   } else {
+    app.use(express.static(path.join(__dirname, 'public')));
     app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));

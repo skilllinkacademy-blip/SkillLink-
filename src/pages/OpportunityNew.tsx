@@ -34,7 +34,7 @@ interface OpportunityNewProps {
 export default function OpportunityNew({ isRtl, isEditing = false }: OpportunityNewProps) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, profile, sqliteId, loading: authLoading } = useAuth();
+  const { user, profile, sqliteId, loading: authLoading, isSupabaseConfigured } = useAuth();
   
   const [step, setStep] = useState(isEditing ? 2 : 1);
   const [subStep, setSubStep] = useState(1);
@@ -430,18 +430,35 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         <h3 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'מדיה וסיום' : 'Media & Finish'}</h3>
         <p className="text-slate-500 font-medium">{isRtl ? 'הוסף תמונה כדי למשוך את העין.' : 'Add a photo to catch the eye.'}</p>
       </div>
-      <div className="max-w-3xl mx-auto w-full h-[400px]">
-        <input type="file" id="img-up" className="hidden" accept="image/*" onChange={handleImageChange} />
-        <label htmlFor="img-up" className="w-full h-full bg-slate-50 border-4 border-dashed border-slate-200 rounded-[4rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-slate-900 transition-all overflow-hidden group">
-          {imagePreview ? (
-            <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-          ) : (
-            <div className="text-center space-y-6">
-              <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-slate-300 shadow-xl group-hover:scale-110 transition-transform"><ImageIcon size={48} /></div>
-              <span className="block font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'לחץ להעלאת תמונה' : 'Click to Upload Image'}</span>
+      <div className="max-w-3xl mx-auto w-full space-y-6">
+        {!isSupabaseConfigured && (
+          <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-3xl flex gap-4 items-start animate-pulse">
+            <AlertCircle className="text-amber-600 shrink-0" size={24} />
+            <div className="space-y-1">
+              <p className="font-black text-amber-900 text-sm">
+                {isRtl ? 'שים לב: מצב תצוגה מקדימה' : 'Note: Preview Mode'}
+              </p>
+              <p className="text-amber-700 text-xs font-medium leading-relaxed">
+                {isRtl 
+                  ? 'העלאות במצב זה הן זמניות בלבד ואינן נשמרות לאחר רענון השרת (Vercel). כדי לשמור נתונים לצמיתות, יש להגדיר חשבון Supabase.' 
+                  : 'Uploads in this mode are temporary and will not persist after server restart (Vercel). To save data permanently, Supabase configuration is required.'}
+              </p>
             </div>
-          )}
-        </label>
+          </div>
+        )}
+        <div className="h-[400px]">
+          <input type="file" id="img-up" className="hidden" accept="image/*" onChange={handleImageChange} />
+          <label htmlFor="img-up" className="w-full h-full bg-slate-50 border-4 border-dashed border-slate-200 rounded-[4rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-slate-900 transition-all overflow-hidden group">
+            {imagePreview ? (
+              <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+            ) : (
+              <div className="text-center space-y-6">
+                <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-slate-300 shadow-xl group-hover:scale-110 transition-transform"><ImageIcon size={48} /></div>
+                <span className="block font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'לחץ להעלאת תמונה' : 'Click to Upload Image'}</span>
+              </div>
+            )}
+          </label>
+        </div>
       </div>
     </div>
   );

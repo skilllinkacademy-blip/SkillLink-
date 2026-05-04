@@ -125,9 +125,13 @@ export default function Landing({ isRtl }: LandingProps) {
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
                   src="/skillink_post1_apprentice_v2.png" 
-                  alt="Professional mentor teaching apprentice"
+                  alt={isRtl ? 'מנטור נגרות מלמד חניך' : 'Carpentry mentor teaching apprentice'}
                   className="w-full h-auto object-cover"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=800";
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
@@ -184,12 +188,48 @@ export default function Landing({ isRtl }: LandingProps) {
 
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4 sm:space-y-6 lg:pt-12">
-                <img src="/skillink_post2_mentor_v2.png" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Professional mentor teaching student" referrerPolicy="no-referrer" />
-                <img src="/barber_shop.png" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Professional barber workshop" referrerPolicy="no-referrer" />
+                <img 
+                  src="/barber_shop.png" 
+                  className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
+                  alt="Professional barber teaching apprentice" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=600";
+                  }}
+                />
+                <img 
+                  src="/skillink_post1_apprentice_v2.png" 
+                  className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
+                  alt="Master carpenter workshop" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&q=80&w=600";
+                  }}
+                />
               </div>
               <div className="space-y-4 sm:space-y-6">
-                <img src="/skillink_post3_general_v2.png" className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" alt="Trade skills training session" referrerPolicy="no-referrer" />
-                <img src="https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=600" className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" alt="Plumbing mentor teaching student" referrerPolicy="no-referrer" />
+                <img 
+                  src="/skillink_post2_mentor_v2.png" 
+                  className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
+                  alt="Professional electrician service" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80&w=600";
+                  }}
+                />
+                <img 
+                  src="/skillink_post3_general_v2.png" 
+                  className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
+                  alt="Professional tiling instruction" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1589939705384-5185138a04b9?auto=format&fit=crop&q=80&w=600";
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -233,16 +273,24 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80&w=800" 
-                  alt="Professional electrician at work" 
+                  src="/skillink_post1_apprentice_v2.png" 
+                  alt="Craftsmanship workshop" 
                   className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=600";
+                  }}
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=800" 
-                  alt="Professional welder teaching student" 
+                  src="/skillink_post3_general_v2.png" 
+                  alt="Industrial training" 
                   className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1541604193435-22287d32c2c2?auto=format&fit=crop&q=80&w=600";
+                  }}
                 />
               </div>
               <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl -z-10"></div>

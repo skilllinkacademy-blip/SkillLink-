@@ -27,6 +27,7 @@ interface AuthContextType {
   unreadMessagesCount: number;
   unreadNotificationsCount: number;
   savedCount: number;
+  isSupabaseConfigured: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
@@ -373,6 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unreadMessagesCount,
       unreadNotificationsCount,
       savedCount,
+      isSupabaseConfigured,
       signOut, 
       refreshProfile,
       refreshUnreadCount,
