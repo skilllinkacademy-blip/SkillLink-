@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield, User as UserIcon, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg, instructionImg, plumbingImg, constructionImg, electricalImg, weldingImg } from '../lib/assets';
+import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg, instructionImg, plumbingImg, constructionImg, electricalImg, weldingImg, mechanicImg } from '../lib/assets';
 
 interface LandingProps {
   isRtl: boolean;
@@ -95,7 +95,7 @@ export default function Landing({ isRtl }: LandingProps) {
                     resolveAsset('avatar_2'),
                     resolveAsset('avatar_3'),
                     resolveAsset('avatar_4'),
-                    resolveAsset('avatar_6')
+                    resolveAsset('avatar_5')
                   ].map((url, i) => (
                     <img 
                       key={i}
@@ -127,7 +127,7 @@ export default function Landing({ isRtl }: LandingProps) {
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
                   src={mentorImg} 
-                  alt={isRtl ? 'מנטור מלמד חניך בשטח' : 'Professional mentor teaching apprentice in the field'}
+                  alt={isRtl ? 'מנטור מקצועי מדריך חניך בשטח' : 'Professional mentor training apprentice in the field'}
                   className="w-full h-auto object-cover aspect-[4/3]"
                   referrerPolicy="no-referrer"
                 />
@@ -184,35 +184,22 @@ export default function Landing({ isRtl }: LandingProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 sm:gap-6">
-              <div className="space-y-4 sm:space-y-6 lg:pt-12">
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src={apprenticeImg} 
-                  className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
-                  alt={isRtl ? 'חניך לומד ממנטור' : 'Apprentice learning from mentor'} 
+                  src={barberShop} 
+                  alt={isRtl ? 'ספר גברים מקצועי' : 'Professional men\'s barber'} 
+                  className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
-                <img 
-                  src={plumbingImg} 
-                  className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
-                  alt={isRtl ? 'עבודת אינסטלציה מקצועית' : 'Professional plumbing work'} 
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="space-y-4 sm:space-y-6">
                 <img 
                   src={electricalImg} 
-                  className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
-                  alt={isRtl ? 'חשמלאי בביצוע עבודה' : 'Professional electrician at work'} 
-                  referrerPolicy="no-referrer"
-                />
-                <img 
-                  src={instructionImg} 
-                  className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
-                  alt={isRtl ? 'הדרכה מקצועית בשטח' : 'Professional field instruction'} 
+                  alt={isRtl ? 'עבודת חשמל מקצועית' : 'Professional electrical work'} 
+                  className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
               </div>
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl -z-10"></div>
             </div>
           </div>
         </div>
@@ -253,25 +240,19 @@ export default function Landing({ isRtl }: LandingProps) {
               </div>
             </div>
               <div className="relative">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="w-full aspect-square rounded-[3rem] overflow-hidden shadow-2xl relative group">
                   <img 
                     src={generalImg} 
-                    alt={isRtl ? 'עבודה מקצועית בשטח' : 'Professional field work'} 
-                    className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
+                    alt={isRtl ? 'מנטור וחניך באתר בנייה' : 'Mentor and apprentice at construction site'} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
-                  <img 
-                    src={constructionImg} 
-                    alt={isRtl ? 'עבודת בנייה מקצועית' : 'Professional construction work'} 
-                    className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
-                    referrerPolicy="no-referrer"
-                  />
-                  <img 
-                    src={weldingImg} 
-                    alt={isRtl ? 'עבודת ריתוך מקצועית' : 'Professional welding work'} 
-                    className="col-span-2 mt-4 rounded-3xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover aspect-[2/1]"
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute bottom-8 left-8 right-8">
+                    <p className="text-white font-black text-2xl tracking-tight">
+                      {isRtl ? 'ניסיון אמיתי בשטח' : 'Real Field Experience'}
+                    </p>
+                  </div>
                 </div>
                 <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl -z-10"></div>
               </div>
