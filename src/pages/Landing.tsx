@@ -90,10 +90,10 @@ export default function Landing({ isRtl }: LandingProps) {
               <div className="flex items-center gap-6 justify-center lg:justify-start pt-4">
                 <div className="flex -space-x-3 rtl:space-x-reverse">
                   {[
-                    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100",
-                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
-                    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=100",
-                    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=100"
+                    "/skillink_post1_apprentice_v2.png",
+                    "/skillink_post2_mentor_v2.png",
+                    "/skillink_post3_general_v2.png",
+                    "/barber_shop.png"
                   ].map((url, i) => (
                     <img 
                       key={i}
@@ -124,8 +124,8 @@ export default function Landing({ isRtl }: LandingProps) {
             >
               <div className="relative rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] rotate-2 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="/skillink_post1_apprentice_v2.png" 
-                  alt={isRtl ? 'מנטור נגרות מלמד חניך' : 'Carpentry mentor teaching apprentice'}
+                  src="/barber_shop.png" 
+                  alt={isRtl ? 'מנטור ספרות מלמד חניך' : 'Professional barber teaching apprentice'}
                   className="w-full h-auto object-cover"
                   referrerPolicy="no-referrer"
                 />
@@ -185,13 +185,13 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4 sm:space-y-6 lg:pt-12">
                 <img 
-                  src="https://cprfaimmxtqsmmutdbcb.supabase.co/storage/v1/object/public/post-images/barber_shop.png" 
+                  src="/skillink_post1_apprentice_v2.png" 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
-                  alt="Professional barber teaching apprentice" 
+                  alt="Professional trade education" 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/skillink_post1_apprentice_v2.png" 
+                  src="/skillink_post2_mentor_v2.png" 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
                   alt="Master carpenter workshop" 
                   referrerPolicy="no-referrer"
@@ -199,13 +199,13 @@ export default function Landing({ isRtl }: LandingProps) {
               </div>
               <div className="space-y-4 sm:space-y-6">
                 <img 
-                  src="/skillink_post2_mentor_v2.png" 
+                  src="/skillink_post3_general_v2.png" 
                   className="rounded-[2rem] shadow-xl object-cover aspect-square hover:scale-105 transition-transform duration-500" 
                   alt="Professional electrician service" 
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/skillink_post3_general_v2.png" 
+                  src="/skillink_post1_apprentice_v2.png" 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
                   alt="Professional tiling instruction" 
                   referrerPolicy="no-referrer"
@@ -253,13 +253,13 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <img 
-                  src="/skillink_post1_apprentice_v2.png" 
+                  src="/skillink_post2_mentor_v2.png" 
                   alt="Craftsmanship workshop" 
                   className="rounded-3xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"
                 />
                 <img 
-                  src="/skillink_post3_general_v2.png" 
+                  src="/barber_shop.png" 
                   alt="Industrial training" 
                   className="rounded-3xl shadow-2xl translate-y-12 transform rotate-3 hover:rotate-0 transition-transform duration-500 object-cover aspect-square"
                   referrerPolicy="no-referrer"

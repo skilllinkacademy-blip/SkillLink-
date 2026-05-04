@@ -44,7 +44,7 @@ export default function About({ isRtl }: { isRtl: boolean }) {
           <div className="relative">
             <div className="absolute inset-0 bg-blue-600 rounded-[3rem] rotate-3 -z-10 opacity-10 blur-2xl"></div>
             <img 
-              src="/skillink_post1_apprentice_v2.png" 
+              src="/skillink_post3_general_v2.png" 
               alt="Mentorship process in workshop" 
               className="rounded-[3rem] shadow-2xl w-full object-cover aspect-[4/3]"
               referrerPolicy="no-referrer"

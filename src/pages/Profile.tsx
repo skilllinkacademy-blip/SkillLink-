@@ -1049,7 +1049,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                               value={formData.businessWebsite}
                               onChange={(e) => setFormData({...formData, businessWebsite: e.target.value})}
                               onBlur={() => handleSave('businessWebsite', formData.businessWebsite)}
-                              placeholder="https://..."
+                              placeholder={isRtl ? 'כתובת האתר...' : 'Enter website URL...'}
                               className="bg-transparent border-none outline-none text-sm font-bold w-full"
                             />
                           </div>

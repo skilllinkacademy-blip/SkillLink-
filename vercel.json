@@ -5,7 +5,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!api|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|css|js|json)).*)",
+      "source": "/((?!api|.*\\.).*)",
       "destination": "/index.html"
     }
   ]
