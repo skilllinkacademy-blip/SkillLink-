@@ -405,6 +405,12 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+  // Serve static files from public directory ALWAYS and FIRST
+  app.use(express.static(path.join(__dirname, 'public')));
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'dist')));
+  }
+
   // Auth Middleware
   const authenticateToken = (req: any, res: any, next: any) => {
     const authHeader = req.headers['authorization'];
@@ -1520,9 +1526,6 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     
-    // Serve public folder as well
-    app.use(express.static(path.join(__dirname, 'public')));
-    
     // SPA fallback for development
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
@@ -1538,8 +1541,6 @@ async function startServer() {
       }
     });
   } else {
-    app.use(express.static(path.join(__dirname, 'public')));
-    app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
