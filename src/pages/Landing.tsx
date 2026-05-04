@@ -185,7 +185,7 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4 sm:space-y-6 lg:pt-12">
                 <img 
-                  src="/barber_shop.png" 
+                  src="https://cprfaimmxtqsmmutdbcb.supabase.co/storage/v1/object/public/post-images/barber_shop.png" 
                   className="rounded-[2rem] shadow-xl object-cover aspect-[4/5] hover:scale-105 transition-transform duration-500" 
                   alt="Professional barber teaching apprentice" 
                   referrerPolicy="no-referrer"
