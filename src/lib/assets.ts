@@ -7,11 +7,10 @@ const assetMap: Record<string, string> = {
 
 // Default strings for direct use if needed
 
-export const barberShop = "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800";
+export const barberShop = "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800";export const apprenticeImg = "https://i.imgur.com/Uhl5AxV.jpg";
 export const apprenticeImg = "https://i.imgur.com/Uhl5AxV.jpg";
 export const mentorImg = "https://i.imgur.com/8x2Qy8x.jpg";
 export const generalImg = "https://i.imgur.com/Uhl5AxV.jpg";
- * This ensures that built-in images work correctly in production environments like Vercel.
  */
 export function resolveAsset(path: string | null | undefined): string | null {
   if (!path) return null;
