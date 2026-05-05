@@ -189,6 +189,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initial session check
     const initAuth = async () => {
       try {
+        if (!isSupabaseConfigured) {
+          setLoading(false);
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         const currentUser = session?.user ?? null;
@@ -217,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Error during auth initialization:', err);
       } finally {
-        // We set loading to false as soon as we have attempted the sync
+        // Essential: always set loading to false to avoid white screen/infinite spinner
         setLoading(false);
       }
     };

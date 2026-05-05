@@ -180,25 +180,37 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
 
 export default function App() {
   const [isRtl, setIsRtl] = useState(() => {
-    const saved = localStorage.getItem('skilllink_v5_rtl');
-    return saved !== null ? saved === 'true' : true;
+    try {
+      const saved = localStorage.getItem('skilllink_v5_rtl');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true; // Default to Hebrew if localStorage fails
+    }
   });
 
   useEffect(() => {
-    // Migration: If user has old v4 key, or no key at all, default to Hebrew (true)
-    const oldSaved = localStorage.getItem('skilllink_v4_rtl');
-    const currentSaved = localStorage.getItem('skilllink_v5_rtl');
-    
-    if (oldSaved !== null && currentSaved === null) {
-      setIsRtl(true);
-      localStorage.removeItem('skilllink_v4_rtl');
+    try {
+      // Migration: If user has old v4 key, or no key at all, default to Hebrew (true)
+      const oldSaved = localStorage.getItem('skilllink_v4_rtl');
+      const currentSaved = localStorage.getItem('skilllink_v5_rtl');
+      
+      if (oldSaved !== null && currentSaved === null) {
+        setIsRtl(true);
+        localStorage.removeItem('skilllink_v4_rtl');
+      }
+    } catch (e) {
+      console.warn('LocalStorage migration failed:', e);
     }
   }, []);
 
   useEffect(() => {
-    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-    document.documentElement.lang = isRtl ? 'he' : 'en';
-    localStorage.setItem('skilllink_v5_rtl', isRtl.toString());
+    try {
+      document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+      document.documentElement.lang = isRtl ? 'he' : 'en';
+      localStorage.setItem('skilllink_v5_rtl', isRtl.toString());
+    } catch (e) {
+      console.warn('Failed to save RTL state:', e);
+    }
   }, [isRtl]);
 
   const toggleLang = () => setIsRtl(!isRtl);
