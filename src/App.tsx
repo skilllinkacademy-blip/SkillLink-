@@ -24,6 +24,8 @@ import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
 import About from './pages/legal/About';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
   const { user, loading, isSyncing } = useAuth();
   const location = useLocation();
@@ -37,11 +39,13 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
   }
 
   return (
-    <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
-      <Navbar isRtl={isRtl} toggleLang={toggleLang} />
-      
-      <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
-        <Routes>
+    <ErrorBoundary>
+      <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
+        <Navbar isRtl={isRtl} toggleLang={toggleLang} />
+        
+        <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
+          <Routes>
+            {/* ... rest of routes stay same ... */}
           {/* Public Routes */}
           <Route 
             path="/" 
@@ -175,6 +179,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
         </Routes>
       </main>
     </div>
+    </ErrorBoundary>
   );
 }
 

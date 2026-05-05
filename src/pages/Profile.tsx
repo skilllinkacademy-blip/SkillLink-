@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap, MessageSquare, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import api from '../lib/api';
@@ -1149,7 +1149,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                           if (isSelected) {
                             newSkills = newSkills.filter((s: any) => s.name !== tag.id);
                           } else {
-                            newSkills.push({ name: tag.id, label: tag.label, verified: false });
+                            newSkills.push({ name: tag.id, level: tag.label, verified: false });
                           }
                           setFormData({ ...formData, skills: newSkills });
                           handleSave('skills', newSkills);
@@ -1178,7 +1178,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                             className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-blue-600"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && newTag) {
-                                const newSkills = [...(formData.skills || []), { name: newTag, label: newTag, verified: false }];
+                                const newSkills = [...(formData.skills || []), { name: newTag, level: newTag, verified: false }];
                                 setFormData({ ...formData, skills: newSkills });
                                 handleSave('skills', newSkills);
                                 setNewTag('');

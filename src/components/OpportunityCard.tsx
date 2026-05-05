@@ -157,11 +157,11 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             </h3>
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                <MapPin size={12} sm:size={14} className="text-slate-300" />
+                <MapPin size={14} className="text-slate-300" />
                 <span>{opportunity.location || opportunity.profiles?.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                <Clock size={12} sm:size={14} className="text-slate-300" />
+                <Clock size={14} className="text-slate-300" />
                 <span>{durationDescription || workHours || (isRtl ? 'גמיש' : 'Flexible')}</span>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                  </span>
                ) : (
                  <span className="flex items-center gap-1.5 text-slate-400">
-                   <GraduationCap size={12} sm:size={14} className="text-slate-300" />
+                   <GraduationCap size={14} className="text-slate-300" />
                    {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
                  </span>
                )}
@@ -230,7 +230,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <p className="text-xs sm:text-sm font-black text-slate-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
                 {opportunity.profiles?.is_verified && (
-                  <ShieldCheck size={12} sm:size={14} className="text-emerald-500 fill-emerald-500/10" />
+                  <ShieldCheck size={14} className="text-emerald-500 fill-emerald-500/10" />
                 )}
               </div>
               <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
@@ -248,7 +248,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                   }}
                   className="p-2 sm:p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
                 >
-                  <Pencil size={18} sm:size={20} />
+                  <Pencil size={20} />
                 </button>
                 {onDelete && (
                   <button 
@@ -259,13 +259,13 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                     }}
                     className="p-2 sm:p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                   >
-                    <Trash2 size={18} sm:size={20} />
+                    <Trash2 size={20} />
                   </button>
                 )}
               </div>
             )}
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
-              <ArrowRight size={20} sm:size={24} />
+              <ArrowRight size={24} />
             </div>
           </div>
         </div>

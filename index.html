@@ -6,10 +6,14 @@
     <title>SkillLink - ללמוד מהמקצוענים</title>
     <script>
       (function() {
-        const saved = localStorage.getItem('skilllink_v5_rtl');
-        const isRtl = saved !== null ? saved === 'true' : true;
-        document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-        document.documentElement.lang = isRtl ? 'he' : 'en';
+        try {
+          const saved = localStorage.getItem('skilllink_v5_rtl');
+          const isRtl = saved !== null ? saved === 'true' : true;
+          document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+          document.documentElement.lang = isRtl ? 'he' : 'en';
+        } catch (e) {
+          console.warn('LocalStorage blocked or inaccessible:', e);
+        }
       })();
     </script>
   </head>

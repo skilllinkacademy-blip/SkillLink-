@@ -28,6 +28,7 @@ interface Conversation {
     full_name: string;
     avatar_url?: string;
     occupation?: string;
+    username?: string;
   };
   unread_count: number;
 }

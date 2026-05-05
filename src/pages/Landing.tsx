@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Users, Zap, CheckCircle2, ArrowRight, Star, Award, Briefcase, GraduationCap, Globe, Shield, User as UserIcon, Search } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { resolveAsset, barberShop, apprenticeImg, mentorImg, generalImg, instructionImg, plumbingImg, constructionImg, electricalImg, weldingImg, mechanicImg } from '../lib/assets';
 

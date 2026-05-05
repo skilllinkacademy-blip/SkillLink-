@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
@@ -271,7 +271,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-                  {isMentorOffer ? <Briefcase size={60} sm:size={100} strokeWidth={1} /> : <GraduationCap size={60} sm:size={100} strokeWidth={1} />}
+                  {isMentorOffer ? <Briefcase size={100} strokeWidth={1} /> : <GraduationCap size={100} strokeWidth={1} />}
                 </div>
               )}
               <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} flex flex-col gap-3`}>
