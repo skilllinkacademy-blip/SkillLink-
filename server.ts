@@ -41,6 +41,126 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 const db = new Database('skilllink.db');
 db.pragma('journal_mode = WAL');
 
+// Database Initialization
+function initDb() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL,
+      location TEXT,
+      age INTEGER,
+      trade TEXT,
+      bio TEXT,
+      goals TEXT,
+      availability TEXT,
+      experience INTEGER,
+      businessName TEXT,
+      teachingPrefs TEXT,
+      areaServed TEXT,
+      lang TEXT DEFAULT 'en',
+      verified INTEGER DEFAULT 0,
+      avatar TEXT,
+      username TEXT,
+      supabase_id TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      image TEXT,
+      type TEXT DEFAULT 'Tip',
+      likes INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS opportunities (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ownerId INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      location TEXT NOT NULL,
+      workHours TEXT,
+      payAmount REAL,
+      payPeriod TEXT,
+      aboutWork TEXT,
+      requirements TEXT,
+      whoIWantToTeach TEXT,
+      menteeWillLearn TEXT,
+      availabilityDays TEXT,
+      desiredSalary REAL,
+      whatIWantToLearn TEXT,
+      experienceNote TEXT,
+      imageUrl TEXT,
+      status TEXT DEFAULT 'active',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (ownerId) REFERENCES users (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS saved_opportunities (
+      userId INTEGER NOT NULL,
+      opportunityId INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (userId, opportunityId),
+      FOREIGN KEY (userId) REFERENCES users (id),
+      FOREIGN KEY (opportunityId) REFERENCES opportunities (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menteeId INTEGER NOT NULL,
+      mentorId INTEGER NOT NULL,
+      message TEXT,
+      startDate TEXT,
+      status TEXT DEFAULT 'pending',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (menteeId) REFERENCES users (id),
+      FOREIGN KEY (mentorId) REFERENCES users (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS ratings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fromId INTEGER NOT NULL,
+      toId INTEGER NOT NULL,
+      rating INTEGER NOT NULL,
+      comment TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (fromId) REFERENCES users (id),
+      FOREIGN KEY (toId) REFERENCES users (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      senderId INTEGER NOT NULL,
+      receiverId INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      isRead INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (senderId) REFERENCES users (id),
+      FOREIGN KEY (receiverId) REFERENCES users (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      senderId INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT,
+      content TEXT,
+      link TEXT,
+      isRead INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users (id),
+      FOREIGN KEY (senderId) REFERENCES users (id)
+    );
+  `);
+}
+
 // Seed Database Function
 function seedDatabase() {
   const userCount = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
@@ -111,6 +231,8 @@ function seedDatabase() {
 }
 
 async function startServer() {
+  initDb();
+  seedDatabase();
   const app = express();
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
