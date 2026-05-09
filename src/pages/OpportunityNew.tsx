@@ -22,7 +22,7 @@ import {
   Search,
   ChevronDown
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveAsset } from '../lib/assets';
