@@ -48,7 +48,7 @@ class ErrorBoundary extends React.Component<Props, State> {
             >
               רענן דף / Refresh Page
             </button>
-            {(import.meta as any).env?.DEV && (
+            {import.meta.env.DEV && (
               <pre className="mt-8 p-4 bg-slate-200 rounded-xl text-left text-xs overflow-auto max-h-40">
                 {error?.message}
               </pre>

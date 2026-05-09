@@ -39,12 +39,14 @@ function calculateDistance(coord1: [number, number], coord2: [number, number]) {
 }
 
 export async function getAIOpportunityRecommendations(userProfile: any, opportunities: any[]) {
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn('GEMINI_API_KEY is not set. Falling back to basic scoring.');
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+  
+  if (!apiKey || apiKey.length < 10) {
+    console.warn('GEMINI_API_KEY is not set or invalid. Falling back to basic scoring.');
     return basicOpportunityScoring(userProfile, opportunities);
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   // Heuristic filtering for performance: take top 20 based on basic scoring first
   const candidates = Array.isArray(opportunities) ? basicOpportunityScoring(userProfile, opportunities).slice(0, 20) : [];
@@ -121,11 +123,13 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
 }
 
 export async function getAIProfileRecommendations(userProfile: any, profiles: any[]) {
-  if (!process.env.GEMINI_API_KEY) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+  
+  if (!apiKey || apiKey.length < 10) {
     return basicProfileScoring(userProfile, profiles);
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const candidates = Array.isArray(profiles) ? basicProfileScoring(userProfile, profiles).slice(0, 20) : [];
 
   if (candidates.length === 0) return [];
