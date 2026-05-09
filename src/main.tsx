@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
 );
 
 // Global Error Handler for Production
-if ((import.meta as any).env?.PROD) {
+if (import.meta.env.PROD) {
   window.onerror = function(message, source, lineno, colno, error) {
     console.error('Global Error:', { message, source, lineno, colno, error });
     return false;
