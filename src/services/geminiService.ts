@@ -44,13 +44,10 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
       Focus on semantic relevance, skills overlap, and geographic proximity.
     `;
 
-    const model = ai.getGenerativeModel({
-      model: "gemini-1.5-flash", 
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: prompt,
+      config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -66,8 +63,7 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
       }
     });
 
-    const text = result.response.text();
-    return JSON.parse(text);
+    return JSON.parse(response.text);
   } catch (error) {
     console.error("Gemini AI Analysis Error:", error);
     return null;

@@ -65,6 +65,26 @@ function initDb() {
       avatar TEXT,
       username TEXT,
       supabase_id TEXT,
+      phone TEXT,
+      workload TEXT,
+      learningIntent TEXT,
+      preferredDuration TEXT,
+      businessType TEXT,
+      targetAudience TEXT,
+      isBusiness INTEGER DEFAULT 0,
+      businessDescription TEXT,
+      businessLogo TEXT,
+      businessSocialLinks TEXT,
+      businessWebsite TEXT,
+      headline TEXT,
+      skills_level TEXT,
+      desired_salary REAL,
+      what_i_want_to_learn TEXT,
+      who_i_want_to_teach TEXT,
+      availability_days TEXT,
+      skills TEXT,
+      cover_url TEXT,
+      verificationStatus TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -79,10 +99,23 @@ function initDb() {
       FOREIGN KEY (userId) REFERENCES users (id)
     );
 
+    CREATE TABLE IF NOT EXISTS post_likes (
+      postId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (postId, userId),
+      FOREIGN KEY (postId) REFERENCES posts (id),
+      FOREIGN KEY (userId) REFERENCES users (id)
+    );
+
     CREATE TABLE IF NOT EXISTS opportunities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ownerId INTEGER NOT NULL,
       type TEXT NOT NULL,
+      opportunityType TEXT,
+      commitmentLevel TEXT,
+      learningFocus TEXT,
+      durationDescription TEXT,
       title TEXT NOT NULL,
       location TEXT NOT NULL,
       workHours TEXT,
@@ -111,6 +144,15 @@ function initDb() {
       FOREIGN KEY (opportunityId) REFERENCES opportunities (id)
     );
 
+    CREATE TABLE IF NOT EXISTS opportunity_interests (
+      opportunityId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (opportunityId, userId),
+      FOREIGN KEY (opportunityId) REFERENCES opportunities (id),
+      FOREIGN KEY (userId) REFERENCES users (id)
+    );
+
     CREATE TABLE IF NOT EXISTS requests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       menteeId INTEGER NOT NULL,
@@ -125,11 +167,16 @@ function initDb() {
 
     CREATE TABLE IF NOT EXISTS ratings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      requestId INTEGER,
       fromId INTEGER NOT NULL,
       toId INTEGER NOT NULL,
-      rating INTEGER NOT NULL,
+      professional INTEGER,
+      teaching INTEGER,
+      workEthic INTEGER,
+      reliability INTEGER,
       comment TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (requestId) REFERENCES requests (id),
       FOREIGN KEY (fromId) REFERENCES users (id),
       FOREIGN KEY (toId) REFERENCES users (id)
     );
@@ -148,7 +195,7 @@ function initDb() {
     CREATE TABLE IF NOT EXISTS notifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
-      senderId INTEGER NOT NULL,
+      senderId INTEGER,
       type TEXT NOT NULL,
       title TEXT,
       content TEXT,
@@ -159,6 +206,49 @@ function initDb() {
       FOREIGN KEY (senderId) REFERENCES users (id)
     );
   `);
+
+  // Migration: Add missing columns if tables already exist
+  const migrations = [
+    { table: 'users', column: 'phone', type: 'TEXT' },
+    { table: 'users', column: 'workload', type: 'TEXT' },
+    { table: 'users', column: 'learningIntent', type: 'TEXT' },
+    { table: 'users', column: 'preferredDuration', type: 'TEXT' },
+    { table: 'users', column: 'businessType', type: 'TEXT' },
+    { table: 'users', column: 'targetAudience', type: 'TEXT' },
+    { table: 'users', column: 'isBusiness', type: 'INTEGER DEFAULT 0' },
+    { table: 'users', column: 'businessDescription', type: 'TEXT' },
+    { table: 'users', column: 'businessLogo', type: 'TEXT' },
+    { table: 'users', column: 'businessSocialLinks', type: 'TEXT' },
+    { table: 'users', column: 'businessWebsite', type: 'TEXT' },
+    { table: 'users', column: 'headline', type: 'TEXT' },
+    { table: 'users', column: 'skills_level', type: 'TEXT' },
+    { table: 'users', column: 'desired_salary', type: 'REAL' },
+    { table: 'users', column: 'what_i_want_to_learn', type: 'TEXT' },
+    { table: 'users', column: 'who_i_want_to_teach', type: 'TEXT' },
+    { table: 'users', column: 'availability_days', type: 'TEXT' },
+    { table: 'users', column: 'skills', type: 'TEXT' },
+    { table: 'users', column: 'cover_url', type: 'TEXT' },
+    { table: 'users', column: 'verificationStatus', type: 'TEXT' },
+    { table: 'opportunities', column: 'opportunityType', type: 'TEXT' },
+    { table: 'opportunities', column: 'commitmentLevel', type: 'TEXT' },
+    { table: 'opportunities', column: 'learningFocus', type: 'TEXT' },
+    { table: 'opportunities', column: 'durationDescription', type: 'TEXT' },
+    { table: 'ratings', column: 'requestId', type: 'INTEGER' },
+    { table: 'ratings', column: 'professional', type: 'INTEGER' },
+    { table: 'ratings', column: 'teaching', type: 'INTEGER' },
+    { table: 'ratings', column: 'workEthic', type: 'INTEGER' },
+    { table: 'ratings', column: 'reliability', type: 'INTEGER' },
+  ];
+
+  for (const m of migrations) {
+    try {
+      db.exec(`ALTER TABLE ${m.table} ADD COLUMN ${m.column} ${m.type}`);
+    } catch (e: any) {
+      if (!e.message.includes('duplicate column name')) {
+        console.error(`Migration failed for ${m.table}.${m.column}:`, e.message);
+      }
+    }
+  }
 }
 
 // Seed Database Function
