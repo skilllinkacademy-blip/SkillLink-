@@ -110,7 +110,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           setMatchBreakdown(breakdown);
           
           // Trigger AI Analysis
-          if (process.env.GEMINI_API_KEY) {
+          if ((import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY) {
             setLoadingAi(true);
             analyzeMatch(transformedData, profile, isRtl).then(analysis => {
               if (analysis) setAiAnalysis(analysis);

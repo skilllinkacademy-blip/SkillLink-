@@ -1,6 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let genAI: GoogleGenAI | null = null;
+
+function getGenAI() {
+  if (genAI) return genAI;
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  genAI = new GoogleGenAI(apiKey);
+  return genAI;
+}
 
 export interface SmartMatchAnalysis {
   score: number;
@@ -11,7 +19,8 @@ export interface SmartMatchAnalysis {
 }
 
 export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolean): Promise<SmartMatchAnalysis | null> {
-  if (!process.env.GEMINI_API_KEY) return null;
+  const ai = getGenAI();
+  if (!ai) return null;
 
   try {
     const prompt = `
@@ -35,10 +44,13 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
       Focus on semantic relevance, skills overlap, and geographic proximity.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
+    const model = ai.getGenerativeModel({
+      model: "gemini-1.5-flash", 
+    });
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -54,7 +66,8 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
       }
     });
 
-    return JSON.parse(response.text);
+    const text = result.response.text();
+    return JSON.parse(text);
   } catch (error) {
     console.error("Gemini AI Analysis Error:", error);
     return null;
