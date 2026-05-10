@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import api from '../lib/api';
 
 interface Profile {
   id: string;
@@ -42,58 +41,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [sqliteId, setSqliteId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
 
-  const fetchSqliteId = async () => {
-    try {
-      const response = await api.get('/auth/me');
-      setSqliteId(response.data.id);
-      if (response.data.savedCount !== undefined) {
-        setSavedCount(response.data.savedCount);
-      }
-      return true;
-    } catch (err: any) {
-      console.error('Error fetching sqliteId/savedCount:', err);
-      // If 401, the token might be stale, return false to trigger sync
-      if (err.response?.status === 401) {
-        localStorage.removeItem('skilllink_token');
-        setSqliteId(null);
-        return false;
-      }
-      return false;
-    }
-  };
-
   const refreshSavedCount = async () => {
-    await fetchSqliteId();
+    if (!isSupabaseConfigured) return;
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+      const { count } = await supabase
+        .from('saved_opportunities')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id);
+      setSavedCount(count || 0);
+    } catch (err) {
+      console.error('Error refreshing saved count:', err);
+    }
   };
 
   const fetchUnreadCount = async (userId: string) => {
     if (!isSupabaseConfigured) return;
     try {
-      // Fetch unread messages
       const { count: msgCount, error: msgError } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', userId)
         .eq('is_read', false);
-      
+
       if (!msgError && msgCount !== null) {
         setUnreadMessagesCount(msgCount);
       }
 
-      // Fetch unread notifications
       const { count: notifCount, error: notifError } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_read', false);
-      
+
       if (!notifError && notifCount !== null) {
         setUnreadNotificationsCount(notifCount);
       }
@@ -135,10 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const ensureProfile = async (user: User) => {
     if (!isSupabaseConfigured) return;
-    
+
     try {
       console.log('AuthContext: Ensuring profile for user:', user.id);
-      // Check if profile exists
       const { data: existing, error: fetchError } = await supabase
         .from('profiles')
         .select('id')
@@ -152,10 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!existing) {
         console.log('AuthContext: Profile not found, creating...');
-        // Profile doesn't exist, create it
         const metadata = user.user_metadata || {};
         const generatedUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
-        
+
         const insertPayload: any = {
           id: user.id,
           username: generatedUsername,
@@ -188,49 +172,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleSessionSync = async (accessToken: string, currentUser: User) => {
-    setIsSyncing(true);
-    try {
-      const response = await api.post('/auth/session', { access_token: accessToken });
-      if (response.data.token) {
-        localStorage.setItem('skilllink_token', response.data.token);
-        await fetchSqliteId();
-      } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
-        console.warn('Backend session sync skipped: Supabase not configured on server');
-      }
-      
-      ensureProfile(currentUser);
-      fetchUnreadCount(currentUser.id);
-    } catch (err) {
-      console.error('Error syncing session with backend:', err);
-      ensureProfile(currentUser);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
       return;
     }
 
-    // Initial session check
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        
-        if (currentUser && session?.access_token) {
-          const success = await fetchSqliteId();
-          if (!success) {
-            await handleSessionSync(session.access_token, currentUser);
-          } else {
-            ensureProfile(currentUser);
-            fetchUnreadCount(currentUser.id);
-          }
+
+        if (currentUser) {
+          ensureProfile(currentUser);
+          fetchUnreadCount(currentUser.id);
+          refreshSavedCount();
         }
       } catch (err) {
         console.error('Error during auth initialization:', err);
@@ -245,21 +203,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       const newUser = session?.user ?? null;
       setUser(newUser);
-      
-      if (newUser && session?.access_token) {
-        if (event === 'INITIAL_SESSION') {
-          const success = await fetchSqliteId();
-          if (success) {
-            ensureProfile(newUser);
-            fetchUnreadCount(newUser.id);
-            return;
-          }
-        }
-        await handleSessionSync(session.access_token, newUser);
+
+      if (newUser) {
+        ensureProfile(newUser);
+        fetchUnreadCount(newUser.id);
+        refreshSavedCount();
       } else if (event === 'SIGNED_OUT') {
-        localStorage.removeItem('skilllink_token');
         setProfile(null);
-        setSqliteId(null);
+        setSavedCount(0);
         setUnreadMessagesCount(0);
         setUnreadNotificationsCount(0);
       }
@@ -270,11 +221,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Separate effect for real-time subscriptions that depend on user.id
   useEffect(() => {
     if (!user || !isSupabaseConfigured) return;
 
-    // Profile updates listener
     const profileSubscription = supabase
       .channel(`profile-updates-${user.id}`)
       .on(
@@ -291,7 +240,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
-    // Mentor verifications updates listener
     const verificationSubscription = supabase
       .channel(`verification-updates-${user.id}`)
       .on(
@@ -362,18 +310,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      profile, 
-      sqliteId,
-      loading, 
-      isSyncing,
+    <AuthContext.Provider value={{
+      user,
+      session,
+      profile,
+      sqliteId: null,
+      loading,
+      isSyncing: false,
       unreadMessagesCount,
       unreadNotificationsCount,
       savedCount,
       isSupabaseConfigured,
-      signOut, 
+      signOut,
       refreshProfile,
       refreshUnreadCount,
       refreshSavedCount,

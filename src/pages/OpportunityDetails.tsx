@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
 import { resolveAsset } from '../lib/assets';
@@ -15,7 +15,7 @@ interface OpportunityDetailsProps {
 export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile, sqliteId, refreshSavedCount } = useAuth();
+  const { user, profile, refreshSavedCount } = useAuth();
   const [opportunity, setOpportunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -31,16 +31,27 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [loadingInterests, setLoadingInterests] = useState(false);
 
   useEffect(() => {
-    if (opportunity && sqliteId && opportunity.owner_id === sqliteId) {
+    if (opportunity && user && opportunity.owner_id === user.id) {
       fetchInterests();
     }
-  }, [opportunity, sqliteId]);
+  }, [opportunity, user]);
 
   const fetchInterests = async () => {
     setLoadingInterests(true);
     try {
-      const response = await api.get(`/opportunities/${id}/interests`);
-      setInterestedUsers(response.data);
+      const { data, error } = await supabase
+        .from('opportunity_interests')
+        .select('*, profiles:user_id(id, full_name, avatar_url, occupation, username)')
+        .eq('opportunity_id', id);
+      if (error) throw error;
+      setInterestedUsers((data || []).map(item => ({
+        userId: item.user_id,
+        userName: item.profiles?.full_name,
+        userAvatar: item.profiles?.avatar_url,
+        userTrade: item.profiles?.occupation,
+        userUsername: item.profiles?.username,
+        userSupabaseId: item.profiles?.id,
+      })));
     } catch (error) {
       console.error('Error fetching interests:', error);
     } finally {
@@ -51,7 +62,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const removeInterest = async (userId: string) => {
     if (!window.confirm(isRtl ? 'האם אתה בטוח שברצונך להסיר את המשתמש מרשימת המעוניינים?' : 'Are you sure you want to remove this user from the interested list?')) return;
     try {
-      await api.delete(`/opportunities/${id}/interest/${userId}`);
+      const { error } = await supabase
+        .from('opportunity_interests')
+        .delete()
+        .eq('opportunity_id', id)
+        .eq('user_id', userId);
+      if (error) throw error;
       setInterestedUsers(prev => prev.filter(u => u.userId !== userId));
     } catch (error) {
       console.error('Error removing interest:', error);
@@ -62,59 +78,45 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     const fetchOpportunity = async () => {
       if (!id) return;
       try {
-        const response = await api.get(`/opportunities/${id}`);
-        const data = response.data;
-        
-        // Transform data to match frontend expectations
-        const transformedData = {
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select('*, profiles:owner_id(id, full_name, avatar_url, occupation, role, is_verified, username, city, created_at)')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        const opportunityData = {
           ...data,
-          owner_id: data.ownerId,
-          image_url: data.imageUrl,
-          work_hours: data.workHours,
-          pay_amount: data.payAmount,
-          pay_period: data.payPeriod,
-          about_work: data.aboutWork,
-          who_i_want_to_teach: data.whoIWantToTeach,
-          mentee_will_learn: data.menteeWillLearn,
-          requirements: data.requirements,
-          what_i_want_to_learn: data.whatIWantToLearn,
-          experience_note: data.experienceNote,
-          desired_salary: data.desiredSalary,
-          created_at: data.createdAt,
-          ownerUsername: data.ownerUsername,
-          ownerSupabaseId: data.ownerSupabaseId,
-          opportunity_type: data.opportunityType,
-          commitment_level: data.commitmentLevel,
-          learning_focus: data.learningFocus,
-          duration_description: data.durationDescription,
           profiles: {
-            full_name: data.ownerName,
-            avatar_url: data.ownerAvatar,
-            occupation: data.ownerTrade,
-            role: data.ownerRole,
-            is_verified: data.ownerVerified === 1,
-            username: data.ownerUsername || data.ownerSupabaseId || data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
-            location: data.location,
-            created_at: data.createdAt
-          }
+            ...data.profiles,
+            location: data.profiles?.city,
+          },
         };
 
-        setOpportunity(transformedData);
-        setIsSaved(data.isSaved === 1);
-        setIsInterested(data.isInterested === 1);
+        setOpportunity(opportunityData);
 
-        // Calculate match score if user is logged in
-        if (profile && transformedData) {
-          const { score, breakdown } = calculateMatchScore(transformedData, profile, isRtl);
+        if (user) {
+          const [savedResult, interestResult] = await Promise.all([
+            supabase.from('saved_opportunities').select('id').eq('user_id', user.id).eq('opportunity_id', id).maybeSingle(),
+            supabase.from('opportunity_interests').select('id').eq('user_id', user.id).eq('opportunity_id', id).maybeSingle(),
+          ]);
+          setIsSaved(!!savedResult.data);
+          setIsInterested(!!interestResult.data);
+        }
+
+        if (profile && opportunityData) {
+          const { score, breakdown } = calculateMatchScore(opportunityData, profile, isRtl);
           setMatchScore(score);
           setMatchBreakdown(breakdown);
-          
-          // Trigger AI Analysis via Backend
-          setLoadingAi(true);
-          analyzeMatch(transformedData, profile, isRtl).then(analysis => {
-            if (analysis) setAiAnalysis(analysis);
-            setLoadingAi(false);
-          });
+
+          if (import.meta.env.VITE_GEMINI_API_KEY) {
+            setLoadingAi(true);
+            analyzeMatch(opportunityData, profile, isRtl).then(analysis => {
+              if (analysis) setAiAnalysis(analysis);
+              setLoadingAi(false);
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching opportunity:', error);
@@ -125,35 +127,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     };
 
     fetchOpportunity();
-  }, [id, navigate, profile]);
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!sqliteId || !id || !opportunity) return;
-      
-      try {
-        // Check if already expressed interest for this specific opportunity
-        const response = await api.get('/notifications');
-        const notifications = response.data;
-        
-        const hasInterest = notifications.some((n: any) => 
-          n.senderId === sqliteId && 
-          n.type === 'interest' && 
-          n.link === `/app/opportunities/${id}`
-        );
-        
-        if (hasInterest) {
-          setIsInterested(true);
-        }
-      } catch (err) {
-        console.error('Error checking status:', err);
-      }
-    };
-
-    if (opportunity && user) {
-      checkStatus();
-    }
-  }, [user, id, opportunity]);
+  }, [id, navigate, profile, user]);
 
   const handleShare = async () => {
     if (!opportunity) return;
@@ -178,33 +152,32 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   };
 
   const handleInterested = async () => {
-    if (!sqliteId || !opportunity) return;
-    
+    if (!user || !opportunity) return;
     if (interesting || isInterested) return;
-    
-    // Prevent self-interest
-    if (sqliteId === opportunity.owner_id) {
+    if (user.id === opportunity.owner_id) {
       alert(isRtl ? 'אינך יכול להביע עניין בהזדמנות של עצמך' : 'You cannot express interest in your own opportunity');
       return;
     }
 
     setInteresting(true);
     try {
-      // 1. Save interest in DB
-      await api.post(`/opportunities/${id}/interest`);
+      const { error: interestError } = await supabase
+        .from('opportunity_interests')
+        .insert({ opportunity_id: id, user_id: user.id });
+      if (interestError) throw interestError;
 
       const senderName = profile?.full_name || (isRtl ? 'משתמש' : 'User');
-      
-      await api.post('/notifications', {
-        userId: opportunity.owner_id,
+      await supabase.from('notifications').insert({
+        user_id: opportunity.owner_id,
+        sender_id: user.id,
         type: 'interest',
         title: isRtl ? 'מישהו מעוניין בהזדמנות שלך!' : 'Someone is interested in your opportunity!',
-        content: isRtl 
+        content: isRtl
           ? `${senderName} התעניין בעבודה "${opportunity.title}", במידה וזה רלוונטי שווה לחזור אליו.`
           : `${senderName} is interested in "${opportunity.title}". If relevant, it's worth getting back to them.`,
-        link: `/app/opportunities/${opportunity.id}`
+        link: `/app/opportunities/${opportunity.id}`,
       });
-      
+
       setIsInterested(true);
       alert(isRtl ? 'הודעה נשלחה למפרסם ההזדמנות!' : 'Notification sent to the opportunity poster!');
     } catch (error: any) {
@@ -219,7 +192,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     if (!user || !id) return;
     setSaving(true);
     try {
-      await api.post(`/opportunities/${id}/save`);
+      if (isSaved) {
+        await supabase.from('saved_opportunities').delete()
+          .eq('user_id', user.id).eq('opportunity_id', id);
+      } else {
+        await supabase.from('saved_opportunities').insert({ user_id: user.id, opportunity_id: id });
+      }
       setIsSaved(!isSaved);
       refreshSavedCount();
     } catch (error) {
@@ -592,7 +570,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
             <Link 
-            to={`/app/u/${opportunity.ownerSupabaseId || opportunity.ownerUsername || opportunity.profiles?.username}`}
+            to={`/app/u/${opportunity.profiles?.username || opportunity.owner_id}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
@@ -614,7 +592,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </Link>
 
             {/* Interested Users (Owner Only) */}
-            {sqliteId === opportunity.owner_id && (
+            {user?.id === opportunity.owner_id && (
               <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
@@ -705,7 +683,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             
             <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
               {user ? (
-                sqliteId === opportunity.owner_id ? (
+                user?.id === opportunity.owner_id ? (
                   <button 
                     onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
                     className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
@@ -731,7 +709,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     </button>
 
                     <button 
-                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.ownerSupabaseId, recipientName: opportunity.profiles?.full_name } })}
+                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
                       className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       <MessageSquare size={18} />

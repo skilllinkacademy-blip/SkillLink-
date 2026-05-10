@@ -1,17 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize Gemini Client lazily
 let aiInstance: any = null;
 
 function getAI() {
   if (aiInstance) return aiInstance;
-  
-  const key = (process.env as any).GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  const key = import.meta.env.VITE_GEMINI_API_KEY;
   if (!key) {
-    console.warn("GEMINI_API_KEY is not defined in the environment.");
+    console.warn("VITE_GEMINI_API_KEY is not defined.");
     return null;
   }
-  
   try {
     aiInstance = new GoogleGenAI({ apiKey: key });
     return aiInstance;
@@ -22,6 +19,7 @@ function getAI() {
 }
 
 const MODEL_NAME = "gemini-flash-latest";
+
 
 export interface SmartMatchAnalysis {
   score: number;

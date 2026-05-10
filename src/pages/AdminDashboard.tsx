@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   ShieldCheck, 
@@ -110,38 +109,21 @@ export default function AdminDashboard({ isRtl }: { isRtl: boolean }) {
             .eq('id', supabaseId);
         }
 
-        // 3. Update SQLite via backend
-        try {
-          await api.post(`/admin/verify-supabase/${supabaseId}`, { verified: status === 'approved' });
-        } catch (sqliteErr) {
-          console.error('Error updating SQLite verification:', sqliteErr);
-          // Continue even if SQLite update fails, as Supabase is the primary source
-        }
-
-        // 4. Send notification via backend
-        try {
-          if (status === 'approved') {
-            await api.post(`/admin/notify-supabase/${supabaseId}`, {
-              type: 'verification',
-              title: isRtl ? 'חשבונך אומת!' : 'Account Verified!',
-              content: isRtl 
-                ? 'חשבונך אומת ועכשיו אתה מנטור מוסמך בקהילה. התג הירוק נוסף לפרופיל שלך!' 
-                : 'Your account has been verified and you are now a certified mentor. The green badge has been added to your profile!',
-              link: `/app/u/${supabaseId}`
-            });
-          } else if (status === 'rejected') {
-            await api.post(`/admin/notify-supabase/${supabaseId}`, {
-              type: 'verification',
-              title: isRtl ? 'בקשת האימות נדחתה' : 'Verification Rejected',
-              content: isRtl 
-                ? 'לצערו, לא יכולנו לאמת את המסמכים ששלחת. אנא נסה שוב עם מסמכים ברורים יותר.' 
-                : 'Unfortunately, we could not verify the documents you sent. Please try again with clearer documents.',
-              link: '/app/verify'
-            });
-          }
-        } catch (notifErr) {
-          console.error('Error sending notification:', notifErr);
-        }
+        // 3. Send notification via Supabase
+        const notifTitle = status === 'approved'
+          ? (isRtl ? 'חשבונך אומת!' : 'Account Verified!')
+          : (isRtl ? 'בקשת האימות נדחתה' : 'Verification Rejected');
+        const notifContent = status === 'approved'
+          ? (isRtl ? 'חשבונך אומת ועכשיו אתה מנטור מוסמך בקהילה. התג הירוק נוסף לפרופיל שלך!' : 'Your account has been verified and you are now a certified mentor. The green badge has been added to your profile!')
+          : (isRtl ? 'לצערנו, לא יכולנו לאמת את המסמכים ששלחת. אנא נסה שוב עם מסמכים ברורים יותר.' : 'Unfortunately, we could not verify the documents you sent. Please try again with clearer documents.');
+        const notifLink = status === 'approved' ? `/app/u/${supabaseId}` : '/app/verify';
+        await supabase.from('notifications').insert({
+          user_id: supabaseId,
+          type: 'verification',
+          title: notifTitle,
+          content: notifContent,
+          link: notifLink,
+        });
       }
       
       setRequests(prev => prev.filter(req => req.id !== id || filter === 'all'));

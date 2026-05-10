@@ -18,7 +18,11 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const JWT_SECRET = process.env.JWT_SECRET || 'skilllink-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set. Server will not start.');
+  process.exit(1);
+}
 const PORT = 3000;
 
 // Initialize Supabase Admin (Server-side)
@@ -327,14 +331,28 @@ async function startServer() {
   seedDatabase();
   const app = express();
   const httpServer = createServer(app);
+
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[];
+
   const io = new Server(httpServer, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+      credentials: true,
     }
   });
 
-  app.use(cors());
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  }));
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -361,59 +379,6 @@ async function startServer() {
 
   // --- API Routes ---
 
-  // SECRET RESET ENDPOINT (Temporary - for emergency use)
-  // This allows resetting the DB without being an admin first
-  app.post('/api/admin/emergency-reset-sqlite', (req, res) => {
-    // Basic security check: only allow if no users exist or specifically requested
-    try {
-      db.exec(`
-        DROP TABLE IF EXISTS saved_opportunities;
-        DROP TABLE IF EXISTS ratings;
-        DROP TABLE IF EXISTS requests;
-        DROP TABLE IF EXISTS opportunities;
-        DROP TABLE IF EXISTS notifications;
-        DROP TABLE IF EXISTS messages;
-        DROP TABLE IF EXISTS post_likes;
-        DROP TABLE IF EXISTS comments;
-        DROP TABLE IF EXISTS posts;
-        DROP TABLE IF EXISTS users;
-      `);
-      
-      // Re-run table creation (copied from top of file)
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL,
-          role TEXT NOT NULL,
-          location TEXT,
-          age INTEGER,
-          trade TEXT,
-          bio TEXT,
-          goals TEXT,
-          availability TEXT,
-          experience INTEGER,
-          businessName TEXT,
-          teachingPrefs TEXT,
-          areaServed TEXT,
-          lang TEXT DEFAULT 'en',
-          verified INTEGER DEFAULT 0,
-          avatar TEXT,
-          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        -- ... other tables ...
-      `);
-      
-      // Note: I'm only including users for brevity in this exec, 
-      // the actual server.ts has the full schema at the top which will run on next restart.
-      // But for immediate effect, let's just ensure users is clean.
-      
-      res.json({ success: true, message: 'SQLite Database wiped. Please restart or refresh.' });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to wipe database' });
-    }
-  });
 
   app.get('/api/health', (req, res) => {
     res.json({ 
@@ -1472,7 +1437,9 @@ async function startServer() {
       if (url.startsWith('/api')) return next();
       
       try {
-        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        const indexPath = path.resolve(__dirname, 'index.html');
+        if (!fs.existsSync(indexPath)) return next();
+        let template = fs.readFileSync(indexPath, 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {

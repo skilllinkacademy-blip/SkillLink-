@@ -41,11 +41,6 @@ export default function MentorVerify({ isRtl }: MentorVerifyProps) {
 
       if (uploadError) throw uploadError;
 
-      // Get document URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('mentor_id_docs')
-        .getPublicUrl(filePath);
-
       // 2. Insert or Update mentor_verifications
       // Check if exists first to avoid RLS issues with upsert
       const { data: existing } = await supabase

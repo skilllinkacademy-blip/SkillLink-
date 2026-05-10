@@ -29,7 +29,7 @@ import About from './pages/legal/About';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading, isSyncing } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {

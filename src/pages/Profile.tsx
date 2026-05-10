@@ -4,7 +4,6 @@ import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
 import OpportunityCard from '../components/OpportunityCard';
 import { resolveAsset } from '../lib/assets';
 
@@ -213,9 +212,24 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const fetchReviews = async (profileId: string) => {
     setLoadingReviews(true);
     try {
-      const res = await api.get(`/ratings/user/${profileId}`);
-      setReviews(res.data.reviews || []);
-      setReviewsStats(res.data);
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*, reviewer:reviewer_id(full_name, avatar_url, is_verified, username)')
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      const reviewList = data || [];
+      const total = reviewList.length;
+      const overallAvg = total > 0
+        ? reviewList.reduce((sum: number, r: any) => sum + r.rating, 0) / total
+        : 0;
+      const distribution = [5, 4, 3, 2, 1].map(star => ({
+        stars: star,
+        count: reviewList.filter((r: any) => r.rating === star).length
+      }));
+      setReviews(reviewList);
+      setReviewsStats({ total, overallAvg, distribution });
     } catch (err) {
       console.error('Error fetching reviews:', err);
     } finally {
@@ -231,14 +245,20 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     }
     setSaving(true);
     try {
-      await api.post('/ratings', {
-        toId: profile.id,
+      const overallRating = Math.round(
+        (newReview.professional + newReview.teaching + newReview.workEthic + newReview.reliability) / 4
+      );
+      const { error } = await supabase.from('reviews').insert({
+        profile_id: profile.id,
+        reviewer_id: user.id,
+        rating: overallRating,
+        comment: newReview.comment,
         professional: newReview.professional,
         teaching: newReview.teaching,
-        workEthic: newReview.workEthic,
+        work_ethic: newReview.workEthic,
         reliability: newReview.reliability,
-        comment: newReview.comment
       });
+      if (error) throw error;
 
       setNewReview({ 
         rating: 5, 
@@ -264,25 +284,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       const fetchSaved = async () => {
         setLoadingSaved(true);
         try {
-          const response = await api.get('/opportunities/saved');
-          const saved = response.data;
-          
-          // Transform to match frontend expectations
-          const transformedSaved = saved.map((opp: any) => ({
-            ...opp,
-            owner_id: opp.ownerId,
-            image_url: opp.imageUrl,
-            work_hours: opp.workHours,
-            pay_amount: opp.payAmount,
-            pay_period: opp.payPeriod,
-            profiles: {
-              full_name: opp.ownerName,
-              avatar_url: opp.ownerAvatar,
-              occupation: opp.ownerTrade,
-              username: opp.ownerUsername || opp.ownerSupabaseId
-            }
+          const { data: savedData, error: savedError } = await supabase
+            .from('saved_opportunities')
+            .select(`*, opportunity:opportunity_id(*, profiles:owner_id(full_name, avatar_url, occupation, username))`)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (savedError) throw savedError;
+          const transformedSaved = (savedData || []).map((item: any) => ({
+            ...item.opportunity,
+            profiles: item.opportunity?.profiles,
           }));
-          
           setSavedOpportunities(transformedSaved);
         } catch (err) {
           console.error('Error fetching saved opportunities:', err);
@@ -317,14 +329,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         delete updatePayload.portfolio_urls;
       }
 
-      // 1. Update SQLite backend
-      try {
-        await api.put('/users/me', updatePayload);
-      } catch (err) {
-        console.error('Error updating SQLite profile:', err);
-      }
-      
-      // 2. Update Supabase
+      // Update Supabase profile
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -437,13 +442,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       if (updateError) throw updateError;
       
-      // Update SQLite backend
-      try {
-        await api.put('/users/me', { avatar: publicUrl });
-      } catch (err) {
-        console.error('Error updating SQLite avatar:', err);
-      }
-
       await refreshProfile();
     } catch (err: any) {
       console.error('Error uploading avatar:', err.message);
@@ -459,13 +457,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     try {
       const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
       if (error) throw error;
-
-      // Update SQLite backend
-      try {
-        await api.put('/users/me', { avatar: null });
-      } catch (err) {
-        console.error('Error removing SQLite avatar:', err);
-      }
 
       await refreshProfile();
     } catch (err: any) {
@@ -1421,30 +1412,30 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-lg overflow-hidden border border-slate-100">
-                              {review.fromAvatar ? (
-                                <img src={review.fromAvatar} alt="" className="w-full h-full object-cover" />
+                              {review.reviewer?.avatar_url ? (
+                                <img src={review.reviewer.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                review.fromName?.charAt(0) || 'U'
+                                review.reviewer?.full_name?.charAt(0) || 'U'
                               )}
                             </div>
                             <div>
                               <p className="font-black text-slate-900 flex items-center gap-2">
-                                {review.fromName}
-                                {review.fromVerified === 1 && <ShieldCheck size={14} className="text-blue-500" />}
+                                {review.reviewer?.full_name}
+                                {review.reviewer?.is_verified && <ShieldCheck size={14} className="text-blue-500" />}
                               </p>
                               <div className="flex gap-0.5 text-yellow-500">
                                 {[1,2,3,4,5].map(star => (
-                                  <Star 
-                                    key={star} 
-                                    size={12} 
-                                    fill={star <= ((review.professional + review.teaching + review.workEthic + review.reliability) / 4) ? "currentColor" : "none"} 
+                                  <Star
+                                    key={star}
+                                    size={12}
+                                    fill={star <= ((review.professional + review.teaching + (review.work_ethic || 0) + review.reliability) / 4) ? "currentColor" : "none"}
                                   />
                                 ))}
                               </div>
                             </div>
                           </div>
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                            {new Date(review.createdAt).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
+                            {new Date(review.created_at).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
                           </span>
                         </div>
                         <p className="text-gray-600 font-medium leading-relaxed italic">
