@@ -256,7 +256,7 @@ export default function Explore({ isRtl }: ExploreProps) {
             {results.map((profile) => (
               <Link 
                 key={profile.id}
-                to={`/app/u/${profile.supabase_id || profile.username || profile.id}`}
+                to={`/app/u/${profile.username || profile.id}`}
                 className="industrial-card p-8 group relative overflow-hidden flex flex-col h-full"
               >
                 {isRecentlyActive(profile.updated_at) && (

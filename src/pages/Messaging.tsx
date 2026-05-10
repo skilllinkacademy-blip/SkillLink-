@@ -80,21 +80,25 @@ export default function Messaging({ isRtl }: MessagingProps) {
     if (selectedConversationId) {
       fetchMessages(selectedConversationId);
 
-      // Subscribe to new messages for this conversation
+      // Subscribe to new and updated messages for this conversation
       const channel = supabase
         .channel(`chat:${selectedConversationId}`)
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*',
             schema: 'public',
             table: 'messages',
             filter: `conversation_id=eq.${selectedConversationId}`
           },
           (payload) => {
-            const newMsg = payload.new as Message;
-            if (newMsg.sender_id !== user?.id) {
-              setMessages((prev) => [...prev, newMsg]);
+            if (payload.eventType === 'INSERT') {
+              const newMsg = payload.new as Message;
+              if (newMsg.sender_id !== user?.id) {
+                setMessages(prev => [...prev, newMsg]);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new as Message } : m));
             }
           }
         )
@@ -207,7 +211,13 @@ export default function Messaging({ isRtl }: MessagingProps) {
 
       // Update local conversation unread count
       setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
-      
+
+      // Update individual message is_read state so read-receipt icons update immediately
+      setMessages(prev => prev.map(m =>
+        m.conversation_id === conversationId && m.recipient_id === user.id && !m.is_read
+          ? { ...m, is_read: true } : m
+      ));
+
       // Update global unread count
       refreshUnreadCount();
     } catch (err) {
@@ -289,6 +299,8 @@ export default function Messaging({ isRtl }: MessagingProps) {
             ...prev.filter(c => c.id !== selectedConversationId)
           ];
         }
+        // New conversation not yet in list — refresh to pick it up
+        fetchConversations();
         return prev;
       });
     } catch (err) {

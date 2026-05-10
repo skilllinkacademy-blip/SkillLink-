@@ -185,7 +185,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               businessDescription: data.businessDescription || '',
               businessLogo: data.businessLogo || '',
               businessWebsite: data.businessWebsite || '',
-              businessSocialLinks: data.businessSocialLinks ? JSON.parse(data.businessSocialLinks) : { facebook: '', instagram: '', linkedin: '' }
+              businessSocialLinks: (() => { try { return data.businessSocialLinks ? JSON.parse(data.businessSocialLinks) : { facebook: '', instagram: '', linkedin: '' }; } catch { return { facebook: '', instagram: '', linkedin: '' }; } })()
             });
             setIsInitialized(true);
             currentProfileId.current = data.id;
@@ -1077,8 +1077,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                                     onBlur={() => handleSave('businessSocialLinks', formData.businessSocialLinks)}
                                   />
                                 </div>
-                              ) : profile.businessSocialLinks && JSON.parse(profile.businessSocialLinks)[typedPlatform] && (
-                                <a key={platform} href={JSON.parse(profile.businessSocialLinks)[typedPlatform]} target="_blank" rel="noopener noreferrer" className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-600">
+                              ) : profile.businessSocialLinks && (() => { try { return JSON.parse(profile.businessSocialLinks as string); } catch { return {}; } })()?.[typedPlatform] && (
+                                <a key={platform} href={(() => { try { return JSON.parse(profile.businessSocialLinks as string); } catch { return {}; } })()?.[typedPlatform]} target="_blank" rel="noopener noreferrer" className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-600">
                                   <Globe size={18} />
                                 </a>
                               );
