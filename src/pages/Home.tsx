@@ -37,6 +37,12 @@ export default function Home({ isRtl }: HomeProps) {
         const { getAIOpportunityRecommendations } = await import('../services/aiService');
         const aiRecs = await getAIOpportunityRecommendations(profile, rawOpps);
 
+        if (!Array.isArray(aiRecs)) {
+          console.warn('AI recommendations did not return an array:', aiRecs);
+          setRecommended([]);
+          return;
+        }
+
         const transformedData = aiRecs.map((opp: any) => ({
           ...opp,
           profiles: {

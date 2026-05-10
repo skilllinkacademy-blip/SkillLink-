@@ -1,8 +1,27 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: (process.env as any).GEMINI_API_KEY });
-const MODEL_NAME = "gemini-3-flash-preview";
+// Initialize Gemini Client lazily
+let aiInstance: any = null;
+
+function getAI() {
+  if (aiInstance) return aiInstance;
+  
+  const key = (process.env as any).GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  if (!key) {
+    console.warn("GEMINI_API_KEY is not defined in the environment.");
+    return null;
+  }
+  
+  try {
+    aiInstance = new GoogleGenAI({ apiKey: key });
+    return aiInstance;
+  } catch (e) {
+    console.error("Failed to initialize GoogleGenAI:", e);
+    return null;
+  }
+}
+
+const MODEL_NAME = "gemini-flash-latest";
 
 export interface SmartMatchAnalysis {
   score: number;
@@ -14,6 +33,9 @@ export interface SmartMatchAnalysis {
 
 export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolean): Promise<SmartMatchAnalysis | null> {
   try {
+    const ai = getAI();
+    if (!ai) return null;
+
     const prompt = `
       Analyze the match between a user profile and a job/apprenticeship opportunity.
       
@@ -62,6 +84,9 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
 
 export async function getAIChatResponse(messages: { role: 'user' | 'model', content: string }[], isRtl: boolean) {
   try {
+    const ai = getAI();
+    if (!ai) return isRtl ? "מצטער, חלה שגיאה בחיבור ל-AI." : "Sorry, I'm having trouble connecting to the AI services.";
+
     const systemPrompt = `
       You are SkillLink AI Assistant, a helpful assistant for the SkillLink platform.
       SkillLink connects professional mentors with apprentices for hands-on training in trades.

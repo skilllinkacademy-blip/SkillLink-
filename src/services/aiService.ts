@@ -1,9 +1,28 @@
 import api from '../lib/api';
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: (process.env as any).GEMINI_API_KEY });
-const MODEL_NAME = "gemini-3-flash-preview";
+// Initialize Gemini Client lazily to avoid top-level crashes
+let aiInstance: any = null;
+
+function getAI() {
+  if (aiInstance) return aiInstance;
+  
+  const key = (process.env as any).GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  if (!key) {
+    console.warn("GEMINI_API_KEY is not defined in the environment.");
+    return null;
+  }
+  
+  try {
+    aiInstance = new GoogleGenAI({ apiKey: key });
+    return aiInstance;
+  } catch (e) {
+    console.error("Failed to initialize GoogleGenAI:", e);
+    return null;
+  }
+}
+
+const MODEL_NAME = "gemini-flash-latest";
 
 // Standard Israeli City Coordinates (Approximate)
 const CITY_COORDS: Record<string, [number, number]> = {
@@ -50,6 +69,9 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
   if (candidates.length === 0) return [];
 
   try {
+    const ai = getAI();
+    if (!ai) return candidates;
+
     const prompt = `
       You are a highly sophisticated recruitment AI for "SkillLink", an Israeli marketplace for professional mentorships and artisanal apprenticeships.
       Match the user with these opportunities.
@@ -120,6 +142,9 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
   if (candidates.length === 0) return [];
 
   try {
+    const ai = getAI();
+    if (!ai) return candidates;
+
     const prompt = `
       You are a professional Israeli mentorship AI for "SkillLink".
       Compare the current user's profile with a list of potential mentors/apprentices.

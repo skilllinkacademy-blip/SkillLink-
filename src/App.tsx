@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // App Version: 1.0.2 (Force Update)
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { isSupabaseConfigured } from './lib/supabase';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';

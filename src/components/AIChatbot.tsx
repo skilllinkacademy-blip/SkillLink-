@@ -92,9 +92,9 @@ export default function AIChatbot({ isRtl }: AIChatbotProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ y: 200, opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-            animate={{ y: 0, opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            exit={{ y: 200, opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 20, opacity: 0, scale: 0.95 }}
             className="w-[350px] md:w-[420px] h-[600px] bg-white rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.25)] border border-slate-100 flex flex-col overflow-hidden relative"
           >
             {/* Background Glow */}
