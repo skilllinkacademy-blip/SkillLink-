@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight, Pencil } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore } from '../utils/matchScore';
 import { resolveAsset } from '../lib/assets';
@@ -138,9 +139,9 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
         {/* Match Score Badge */}
         {matchScore > 0 && (
           <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-2 rounded-lg bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-2 border border-slate-200 animate-in zoom-in duration-500 ${
-            matchScore > 85 ? 'ring-2 ring-emerald-500 ring-offset-2' : ''
+            matchScore > 85 ? 'ring-4 ring-emerald-500/30' : ''
           }`}>
-            <Zap size={12} className={`${matchScore > 85 ? 'text-emerald-500 fill-emerald-500' : 'text-slate-400'}`} />
+            <Zap size={12} className={`${matchScore > 85 ? 'text-emerald-500 fill-emerald-500 animate-pulse' : 'text-slate-400'}`} />
             <span>{isRtl ? 'התאמה' : 'Match'} {matchScore}%</span>
           </div>
         )}
@@ -148,13 +149,27 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
 
       {/* Content */}
       <div className={`p-5 sm:p-8 flex-1 flex flex-col space-y-4 sm:space-y-6 transition-colors duration-500 ${
-        matchScore > 85 ? 'bg-emerald-50/30' : ''
+        matchScore > 85 ? 'bg-emerald-50/20' : ''
       }`}>
         <div className="flex-1 space-y-3 sm:space-y-4">
           <div className="space-y-1 sm:space-y-2">
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
-              {opportunity.title}
-            </h3>
+            <div className="flex justify-between items-start gap-4">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
+                {opportunity.title}
+              </h3>
+            </div>
+            
+            {/* Match Bar */}
+            {matchScore > 0 && (
+              <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-1 mb-3">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${matchScore}%` }}
+                  className={`h-full ${matchScore > 85 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                />
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                 <MapPin size={14} className="text-slate-300" />

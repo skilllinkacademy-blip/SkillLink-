@@ -56,8 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.data.savedCount !== undefined) {
         setSavedCount(response.data.savedCount);
       }
-    } catch (err) {
+      return true;
+    } catch (err: any) {
       console.error('Error fetching sqliteId/savedCount:', err);
+      // If 401, the token might be stale, return false to trigger sync
+      if (err.response?.status === 401) {
+        localStorage.removeItem('skilllink_token');
+        setSqliteId(null);
+        return false;
+      }
+      return false;
     }
   };
 
@@ -180,6 +188,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleSessionSync = async (accessToken: string, currentUser: User) => {
+    setIsSyncing(true);
+    try {
+      const response = await api.post('/auth/session', { access_token: accessToken });
+      if (response.data.token) {
+        localStorage.setItem('skilllink_token', response.data.token);
+        await fetchSqliteId();
+      } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
+        console.warn('Backend session sync skipped: Supabase not configured on server');
+      }
+      
+      ensureProfile(currentUser);
+      fetchUnreadCount(currentUser.id);
+    } catch (err) {
+      console.error('Error syncing session with backend:', err);
+      ensureProfile(currentUser);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
@@ -189,80 +218,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initial session check
     const initAuth = async () => {
       try {
-        if (!isSupabaseConfigured) {
-          setLoading(false);
-          return;
-        }
-
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
         if (currentUser && session?.access_token) {
-          // Sync with local backend
-          try {
-            const response = await api.post('/auth/session', { access_token: session.access_token });
-            if (response.data.token) {
-              localStorage.setItem('skilllink_token', response.data.token);
-              await fetchSqliteId();
-            } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
-              console.warn('Backend session sync skipped: Supabase not configured on server');
-            }
-            
-            // Fire and forget, or handle in background
+          const success = await fetchSqliteId();
+          if (!success) {
+            await handleSessionSync(session.access_token, currentUser);
+          } else {
             ensureProfile(currentUser);
             fetchUnreadCount(currentUser.id);
-          } catch (err) {
-            console.error('Error syncing session with backend during init:', err);
-            // If sync fails, we still want to try to load the profile from Supabase directly
-            ensureProfile(currentUser);
           }
         }
       } catch (err) {
         console.error('Error during auth initialization:', err);
       } finally {
-        // Essential: always set loading to false to avoid white screen/infinite spinner
         setLoading(false);
       }
     };
 
     initAuth();
 
-    // Auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       const newUser = session?.user ?? null;
       setUser(newUser);
       
       if (newUser && session?.access_token) {
-        // Only sync if the token is different from what we have
-        const currentToken = localStorage.getItem('skilllink_token');
-        if (currentToken && event === 'INITIAL_SESSION') {
-          // Skip redundant sync on initial session if we already have a token
-          // (Actually, better to sync once to be sure, but let's avoid parallel calls)
-          await fetchSqliteId();
-          return;
-        }
-
-        // Sync with local backend
-        setIsSyncing(true);
-        try {
-          const response = await api.post('/auth/session', { access_token: session.access_token });
-          if (response.data.token) {
-            localStorage.setItem('skilllink_token', response.data.token);
-            await fetchSqliteId();
-          } else if (response.data.error === 'SUPABASE_NOT_CONFIGURED') {
-            console.warn('Backend session sync skipped: Supabase not configured on server');
+        if (event === 'INITIAL_SESSION') {
+          const success = await fetchSqliteId();
+          if (success) {
+            ensureProfile(newUser);
+            fetchUnreadCount(newUser.id);
+            return;
           }
-        } catch (err) {
-          console.error('Error syncing session with backend during state change:', err);
-        } finally {
-          setIsSyncing(false);
-          // Always ensure profile even if backend sync fails
-          ensureProfile(newUser);
-          fetchUnreadCount(newUser.id);
         }
+        await handleSessionSync(session.access_token, newUser);
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('skilllink_token');
         setProfile(null);

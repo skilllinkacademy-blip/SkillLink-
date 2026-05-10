@@ -5,21 +5,17 @@ import {
   GraduationCap, 
   MapPin, 
   Clock, 
-  DollarSign, 
   Image as ImageIcon, 
   ArrowLeft, 
   ArrowRight, 
   ShieldCheck, 
   AlertCircle,
-  CheckCircle2,
   Sparkles,
   Lightbulb,
   Info,
   Target,
   Zap,
-  Users,
   Briefcase,
-  Search,
   ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,17 +70,15 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     if (location.length > 2) score += 10;
     if (type === 'mentor_offer') {
       if (aboutWork.length > 20) score += 20;
-      if (requirements.length > 10) score += 15;
-      if (menteeWillLearn.length > 20) score += 20;
-      if (whoIWantToTeach.length > 10) score += 10;
+      if (profession) score += 15;
+      if (learningFocus) score += 20;
     } else {
       if (whatIWantToLearn.length > 20) score += 30;
-      if (experienceNote.length > 10) score += 20;
-      if (availabilityDays.length > 0) score += 15;
+      if (profession) score += 20;
     }
     if (imageFile || imagePreview) score += 10;
     return Math.min(100, score);
-  }, [title, location, aboutWork, requirements, menteeWillLearn, whoIWantToTeach, whatIWantToLearn, experienceNote, availabilityDays, imageFile, imagePreview, type]);
+  }, [title, location, aboutWork, profession, learningFocus, whatIWantToLearn, imageFile, imagePreview, type]);
 
   const strengthLabel = useMemo(() => {
     if (postStrength < 30) return isRtl ? 'התחלה טובה' : 'Good start';
@@ -131,6 +125,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         setExperienceNote(data.experienceNote || '');
         setImagePreview(data.imageUrl);
         setProfession(data.profession || profile?.occupation || '');
+        setLearningFocus(data.learning_focus || '');
+        setDurationDescription(data.duration_description || '');
+        setCommitmentLevel(data.commitment_level || 'high');
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -147,32 +144,18 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     const getContent = () => {
       if (prof.includes('ספר') || prof.includes('שיער') || prof.includes('barber')) {
         return {
-          title: isMentor ? 'דרושה חניכה לעיצוב שיער בסטודיו מוביל בתל אביב' : 'מחפש להתמחות אצל ספר צמרת - מעוניין ללמוד דירוגים',
-          focus: isMentor ? 'טכניקות צבע, תסרוקות כלה וניהול לקוחות' : 'שימוש נכון בתער, דירוגי עור ותספורות גברים',
-        };
-      }
-      if (prof.includes('חשמל') || prof.includes('electric')) {
-        return {
-          title: isMentor ? 'הזדמנות להתלמד אצל חשמלאי מוסמך - עבודות תשתיות' : 'תלמיד חשמל מחפש ניסיון מעשי בשטח',
-          focus: isMentor ? 'קריאת תכניות, חיווט לוחות ותיקון תקלות ביתיות' : 'עבודה עם לוחות תלת-פאזיים ותשתיות בנייה',
+          title: isMentor ? 'דרושה חניכה לעיצוב שיער בסטודיו מוביל' : 'מחפש להתמחות אצל ספר צמרת',
+          focus: isMentor ? 'טכניקות צבע וניהול לקוחות' : 'שימוש בתער ותספורות גברים',
         };
       }
       return {
-        title: isMentor ? (isRtl ? 'דרוש חניך רציני ללמידת מקצוע מהשטח' : 'Apprentice wanted for field training') : (isRtl ? 'מחפש מנטור מקצועי ללמוד ממנו את העבודה בשטח' : 'Seeking master to learn on-the-job'),
-        focus: isMentor ? (isRtl ? 'הקניית יסודות המקצוע' : 'Professional basics') : (isRtl ? 'רכישת מיומנויות פרקטיות' : 'Practical skill acquisition'),
+        title: isMentor ? (isRtl ? 'דרוש חניך רציני' : 'Apprentice wanted') : (isRtl ? 'מחפש מנטור מקצועי' : 'Seeking master'),
+        focus: isMentor ? (isRtl ? 'הקניית יסודות המקצוע' : 'Professional basics') : (isRtl ? 'רכישת מיומנויות פרקטיות' : 'Practical skills'),
       };
     };
 
     const strings = getContent();
     return strings[fieldName as keyof typeof strings] || '';
-  };
-
-  const renderHelperText = (text: string) => (
-    <p className="mt-2 text-[10px] font-bold text-slate-400 px-1">{text}</p>
-  );
-
-  const toggleDay = (day: string) => {
-    setAvailabilityDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +169,10 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (subStep < 4) {
-      if (subStep === 1 && (!title || !location)) { setError(isRtl ? 'חובה למלא כותרת ומיקום' : 'Title and location required'); return; }
+      if (subStep === 1 && (!title || !location || !profession)) { 
+        setError(isRtl ? 'חובה למלא כותרת, מיקום ותחום מקצועי' : 'Title, location and field required'); 
+        return; 
+      }
       setError(null);
       setSubStep(subStep + 1);
       return;
@@ -215,10 +201,11 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         duration_description: durationDescription,
         title, 
         location, 
-        workHours,
-        payAmount: payAmount ? parseFloat(payAmount) : null,
-        payPeriod: payAmount ? payPeriod : null,
-        aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
+        profession,
+        aboutWork, 
+        requirements, 
+        whoIWantToTeach, 
+        menteeWillLearn,
         availabilityDays, 
         desiredSalary: desiredSalary ? parseFloat(desiredSalary) : null,
         whatIWantToLearn, 
@@ -243,7 +230,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   const renderField = (label: string, icon: any, children: React.ReactNode, tip?: string) => (
     <div className="space-y-3 group">
       <div className="flex items-center justify-between px-1">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
           {icon && React.createElement(icon, { size: 14, className: "text-slate-400 group-focus-within:text-slate-900 transition-colors" })}
           {label}
         </label>
@@ -256,61 +243,72 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           </div>
         )}
       </div>
-      {children}
+      <div className="relative">
+        <div className="absolute inset-0 bg-slate-900/5 rounded-[2.5rem] -m-1 opacity-0 group-focus-within:opacity-100 transition-opacity" />
+        {children}
+      </div>
     </div>
   );
 
   const renderStep1 = () => (
     <div className="space-y-12 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900/5 text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-900/5">
-          <Sparkles size={14} />
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
+          <Sparkles size={14} className="text-emerald-400" />
           {isRtl ? 'בניית דור המקצוענים הבא' : 'Building the next pro generation'}
         </div>
-        <h1 className="text-5xl font-black text-slate-900 tracking-tight">{isRtl ? 'מה תרצה לפרסם?' : 'What would you like to post?'}</h1>
-        <p className="text-xl text-slate-500 font-medium max-w-xl mx-auto italic">
-          {isRtl ? 'בחר את המסלול שלך להשפעה ולמידה' : 'Choose your path for impact and learning'}
+        <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          {isRtl ? 'מה הכיוון שלך היום?' : 'What is your direction today?'}
+        </h1>
+        <p className="text-xl text-slate-500 font-medium max-w-xl mx-auto italic leading-relaxed">
+          {isRtl ? 'בחר את המסלול שלך להשפעה, למידה או צמיחה מקצועית' : 'Choose your path for impact, learning, or professional growth'}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto px-4">
         <motion.button
+          type="button"
           whileHover={{ y: -12, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { setType('mentor_offer'); setStep(2); }}
-          className={`group p-12 rounded-[4rem] border-4 text-start transition-all relative overflow-hidden flex flex-col gap-10 bg-white border-slate-900 shadow-[0_30px_70px_-15px_rgba(15,23,42,0.2)]`}
+          className="group p-12 rounded-[4rem] border-4 text-start transition-all relative overflow-hidden flex flex-col gap-10 bg-white border-slate-900 shadow-[0_40px_80px_-20px_rgba(15,23,42,0.25)]"
         >
-          <div className="w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-transform duration-500">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-125 transition-transform duration-700" />
+          
+          <div className="w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-transform duration-500 relative z-10">
             <Presentation size={48} />
           </div>
-          <div className="space-y-4">
-            <h3 className="text-3xl font-black text-slate-900">{isRtl ? 'אני מנטור' : 'I am a Mentor'}</h3>
-            <p className="text-slate-500 font-medium text-lg leading-relaxed">
-              {isRtl ? 'הפוך למוקד ידע בקהילה. שתף את הניסיון שלך, חנך את דור העתיד ומצא כוח אדם נאמן.' : 'Be a knowledge hub. Share experience, train next-gen, and find loyal staff.'}
+          <div className="space-y-4 relative z-10">
+            <h3 className="text-3xl font-black text-slate-900">{isRtl ? 'אני מנטור / בעל עסק' : 'I am a Mentor / Business'}</h3>
+            <p className="text-slate-600 font-medium text-lg leading-relaxed">
+              {isRtl ? 'שתף את הניסיון שלך, חנך את דור העתיד ומצא כוח אדם נאמן שיגדל אצלך בבית.' : 'Share experience, train the next generation, and find loyal staff growing in your business.'}
             </p>
           </div>
-          <div className="flex items-center gap-2 text-slate-900 font-black text-sm uppercase tracking-[0.2em] pt-4">
+          <div className="flex items-center gap-2 text-slate-900 font-black text-sm uppercase tracking-[0.2em] pt-4 relative z-10">
             {isRtl ? 'פרסם הצעת חניכה' : 'Post Master Offer'}
             <ArrowRight size={20} className="rtl:rotate-180 group-hover:translate-x-2 transition-transform" />
           </div>
         </motion.button>
 
         <motion.button
+          type="button"
           whileHover={{ y: -12, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => { setType('mentee_seeking'); setStep(2); }}
-          className={`group p-12 rounded-[4rem] border-4 text-start transition-all relative overflow-hidden flex flex-col gap-10 bg-white border-emerald-600 shadow-[0_30px_70px_-15px_rgba(16,185,129,0.2)]`}
+          className="group p-12 rounded-[4rem] border-4 text-start transition-all relative overflow-hidden flex flex-col gap-10 bg-white border-emerald-500 shadow-[0_40px_80px_-20px_rgba(16,185,129,0.25)]"
         >
-          <div className="w-24 h-24 bg-emerald-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl group-hover:-rotate-12 transition-transform duration-500">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-125 transition-transform duration-700" />
+
+          <div className="w-24 h-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl group-hover:-rotate-12 transition-transform duration-500 relative z-10">
             <GraduationCap size={48} />
           </div>
-          <div className="space-y-4">
-            <h3 className="text-3xl font-black text-slate-900">{isRtl ? 'אני מתלמד' : 'I am an Apprentice'}</h3>
-            <p className="text-slate-500 font-medium text-lg leading-relaxed">
+          <div className="space-y-4 relative z-10">
+            <h3 className="text-3xl font-black text-slate-900">{isRtl ? 'אני מחפש ללמוד' : 'I want to learn'}</h3>
+            <p className="text-slate-600 font-medium text-lg leading-relaxed">
               {isRtl ? 'רוצה לצאת לשטח? מצא מנטור שילמד אותך את "רזי המקצוע" פנים אל פנים.' : 'Want to hit the field? Find a master who teaches you the trade secrets face-to-face.'}
             </p>
           </div>
-          <div className="flex items-center gap-2 text-emerald-600 font-black text-sm uppercase tracking-[0.2em] pt-4">
+          <div className="flex items-center gap-2 text-emerald-600 font-black text-sm uppercase tracking-[0.2em] pt-4 relative z-10">
             {isRtl ? 'חפש מנטור מוביל' : 'Find Top Master'}
             <ArrowRight size={20} className="rtl:rotate-180 group-hover:translate-x-2 transition-transform" />
           </div>
@@ -321,33 +319,37 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
   const renderSubStep1 = () => (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="lg:col-span-8 space-y-10">
-        <div className="space-y-2">
-          <h3 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'סוג ההזדמנות והתחייבות' : 'Opportunity Type & Commitment'}</h3>
-          <p className="text-slate-500 font-medium">{isRtl ? 'בחר את אופי הלמידה ורמת ההתחייבות.' : 'Choose the nature of learning and commitment level.'}</p>
+      <div className="lg:col-span-8 space-y-12">
+        <div className="space-y-4">
+          <h3 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            {isRtl ? 'בוא נתחיל מהבסיס' : 'Lets start with the basics'}
+          </h3>
+          <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl">
+            {isRtl ? 'כדי שה-AI שלנו יוכל לחבר אותך לאנשים הנכונים, אנחנו צריכים קצת פרטים יבשים.' : 'To help our AI connect you with the right people, we need some dry details.'}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-10">
+        <div className="space-y-12">
           {renderField(
             isRtl ? 'תחום מקצועי' : 'Professional Field',
-            Search,
+            Briefcase,
             <div className="space-y-4">
-              <div className="relative group">
+              <div className="relative">
                 <select
                   value={profession.startsWith('אחר - ') ? 'אחר' : profession}
                   onChange={(e) => {
                     if (e.target.value === 'אחר') setProfession('אחר - ');
                     else setProfession(e.target.value);
                   }}
-                  className="w-full px-8 py-5 bg-slate-50 border-4 border-transparent rounded-[2.5rem] focus:bg-white focus:border-slate-900 transition-all font-black text-lg outline-none appearance-none shadow-sm"
+                  className="w-full px-8 py-5 bg-white border-2 border-slate-200 rounded-[2.5rem] focus:border-slate-900 focus:ring-8 focus:ring-slate-900/5 transition-all font-bold text-lg outline-none appearance-none shadow-[0_10px_30px_-5px_rgba(0,0,0,0.05)]"
                 >
                   <option value="">{isRtl ? '-- בחר תחום --' : '-- Select Field --'}</option>
-                  <option value="חשמלאות">{isRtl ? 'חשמלאות' : 'Electrical'}</option>
-                  <option value="נגרות">{isRtl ? 'נגרות' : 'Carpentry'}</option>
-                  <option value="ספרות">{isRtl ? 'ספרות' : 'Barbering/Hair'}</option>
-                  <option value="שיפוצים">{isRtl ? 'שיפוצים' : 'Renovations'}</option>
-                  <option value="אינסטלציה">{isRtl ? 'אינסטלציה' : 'Plumbing'}</option>
-                  <option value="מיזוג אוויר">{isRtl ? 'מיזוג אוויר' : 'AC/HVAC'}</option>
+                  <option value="חשמלאות">{isRtl ? 'חשמלאות ⚡' : 'Electrical ⚡'}</option>
+                  <option value="נגרות">{isRtl ? 'נגרות 🪵' : 'Carpentry 🪵'}</option>
+                  <option value="ספרות">{isRtl ? 'ספרות ✂️' : 'Barbering/Hair ✂️'}</option>
+                  <option value="שיפוצים">{isRtl ? 'שיפוצים 🏗️' : 'Renovations 🏗️'}</option>
+                  <option value="אינסטלציה">{isRtl ? 'אינסטלציה 🔧' : 'Plumbing 🔧'}</option>
+                  <option value="מיזוג אוויר">{isRtl ? 'מיזוג אוויר ❄️' : 'AC/HVAC ❄️'}</option>
                   <option value="אחר">{isRtl ? 'אחר (פרט...)' : 'Other (specify...)'}</option>
                 </select>
                 <ChevronDown className={`absolute ${isRtl ? 'left-8' : 'right-8'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} size={24} />
@@ -356,8 +358,8 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
                   <input
                     type="text"
-                    placeholder={isRtl ? 'איזה מקצוע? (למשל: מסגרות, זגגות...)' : 'What trade? (e.g. Blacksmith, Glazier...)'}
-                    className="w-full px-8 py-5 bg-white border-4 border-slate-900 rounded-[2.5rem] font-black text-lg outline-none shadow-xl"
+                    placeholder={isRtl ? 'איזה מקצוע?' : 'What trade?'}
+                    className="w-full px-8 py-5 bg-white border-2 border-slate-900 rounded-[2.5rem] font-bold text-lg outline-none shadow-xl"
                     value={profession.replace('אחר - ', '')}
                     onChange={(e) => setProfession('אחר - ' + e.target.value)}
                   />
@@ -366,35 +368,69 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {renderField(isRtl ? 'כותרת' : 'Title', null,
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {renderField(isRtl ? 'כותרת מושכת' : 'Catchy Title', Target,
               <input 
                 type="text" required placeholder={getFieldContent('title')}
                 value={title} onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-8 py-5 bg-slate-50 border-4 border-transparent rounded-[2.5rem] focus:bg-white focus:border-slate-900 transition-all font-black outline-none"
+                className="w-full px-8 py-5 bg-white border-2 border-slate-200 rounded-[2.5rem] focus:border-slate-900 focus:ring-8 focus:ring-slate-900/5 transition-all font-bold outline-none shadow-[0_10px_30px_-5px_rgba(0,0,0,0.05)]"
               />
             )}
-            {renderField(isRtl ? 'מיקום' : 'Location', MapPin,
-              <input type="text" required placeholder={isRtl ? 'עיר' : 'City'} value={location} onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-8 py-5 bg-slate-50 border-4 border-transparent rounded-[2.5rem] focus:bg-white focus:border-slate-900 transition-all font-black outline-none"
+            {renderField(isRtl ? 'מיקום (עיר)' : 'Location (City)', MapPin,
+              <input type="text" required placeholder={isRtl ? 'למשל: תל אביב' : 'e.g. London'} value={location} onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-8 py-5 bg-white border-2 border-slate-200 rounded-[2.5rem] focus:border-slate-900 focus:ring-8 focus:ring-slate-900/5 transition-all font-bold outline-none shadow-[0_10px_30px_-5px_rgba(0,0,0,0.05)]"
               />
             )}
           </div>
+
+          {renderField(isRtl ? 'רמת אינטנסיביות' : 'Intensity Level', Zap,
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { id: 'flexible', label: 'גמיש', icon: Clock, desc: 'מדי פעם' },
+                { id: 'low', label: 'חלקי', icon: Zap, desc: 'יומיים-שלושה' },
+                { id: 'high', label: 'מלא', icon: ShieldCheck, desc: '5 ימים בשבוע' }
+              ].map((lvl) => (
+                <button
+                  key={lvl.id}
+                  type="button"
+                  onClick={() => setCommitmentLevel(lvl.id as any)}
+                  className={`p-6 rounded-3xl border-2 transition-all text-start space-y-2 ${
+                    commitmentLevel === lvl.id 
+                      ? 'border-slate-900 bg-slate-900 text-white shadow-xl scale-105' 
+                      : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 shadow-sm'
+                  }`}
+                >
+                  <lvl.icon size={24} className={commitmentLevel === lvl.id ? 'text-emerald-400' : 'text-slate-400'} />
+                  <div>
+                    <div className="font-black text-sm uppercase tracking-wider">{lvl.label}</div>
+                    <div className={`text-[10px] font-bold ${commitmentLevel === lvl.id ? 'text-slate-400' : 'text-slate-400'}`}>{lvl.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="lg:col-span-4 hidden lg:block">
-        <div className="sticky top-24 p-10 bg-slate-900 rounded-[3.5rem] text-white shadow-2xl space-y-10">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-emerald-400"><Lightbulb size={32} /></div>
-          <div className="space-y-6">
-            <h4 className="text-xl font-black">{isRtl ? 'טיפ מקצועי' : 'Pro Tip'}</h4>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              {isRtl ? 'כותרת ברורה ומיקום מדויק מקפיצים את כמות הפניות ב-40%.' : 'Clear titles and accurate location boost leads by 40%.'}
+        <div className="sticky top-24 p-10 bg-slate-900 rounded-[3.5rem] text-white shadow-2xl space-y-10 border border-white/5 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-emerald-400 relative z-10"><Lightbulb size={32} /></div>
+          <div className="space-y-6 relative z-10">
+            <h4 className="text-xl font-black">{isRtl ? 'טיפ מה-AI' : 'AI Tip'}</h4>
+            <p className="text-slate-400 text-sm font-medium leading-relaxed italic">
+              {isRtl ? '"כותרת ברורה ומיקום מדויק מקפיצים את כמות הפניות ב-40%."' : '"Clear titles and accurate location boost leads by 40%."'}
             </p>
           </div>
-          <div className="space-y-4">
-             <div className="flex justify-between items-end"><span className="text-[10px] uppercase font-black text-slate-500">{isRtl ? 'חוזק הפוסט' : 'Strength'}</span><span className="text-xl font-black text-emerald-400">{postStrength}%</span></div>
-             <div className="h-4 bg-white/10 rounded-full overflow-hidden"><motion.div animate={{ width: `${postStrength}%` }} className={`h-full ${strengthColor}`} /></div>
+          <div className="space-y-4 pt-6 border-t border-white/10 relative z-10">
+             <div className="flex justify-between items-end">
+               <span className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em]">{isRtl ? 'חוזק הפוסט' : 'Strength'}</span>
+               <span className="text-2xl font-black text-emerald-400">{postStrength}%</span>
+             </div>
+             <div className="h-4 bg-white/10 rounded-full overflow-hidden">
+               <motion.div initial={{ width: 0 }} animate={{ width: `${postStrength}%` }} className={`h-full ${strengthColor}`} />
+             </div>
+             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">{strengthLabel}</p>
           </div>
         </div>
       </div>
@@ -403,22 +439,44 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
   const renderSubStep2 = () => (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-2">
-        <h3 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'תוכן ודרישות' : 'Content & Requirements'}</h3>
-        <p className="text-slate-500 font-medium">{isRtl ? 'ספר לקהילה למה ההזדמנות הזו מושלמת בשבילם.' : 'Tell the community why this is perfect for them.'}</p>
+      <div className="space-y-4">
+        <h3 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
+          {isRtl ? 'הגענו לבשר: מה קורה בשטח?' : 'What happens on the ground?'}
+        </h3>
+        <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl">
+          {isRtl ? 'ספר לקהילה למה ההזדמנות הזו מושלמת בשבילם.' : 'Tell the community why this is perfect for them.'}
+        </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {renderField(isRtl ? 'מוקד הלמידה' : 'Learning Focus', Lightbulb, 
-          <input type="text" placeholder={getFieldContent('focus')} value={learningFocus} onChange={(e) => setLearningFocus(e.target.value)} className="w-full px-8 py-5 bg-slate-50 border-4 border-transparent rounded-[2.5rem] focus:bg-white focus:border-slate-900 transition-all font-black outline-none" />
+          <input 
+            type="text" placeholder={getFieldContent('focus')} value={learningFocus} 
+            onChange={(e) => setLearningFocus(e.target.value)} 
+            className="w-full px-8 py-5 bg-white border-2 border-slate-200 rounded-[2.5rem] focus:border-slate-900 focus:ring-8 focus:ring-slate-900/5 transition-all font-bold outline-none shadow-sm" 
+          />
         )}
-        {renderField(isRtl ? 'משך זמן' : 'Duration', Clock, 
-          <input type="text" placeholder={isRtl ? 'למשל: חצי שנה' : 'e.g. 6 months'} value={durationDescription} onChange={(e) => setDurationDescription(e.target.value)} className="w-full px-8 py-5 bg-slate-50 border-4 border-transparent rounded-[2.5rem] focus:bg-white focus:border-slate-900 transition-all font-black outline-none" />
+        {renderField(isRtl ? 'משך זמן משוער' : 'Approx. Duration', Clock, 
+          <input 
+            type="text" placeholder={isRtl ? 'חצי שנה' : '6 months'} value={durationDescription} 
+            onChange={(e) => setDurationDescription(e.target.value)} 
+            className="w-full px-8 py-5 bg-white border-2 border-slate-200 rounded-[2.5rem] focus:border-slate-900 focus:ring-8 focus:ring-slate-900/5 transition-all font-bold outline-none shadow-sm" 
+          />
         )}
+        
         <div className="md:col-span-2">
           {type === 'mentor_offer' ? (
-             renderField(isRtl ? 'על העבודה' : 'About work', Info, <textarea rows={5} value={aboutWork} onChange={(e) => setAboutWork(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-4 border-transparent rounded-[3rem] focus:bg-white focus:border-slate-900 transition-all font-medium outline-none resize-none" />)
+             renderField(isRtl ? 'על העבודה' : 'About the work', Info, 
+               <textarea rows={6} value={aboutWork} onChange={(e) => setAboutWork(e.target.value)} 
+                 className="w-full px-8 py-8 bg-white border-2 border-slate-200 rounded-[3rem] focus:border-slate-900 transition-all font-medium text-lg outline-none resize-none shadow-sm" 
+               />
+             )
           ) : (
-             renderField(isRtl ? 'מה אני רוצה ללמוד' : 'What I want to learn', GraduationCap, <textarea rows={5} value={whatIWantToLearn} onChange={(e) => setWhatIWantToLearn(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-4 border-transparent rounded-[3rem] focus:bg-white focus:border-slate-900 transition-all font-medium outline-none resize-none" />)
+             renderField(isRtl ? 'מה תרצה ללמוד בשטח?' : 'What do you want to learn?', GraduationCap, 
+               <textarea rows={6} value={whatIWantToLearn} onChange={(e) => setWhatIWantToLearn(e.target.value)} 
+                 className="w-full px-8 py-8 bg-white border-2 border-slate-200 rounded-[3rem] focus:border-slate-900 transition-all font-medium text-lg outline-none resize-none shadow-sm" 
+               />
+             )
           )}
         </div>
       </div>
@@ -427,35 +485,24 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
   const renderSubStep3 = () => (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-2">
-        <h3 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'מדיה וסיום' : 'Media & Finish'}</h3>
-        <p className="text-slate-500 font-medium">{isRtl ? 'הוסף תמונה כדי למשוך את העין.' : 'Add a photo to catch the eye.'}</p>
+      <div className="space-y-4">
+        <h3 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">{isRtl ? 'תמונה אחת שווה...' : 'A picture is worth...'}</h3>
       </div>
-      <div className="max-w-3xl mx-auto w-full space-y-6">
-        {!isSupabaseConfigured && (
-          <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-3xl flex gap-4 items-start animate-pulse">
-            <AlertCircle className="text-amber-600 shrink-0" size={24} />
-            <div className="space-y-1">
-              <p className="font-black text-amber-900 text-sm">
-                {isRtl ? 'שים לב: מצב תצוגה מקדימה' : 'Note: Preview Mode'}
-              </p>
-              <p className="text-amber-700 text-xs font-medium leading-relaxed">
-                {isRtl 
-                  ? 'העלאות במצב זה הן זמניות בלבד ואינן נשמרות לאחר רענון השרת (Vercel). כדי לשמור נתונים לצמיתות, יש להגדיר חשבון Supabase.' 
-                  : 'Uploads in this mode are temporary and will not persist after server restart (Vercel). To save data permanently, Supabase configuration is required.'}
-              </p>
-            </div>
-          </div>
-        )}
-        <div className="h-[400px]">
+      
+      <div className="max-w-4xl mx-auto w-full space-y-8">
+        <div className="h-[450px] relative group">
           <input type="file" id="img-up" className="hidden" accept="image/*" onChange={handleImageChange} />
-          <label htmlFor="img-up" className="w-full h-full bg-slate-50 border-4 border-dashed border-slate-200 rounded-[4rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-slate-900 transition-all overflow-hidden group">
+          <label htmlFor="img-up" className="w-full h-full bg-white border-4 border-dashed border-slate-200 rounded-[5rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-900 hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
             {imagePreview ? (
               <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
             ) : (
-              <div className="text-center space-y-6">
-                <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-slate-300 shadow-xl group-hover:scale-110 transition-transform"><ImageIcon size={48} /></div>
-                <span className="block font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'לחץ להעלאת תמונה' : 'Click to Upload Image'}</span>
+              <div className="text-center space-y-8">
+                <div className="w-32 h-32 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-300 shadow-sm group-hover:scale-110 transition-all duration-500">
+                  <ImageIcon size={64} />
+                </div>
+                <div className="space-y-2">
+                  <span className="block font-black text-slate-900 text-xl">{isRtl ? 'העלה תמונה' : 'Upload photo'}</span>
+                </div>
               </div>
             )}
           </label>
@@ -470,26 +517,21 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         <h3 className="text-4xl font-black text-slate-900">{isRtl ? 'מוכן לצאת לדרך!' : 'Ready to go!'}</h3>
         <p className="text-slate-500 font-medium">{isRtl ? 'זה הזמן לעבור על הכל וללחוץ על פרסם.' : 'Time to review and click publish.'}</p>
       </div>
-      <div className="max-w-2xl mx-auto industrial-card p-12 space-y-8 bg-white shadow-2xl relative">
+      <div className="max-w-2xl mx-auto p-12 space-y-8 bg-white border-2 border-slate-100 rounded-[4rem] shadow-2xl relative">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-3xl font-black">
-            {profile?.avatar_url ? <img src={resolveAsset(profile.avatar_url) || ''} className="w-full h-full object-cover rounded-2xl" alt="" /> : profile?.full_name?.charAt(0)}
+          <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-3xl font-black overflow-hidden">
+            {profile?.avatar_url ? <img src={resolveAsset(profile.avatar_url) || ''} className="w-full h-full object-cover" alt="" /> : profile?.full_name?.charAt(0)}
           </div>
           <div>
-            <h4 className="text-2xl font-black text-slate-900">{title || (isRtl ? 'כותרת לדוגמה' : 'Sample Title')}</h4>
+            <h4 className="text-2xl font-black text-slate-900">{title || 'Opportunity'}</h4>
             <div className="flex items-center gap-3 text-xs font-black text-slate-400 uppercase tracking-widest mt-1">
-              <MapPin size={14} /> {location || (isRtl ? 'מיקום' : 'Location')}
+              <MapPin size={14} /> {location}
             </div>
           </div>
         </div>
         <div className="p-8 bg-slate-50 rounded-[2.5rem] text-slate-600 font-medium italic leading-relaxed">
-          "{type === 'mentor_offer' ? (aboutWork?.substring(0, 200) || (isRtl ? 'כאן יופיע תיאור העבודה...' : 'Work description here...')) : (whatIWantToLearn?.substring(0, 200) || (isRtl ? 'כאן יופע מה שאתה רוצה ללמוד...' : 'What you want to learn...'))}..."
+          "{type === 'mentor_offer' ? (aboutWork?.substring(0, 200)) : (whatIWantToLearn?.substring(0, 200))}..."
         </div>
-        {imagePreview && (
-          <div className="w-full h-64 rounded-[3rem] overflow-hidden border-8 border-white shadow-xl">
-            <img src={imagePreview} className="w-full h-full object-cover" alt="" />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -497,7 +539,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   if (authLoading || fetching) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 py-12 min-h-screen font-sans">
       {step === 1 ? renderStep1() : (
         <div className="space-y-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
@@ -525,17 +567,17 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
               </motion.div>
             </AnimatePresence>
 
-            {error && <div className="p-8 bg-red-50 border-4 border-red-100 rounded-[3rem] text-red-600 font-black text-sm text-center animate-shake">{error}</div>}
+            {error && <div className="p-8 bg-red-50 border-2 border-red-100 rounded-[3rem] text-red-600 font-black text-sm text-center">{error}</div>}
 
             <div className="flex items-center justify-between pt-12 border-t border-slate-100">
                <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{subStep} / 4</div>
                <button 
                 type="submit" disabled={isSubmitting}
-                className="px-16 py-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-[0_20px_50px_rgba(15,23,42,0.3)] hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-4 group"
+                className="px-16 py-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-4 group"
                >
                  {isSubmitting ? <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : (
                    <>
-                    {subStep === 4 ? (isRtl ? 'פרסם עכשיו' : 'Publish Now') : (isRtl ? 'המשך לשלב הבא' : 'Continue')}
+                    {subStep === 4 ? (isRtl ? 'פרסם עכשיו' : 'Publish Now') : (isRtl ? 'המשך למידה' : 'Continue')}
                     <ArrowRight size={20} className="rtl:rotate-180 group-hover:translate-x-2 transition-transform" />
                    </>
                  )}

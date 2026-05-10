@@ -112,6 +112,7 @@ function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ownerId INTEGER NOT NULL,
       type TEXT NOT NULL,
+      profession TEXT,
       opportunityType TEXT,
       commitmentLevel TEXT,
       learningFocus TEXT,
@@ -229,6 +230,7 @@ function initDb() {
     { table: 'users', column: 'skills', type: 'TEXT' },
     { table: 'users', column: 'cover_url', type: 'TEXT' },
     { table: 'users', column: 'verificationStatus', type: 'TEXT' },
+    { table: 'opportunities', column: 'profession', type: 'TEXT' },
     { table: 'opportunities', column: 'opportunityType', type: 'TEXT' },
     { table: 'opportunities', column: 'commitmentLevel', type: 'TEXT' },
     { table: 'opportunities', column: 'learningFocus', type: 'TEXT' },
@@ -786,7 +788,6 @@ async function startServer() {
     res.json(results);
   });
 
-  // AI Matching and Recommendations
   app.get('/api/opportunities/saved', authenticateToken, (req: any, res) => {
     const saved = db.prepare(`
       SELECT o.*, u.name as ownerName, u.trade as ownerTrade, u.avatar as authorAvatar, u.supabase_id as ownerSupabaseId, u.username as ownerUsername, u.verified as ownerVerified
@@ -1072,7 +1073,7 @@ async function startServer() {
       type, opportunity_type, commitment_level, learning_focus, duration_description,
       title, location, workHours, payAmount, payPeriod, 
       aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
-      availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl 
+      availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl, profession 
     } = req.body;
 
     const stmt = db.prepare(`
@@ -1080,15 +1081,15 @@ async function startServer() {
         ownerId, type, opportunityType, commitmentLevel, learningFocus, durationDescription,
         title, location, workHours, payAmount, payPeriod,
         aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
-        availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        availabilityDays, desiredSalary, whatIWantToLearn, experienceNote, imageUrl, profession, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
     `);
 
     const result = stmt.run(
       req.user.id, type, opportunity_type, commitment_level, learning_focus, duration_description,
       title, location, workHours, payAmount, payPeriod,
       aboutWork, requirements, whoIWantToTeach, menteeWillLearn,
-      JSON.stringify(availabilityDays || []), desiredSalary, whatIWantToLearn, experienceNote, imageUrl
+      JSON.stringify(availabilityDays || []), desiredSalary, whatIWantToLearn, experienceNote, imageUrl, profession
     );
 
     res.json({ id: result.lastInsertRowid });
@@ -1109,7 +1110,7 @@ async function startServer() {
       'type', 'title', 'location', 'workHours', 'payAmount', 'payPeriod',
       'aboutWork', 'requirements', 'whoIWantToTeach', 'menteeWillLearn',
       'availabilityDays', 'desiredSalary', 'whatIWantToLearn', 'experienceNote', 'imageUrl', 'status',
-      'opportunityType', 'commitmentLevel', 'learningFocus', 'durationDescription'
+      'opportunityType', 'commitmentLevel', 'learningFocus', 'durationDescription', 'profession'
     ].filter(f => req.body[f] !== undefined);
 
     if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });

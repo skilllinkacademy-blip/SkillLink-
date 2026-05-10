@@ -76,7 +76,8 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
 
   const oppTitle = (opportunity.title || '').toLowerCase();
   const oppAbout = (opportunity.about_work || opportunity.aboutWork || '').toLowerCase();
-  const oppTrade = (opportunity.trade || opportunity.ownerTrade || '').toLowerCase();
+  const oppTrade = (opportunity.trade || opportunity.ownerTrade || opportunity.profession || '').toLowerCase();
+  const oppLearningFocus = (opportunity.learning_focus || opportunity.learningFocus || '').toLowerCase();
   const myOcc = (myProfile.occupation || '').toLowerCase();
   const myIntent = (myProfile.learningIntent || '').toLowerCase();
   
@@ -86,7 +87,8 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
     const matchesIntent = intentKeywords.some(k => 
       oppTitle.includes(k) || 
       oppAbout.includes(k) || 
-      oppTrade.includes(k)
+      oppTrade.includes(k) ||
+      oppLearningFocus.includes(k)
     );
     if (matchesIntent) {
       roleScore += 15;
@@ -94,7 +96,13 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
     }
   }
 
-  if (myOcc && (oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc) || oppTrade.includes(myOcc))) {
+  if (myOcc && (
+    oppTitle.includes(myOcc) || 
+    myOcc.includes(oppTitle) || 
+    oppAbout.includes(myOcc) || 
+    oppTrade.includes(myOcc) || 
+    oppLearningFocus.includes(myOcc)
+  )) {
     roleScore += 15;
     details.push(isRtl ? 'התאמה מקצועית גבוהה' : 'High professional alignment');
   } else if (roleScore > 0 && !details.some(d => d.includes('ללמוד') || d.includes('learn'))) {

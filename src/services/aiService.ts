@@ -1,4 +1,9 @@
+import api from '../lib/api';
 import { GoogleGenAI, Type } from "@google/genai";
+
+// Initialize Gemini Client
+const ai = new GoogleGenAI({ apiKey: (process.env as any).GEMINI_API_KEY });
+const MODEL_NAME = "gemini-3-flash-preview";
 
 // Standard Israeli City Coordinates (Approximate)
 const CITY_COORDS: Record<string, [number, number]> = {
@@ -39,53 +44,40 @@ function calculateDistance(coord1: [number, number], coord2: [number, number]) {
 }
 
 export async function getAIOpportunityRecommendations(userProfile: any, opportunities: any[]) {
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-  
-  if (!apiKey || apiKey.length < 10) {
-    console.warn('GEMINI_API_KEY is not set or invalid. Falling back to basic scoring.');
-    return basicOpportunityScoring(userProfile, opportunities);
-  }
-
-  const ai = new GoogleGenAI(apiKey);
-  
   // Heuristic filtering for performance: take top 20 based on basic scoring first
   const candidates = Array.isArray(opportunities) ? basicOpportunityScoring(userProfile, opportunities).slice(0, 20) : [];
 
   if (candidates.length === 0) return [];
 
-  const prompt = `
-    You are a highly sophisticated recruitment AI for "SkillLink", an Israeli marketplace for professional mentorships and artisanal apprenticeships.
-    Your goal is to match users with opportunities.
-    
-    CRITICAL INSTRUCTIONS:
-    1. BE EXTREMELY STRICT. If an opportunity does not match the user's trade (occupation) or professional goals, give it a score BELOW 30%.
-    2. High scores (80%+) are reserved ONLY for exact trade matches in the same or nearby city.
-    3. If the user provided nonsense data, assign VERY LOW scores (0-15%) to everything.
-    4. Provide a "reason" in Hebrew (1 professional sentence) that actually justifies the match logic.
-    
-    User Profile:
-    - Name: ${userProfile.full_name}
-    - Role: ${userProfile.role}
-    - Trade/Occupation: ${userProfile.occupation}
-    - Skills: ${userProfile.skills || 'Not specified'}
-    - Goals: ${userProfile.bio || 'Not specified'}
-    - Location: ${userProfile.location}
-    
-    Candidates:
-    ${candidates.map((o, i) => `
-      - ID: ${o.id}
-        Title: ${o.title}
-        Trade: ${o.trade || o.ownerTrade}
-        Location: ${o.location}
-        Description: ${o.about_work || o.aboutWork || o.learningFocus}
-    `).join('\n')}
-    
-    Return a JSON array: [{"id": number, "score": number, "reason": string}].
-  `;
-
   try {
+    const prompt = `
+      You are a highly sophisticated recruitment AI for "SkillLink", an Israeli marketplace for professional mentorships and artisanal apprenticeships.
+      Match the user with these opportunities.
+      
+      CRITICAL INSTRUCTIONS:
+      1. BE EXTREMELY STRICT. If an opportunity does not match the user's trade (occupation) or professional goals, give it a score BELOW 30%.
+      2. High scores (80%+) are reserved ONLY for exact trade matches in the same or nearby city.
+      3. Provide a "reason" in Hebrew (1 professional sentence) that justifies the match.
+      
+      User Profile:
+      - Name: ${userProfile.name || userProfile.full_name}
+      - Trade: ${userProfile.trade || userProfile.occupation}
+      - Goals: ${userProfile.bio || 'Not specified'}
+      - Location: ${userProfile.location}
+      
+      Opportunities:
+      ${candidates.map((o: any) => `
+        - ID: ${o.id}
+          Title: ${o.title}
+          Trade: ${o.trade || o.ownerTrade || o.profession}
+          Location: ${o.location}
+      `).join('\n')}
+      
+      Return a JSON array: [{"id": number, "score": number, "reason": string}].
+    `;
+
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -104,7 +96,7 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
       }
     });
 
-    const aiOutput = JSON.parse(response.text);
+    const aiOutput = JSON.parse(response.text || '[]');
     
     // Merge AI results with candidate data
     return candidates.map(opp => {
@@ -123,49 +115,40 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
 }
 
 export async function getAIProfileRecommendations(userProfile: any, profiles: any[]) {
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-  
-  if (!apiKey || apiKey.length < 10) {
-    return basicProfileScoring(userProfile, profiles);
-  }
-
-  const ai = new GoogleGenAI(apiKey);
   const candidates = Array.isArray(profiles) ? basicProfileScoring(userProfile, profiles).slice(0, 20) : [];
 
   if (candidates.length === 0) return [];
 
-  const prompt = `
-    You are a professional Israeli mentorship AI for "SkillLink".
-    Compare the current user's profile with a list of potential mentors/apprentices.
-    Find the best professional matches.
-    
-    CRITICAL: 
-    - Same trade (occupation) matches are GOLD (90%+).
-    - If user is "mentee", find "mentor" in same trade.
-    - If user is "mentor", find "mentee" in same trade.
-    - Be strict. If no professional connection, score below 20%.
-
-    User Profile:
-    - Name: ${userProfile.full_name}
-    - Trade: ${userProfile.occupation}
-    - Role: ${userProfile.role}
-    - Bio: ${userProfile.bio}
-
-    Candidates:
-    ${candidates.map(p => `
-      - ID: ${p.id}
-        Name: ${p.full_name}
-        Trade: ${p.occupation}
-        Role: ${p.role}
-        Bio: ${p.bio}
-    `).join('\n')}
-
-    Return JSON array: [{"id": number, "score": number, "reason": string}]. Reason in Hebrew.
-  `;
-
   try {
+    const prompt = `
+      You are a professional Israeli mentorship AI for "SkillLink".
+      Compare the current user's profile with a list of potential mentors/apprentices.
+      
+      CRITICAL: 
+      - Same trade (occupation) matches are GOLD (90%+).
+      - If user is "mentee", find "mentor" in same trade.
+      - If user is "mentor", find "mentee" in same trade.
+      - Be strict. If no professional connection, score below 20%.
+
+      User Profile:
+      - Name: ${userProfile.name || userProfile.full_name}
+      - Trade: ${userProfile.trade || userProfile.occupation}
+      - Role: ${userProfile.role}
+      - Bio: ${userProfile.bio}
+
+      Candidates:
+      ${candidates.map((p: any) => `
+        - ID: ${p.id}
+          Name: ${p.name || p.full_name}
+          Trade: ${p.trade || p.occupation}
+          Role: ${p.role}
+      `).join('\n')}
+
+      Return JSON array: [{"id": number, "score": number, "reason": string}]. Reason in Hebrew.
+    `;
+
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -184,7 +167,7 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
       }
     });
 
-    const aiOutput = JSON.parse(response.text);
+    const aiOutput = JSON.parse(response.text || '[]');
     return candidates.map(p => {
       const rec = aiOutput.find((r: any) => r.id === p.id);
       return { ...p, aiScore: rec?.score || 10, aiReason: rec?.reason };
