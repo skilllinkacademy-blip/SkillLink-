@@ -14,22 +14,35 @@ export default function Landing({ isRtl }: LandingProps) {
 
   useEffect(() => {
     const fetchCounts = async () => {
-      const { count: mentorCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'mentor');
-      
-      const { count: menteeCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'mentee');
+      try {
+        if (!supabase) return;
+        
+        const { count: mentorCount, error: mentorError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'mentor');
+        
+        const { count: menteeCount, error: menteeError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'mentee');
 
-      const total = (mentorCount || 0) + (menteeCount || 0);
-      setCounts({ 
-        mentors: mentorCount || 0, 
-        mentees: menteeCount || 0, 
-        total: total > 0 ? total : 500 // Fallback to 500 if DB is empty for demo
-      });
+        if (mentorError || menteeError) {
+          console.warn('Landing: Supabase query returned error, using fallbacks');
+          setCounts({ mentors: 120, mentees: 380, total: 500 });
+          return;
+        }
+
+        const total = (mentorCount || 0) + (menteeCount || 0);
+        setCounts({ 
+          mentors: mentorCount || 0, 
+          mentees: menteeCount || 0, 
+          total: total > 0 ? total : 500
+        });
+      } catch (err) {
+        console.error('Landing: Failed to fetch counts:', err);
+        setCounts({ mentors: 120, mentees: 380, total: 500 }); // Demo fallbacks
+      }
     };
 
     fetchCounts();
