@@ -37,13 +37,15 @@ export default function Auth({ isRtl }: AuthProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [location, setLocation] = useState('');
-  
+
   // New Intent Fields
   const [learningIntent, setLearningIntent] = useState<'trade' | 'business' | 'both'>('trade');
   const [preferredDuration, setPreferredDuration] = useState<'short' | 'long' | 'both'>('long');
@@ -73,6 +75,38 @@ export default function Auth({ isRtl }: AuthProps) {
       navigate(returnTo || '/app/opportunities', { replace: true });
     }
   }, [user, navigate, searchParams]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=login`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/app/opportunities` },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -510,7 +544,9 @@ export default function Auth({ isRtl }: AuthProps) {
 
       <button
         type="button"
-        className="w-full bg-white border border-gray-200 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+        onClick={handleGoogleAuth}
+        disabled={loading}
+        className="w-full bg-white border border-gray-200 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3 shadow-sm disabled:opacity-50"
       >
         <Globe className="w-5 h-5 text-gray-400" />
         {isRtl ? 'המשך עם Google' : 'Continue with Google'}
@@ -545,7 +581,7 @@ export default function Auth({ isRtl }: AuthProps) {
         <div className="space-y-1.5">
           <div className="flex justify-between items-center px-1">
             <label className="text-sm font-bold text-gray-700">{isRtl ? 'סיסמה' : 'Password'}</label>
-            <button type="button" className="text-xs font-bold text-blue-500 hover:underline">{isRtl ? 'שכחת סיסמה?' : 'Forgot password?'}</button>
+            <button type="button" onClick={() => setForgotMode(true)} className="text-xs font-bold text-blue-500 hover:underline">{isRtl ? 'שכחת סיסמה?' : 'Forgot password?'}</button>
           </div>
           <div className="relative group">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" size={20} />
@@ -596,6 +632,57 @@ export default function Auth({ isRtl }: AuthProps) {
       </div>
     </form>
   );
+
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-8 sm:p-10 space-y-8">
+            <div className="text-center">
+              <Link to="/" className="text-3xl font-black tracking-tighter text-black flex items-center justify-center" dir="ltr">
+                SkillLink<span className="text-blue-500">.</span>
+              </Link>
+            </div>
+            {forgotSent ? (
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <Check size={32} className="text-green-600" />
+                </div>
+                <h2 className="text-2xl font-black text-gray-900">{isRtl ? 'נשלח!' : 'Sent!'}</h2>
+                <p className="text-gray-500">{isRtl ? 'בדוק את האימייל שלך לקישור לאיפוס סיסמה.' : 'Check your email for the password reset link.'}</p>
+                <button onClick={() => { setForgotMode(false); setForgotSent(false); }} className="text-blue-500 font-bold hover:underline">
+                  {isRtl ? 'חזרה להתחברות' : 'Back to login'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-6">
+                <div className="text-center space-y-1">
+                  <h2 className="text-2xl font-black text-gray-900">{isRtl ? 'שכחת סיסמה?' : 'Forgot password?'}</h2>
+                  <p className="text-sm text-gray-500">{isRtl ? 'נשלח לך קישור לאיפוס לאימייל' : "We'll send you a reset link"}</p>
+                </div>
+                {error && <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex gap-3"><AlertCircle size={18} className="shrink-0" />{error}</div>}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-bold text-gray-700 px-1">{isRtl ? 'אימייל' : 'Email'}</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 transition-all font-medium outline-none text-gray-900" />
+                  </div>
+                </div>
+                <button type="submit" disabled={loading}
+                  className="w-full bg-blue-500 text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 flex items-center justify-center">
+                  {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : (isRtl ? 'שלח קישור איפוס' : 'Send reset link')}
+                </button>
+                <button type="button" onClick={() => setForgotMode(false)} className="w-full py-2 text-gray-400 hover:text-gray-600 flex items-center justify-center gap-2 font-bold">
+                  <ArrowLeft size={16} className="rtl:rotate-180" />{isRtl ? 'חזרה' : 'Back'}
+                </button>
+              </form>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
