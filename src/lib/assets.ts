@@ -30,6 +30,12 @@ assetMap['/skillink_post1_apprentice_v2.png'] = assetMap['trade_carpentry'];
 assetMap['/skillink_post2_mentor_v2.png'] = assetMap['trade_electrical'];
 assetMap['/skillink_post3_general_v2.png'] = assetMap['trade_construction'];
 
+// Real Israeli trade photos (place in /public)
+export const barberMentorImg  = '/barber_mentor.jpg';
+export const carpenterMentorImg = '/carpenter_mentor.jpg';
+export const electricianMentorImg = '/electrician_mentor.jpg';
+export const constructionMentorImg = '/construction_mentor.jpg';
+
 export const barberShop = assetMap['trade_barber'];
 export const apprenticeImg = assetMap['trade_mentorship_1'];
 export const mentorImg = assetMap['trade_mentorship_2'];

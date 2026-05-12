@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
-  barberShop, electricalImg, weldingImg, mentorImg,
-  constructionImg, apprenticeImg
+  barberMentorImg, carpenterMentorImg,
+  electricianMentorImg, constructionMentorImg,
 } from '../lib/assets';
 
 const AVATARS = [
@@ -78,7 +78,7 @@ function MentorApprenticeScene({ isRtl }: { isRtl: boolean }) {
           className="w-[140px] sm:w-[200px] lg:w-[240px] rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/15 border-2 border-blue-200 flex-shrink-0"
         >
           <div className="aspect-[3/4] relative">
-            <img src={weldingImg} alt="Mentor" className="w-full h-full object-cover" />
+            <img src={barberMentorImg} alt="Mentor" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
             <div className="absolute top-3 left-3 px-2.5 py-1 bg-blue-600 rounded-full text-[10px] font-black text-white uppercase tracking-wider">
               {isRtl ? 'מנטור' : 'Mentor'}
@@ -147,7 +147,7 @@ function MentorApprenticeScene({ isRtl }: { isRtl: boolean }) {
           className="w-[140px] sm:w-[200px] lg:w-[240px] rounded-3xl overflow-hidden shadow-2xl shadow-gray-900/10 border-2 border-gray-200 flex-shrink-0"
         >
           <div className="aspect-[3/4] relative">
-            <img src={apprenticeImg} alt="Apprentice" className="w-full h-full object-cover" />
+            <img src={carpenterMentorImg} alt="Apprentice" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
             <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 rounded-full text-[10px] font-black text-gray-700 uppercase tracking-wider">
               {isRtl ? 'חניך' : 'Apprentice'}
@@ -306,7 +306,7 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="absolute inset-8 bg-blue-400/20 rounded-[3rem] blur-[60px]" />
             <div className="float-anim relative w-[280px] rounded-3xl overflow-hidden border-2 border-blue-100 shadow-2xl shadow-blue-900/15">
               <div className="aspect-[4/5] relative">
-                <img src={constructionImg} alt="Mentor" className="w-full h-full object-cover" />
+                <img src={electricianMentorImg} alt="Mentor" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                 <div className="absolute top-4 left-4 px-3 py-1 bg-blue-600 rounded-full text-white text-[11px] font-black uppercase tracking-widest">
                   {isRtl ? 'מנטור' : 'Mentor'}
@@ -514,13 +514,13 @@ export default function Landing({ isRtl }: LandingProps) {
           </Section>
           <Section className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { n:'01', icon: GraduationCap, img: constructionImg,
+              { n:'01', icon: GraduationCap, img: electricianMentorImg,
                 t:{ he:'צור פרופיל', en:'Create Profile' },
                 d:{ he:'הגדר כישורים, מיקום וסוג ההזדמנות שאתה מחפש.', en:"Set your skills, location and opportunity type." } },
-              { n:'02', icon: Zap, img: weldingImg,
+              { n:'02', icon: Zap, img: barberMentorImg,
                 t:{ he:'התאמת AI', en:'AI Match' },
                 d:{ he:'AI מוצא את ההתאמה הטובה ביותר.', en:'AI finds your best match by location and trade.' } },
-              { n:'03', icon: Briefcase, img: electricalImg,
+              { n:'03', icon: Briefcase, img: constructionMentorImg,
                 t:{ he:'התחל בשטח', en:'Start in the Field' },
                 d:{ he:'צבור ניסיון מעשי אמיתי תחת הנחיית מקצוען מנוסה.', en:'Gain real hands-on experience under a pro.' } },
             ].map((step, i) => (
@@ -543,53 +543,6 @@ export default function Landing({ isRtl }: LandingProps) {
         </div>
       </section>
 
-      {/* ─── TRADES GRID ──────────────────────────────── */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto px-6">
-          <Section className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
-            <div className="space-y-2">
-              <motion.p variants={fadeUp} className="text-[11px] font-black text-blue-600 uppercase tracking-[.25em]">
-                {isRtl ? 'מגוון מקצועות' : 'Trade Categories'}
-              </motion.p>
-              <motion.h2 variants={fadeUp} className="text-3xl sm:text-5xl font-black tracking-tight text-gray-950 leading-[1.05]">
-                {isRtl ? 'כל המקצועות,\nמקום אחד' : 'All trades,\none place'}
-              </motion.h2>
-            </div>
-            <motion.div variants={fadeUp}>
-              <Link to="/app/opportunities"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900 text-sm font-semibold transition-all">
-                {isRtl ? 'כל ההזדמנויות' : 'All opportunities'}
-                <ArrowRight size={14} className="rtl:rotate-180" />
-              </Link>
-            </motion.div>
-          </Section>
-
-          <Section className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label:{ he:'חשמל',en:'Electrical' }, img: electricalImg },
-              { label:{ he:'ריתוך',en:'Welding' }, img: weldingImg },
-              { label:{ he:'בנייה',en:'Construction' }, img: constructionImg },
-              { label:{ he:'ספרות',en:'Barbering' }, img: barberShop },
-              { label:{ he:'שיפוצים',en:'Renovation' }, img: apprenticeImg },
-              { label:{ he:'מכונאות',en:'Mechanics' }, img: mentorImg },
-            ].map((t, i) => (
-              <motion.div key={i} variants={fadeUp}>
-                <Link to="/app/opportunities"
-                  className="group relative aspect-video rounded-2xl overflow-hidden block shadow-sm hover:shadow-xl transition-all duration-500">
-                  <img src={t.img} alt={isRtl ? t.label.he : t.label.en}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-500" />
-                  <p className="absolute bottom-3 left-4 text-white font-black text-sm">
-                    {isRtl ? t.label.he : t.label.en}
-                  </p>
-                </Link>
-              </motion.div>
-            ))}
-          </Section>
-        </div>
-      </section>
-
       {/* ─── SPLIT CTA ────────────────────────────────── */}
       <section className="py-24 sm:py-32 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
@@ -597,7 +550,7 @@ export default function Landing({ isRtl }: LandingProps) {
             {/* Mentor */}
             <motion.div variants={fadeUp}
               className="group relative rounded-3xl overflow-hidden min-h-[420px] flex flex-col justify-between p-8 sm:p-10 bg-gray-950 text-white">
-              <img src={constructionImg} alt=""
+              <img src={carpenterMentorImg} alt=""
                 className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 group-hover:scale-105 transition-all duration-700" />
               <div className="absolute inset-0 bg-gradient-to-b from-gray-950/80 via-gray-950/50 to-gray-950/80" />
               <div className="absolute top-0 right-0 w-72 h-52 bg-blue-600/15 rounded-full blur-[80px]" />
