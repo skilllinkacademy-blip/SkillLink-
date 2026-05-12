@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, MessageSquare, Bell, User, Globe, Menu, X, LogOut, Briefcase, ShieldCheck, Heart } from 'lucide-react';
+import { Home, Search, MessageSquare, Bell, User, Globe, Menu, X, LogOut, Briefcase, ShieldCheck, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface NavbarProps {
@@ -11,191 +11,201 @@ interface NavbarProps {
 export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut, unreadMessagesCount, unreadNotificationsCount, savedCount } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut, unreadMessagesCount, unreadNotificationsCount } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
-  const navItems = [
-    ...(user ? [
-      { icon: Home, label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
-      { icon: Briefcase, label: isRtl ? 'ההזדמנויות שלי' : 'My Opportunities', path: '/app/my-opportunities' },
-      { icon: MessageSquare, label: isRtl ? 'תיבת הודעות' : 'Inbox', path: '/app/messages', count: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
-      { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
-      ...(profile?.role === 'admin' ? [{ icon: ShieldCheck, label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
-    ] : [
-      { icon: Search, label: isRtl ? 'צפה בהזדמנויות' : 'View Opportunities', path: '/app/opportunities' },
-    ])
-  ];
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+
+  const mobileNavItems = user ? [
+    { icon: Home, label: isRtl ? 'ראשי' : 'Home', path: '/app/opportunities' },
+    { icon: Search, label: isRtl ? 'חיפוש' : 'Explore', path: '/app/explore' },
+    { icon: MessageSquare, label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages', badge: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
+    { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
+  ] : [];
+
+  const desktopNavItems = user ? [
+    { label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
+    { label: isRtl ? 'חיפוש' : 'Explore', path: '/app/explore' },
+    { label: isRtl ? 'ההזדמנויות שלי' : 'My Posts', path: '/app/my-opportunities' },
+    { label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages', badge: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
+    ...(profile?.role === 'admin' ? [{ label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
+  ] : [];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <>
+      {/* ── TOP NAV ── */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-4">
-            <Link to={user ? "/app/opportunities" : "/"} className="text-2xl font-black tracking-tighter text-black flex items-center !font-sans" dir="ltr">
-              SkillLink<span className="text-blue-600">.</span>
-            </Link>
-            
-            {user && profile && (
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                  profile.role === 'mentor' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                }`}>
-                  {isRtl ? (profile.role === 'mentor' ? 'מנטור' : 'מתלמד') : profile.role}
-                </span>
-                {profile.role === 'mentor' && (
-                  <Link 
-                    to="/app/verify"
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
-                      profile.is_verified || profile.verification_status === 'approved'
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-black hover:text-white'
-                    }`}
-                  >
-                    {(profile.is_verified || profile.verification_status === 'approved') && <ShieldCheck size={12} fill="currentColor" className="text-white" />}
-                    {isRtl 
-                      ? (profile.is_verified || profile.verification_status === 'approved' ? 'מאומת' : profile.verification_status === 'pending' ? 'בבדיקה' : 'אמת חשבון') 
-                      : (profile.is_verified || profile.verification_status === 'approved' ? 'Verified' : profile.verification_status === 'pending' ? 'Pending' : 'Verify')}
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
+          <Link
+            to={user ? '/app/opportunities' : '/'}
+            className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-0.5 flex-shrink-0"
+            dir="ltr"
+          >
+            SkillLink<span className="text-blue-600">.</span>
+          </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-4 rtl:space-x-reverse">
-            {navItems.map((item: any) => (
+          {/* Desktop links */}
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {desktopNavItems.map((item: any) => (
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex flex-col items-center px-3 py-1 rounded-lg transition-colors group relative ${
-                  location.pathname === item.path ? 'text-black' : 'text-gray-400 hover:text-black'
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'text-slate-900 bg-slate-100'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                <item.icon size={22} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
-                {item.count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
-                    {item.count}
+                {item.label}
+                {item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                    {item.badge}
                   </span>
-                )}
-                <span className="text-[11px] font-medium mt-0.5">{item.label}</span>
-                {location.pathname === item.path && (
-                  <div className="h-0.5 w-full bg-black mt-1 rounded-full" />
                 )}
               </Link>
             ))}
-            
-            {!user && (
-              <div className="flex items-center gap-4">
-                <Link to="/auth?mode=login" className="text-sm font-bold text-gray-600 hover:text-black transition-colors">
-                  {isRtl ? 'התחברות' : 'Sign in'}
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                {/* Post CTA — desktop only */}
+                <Link
+                  to="/app/opportunities/new"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
+                >
+                  <Plus size={15} />
+                  {isRtl ? 'פרסם' : 'Post'}
                 </Link>
-                <Link to="/auth?mode=signup" className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
-                  {isRtl ? 'הצטרפות חינם' : 'Join free'}
+
+                {/* Profile avatar */}
+                <button
+                  onClick={() => navigate('/app/profile')}
+                  className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 overflow-hidden flex items-center justify-center text-slate-600 font-bold text-sm hover:opacity-80 transition-opacity"
+                >
+                  {profile?.avatar_url
+                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    : profile?.full_name?.charAt(0) || 'U'}
+                </button>
+
+                {/* Verify badge (mentor only) */}
+                {profile?.role === 'mentor' && !profile?.is_verified && (
+                  <Link
+                    to="/app/verify"
+                    className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                  >
+                    <ShieldCheck size={11} />
+                    {isRtl ? 'אמת' : 'Verify'}
+                  </Link>
+                )}
+                {profile?.role === 'mentor' && (profile?.is_verified || profile?.verification_status === 'approved') && (
+                  <span className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <ShieldCheck size={11} className="fill-emerald-200" />
+                    {isRtl ? 'מאומת' : 'Verified'}
+                  </span>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="hidden md:block p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                  title={isRtl ? 'יציאה' : 'Logout'}
+                >
+                  <LogOut size={17} />
+                </button>
+              </>
+            ) : (
+              <div className="hidden md:flex items-center gap-2">
+                <Link to="/auth?mode=login" className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                  {isRtl ? 'כניסה' : 'Sign in'}
+                </Link>
+                <Link to="/auth?mode=signup" className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">
+                  {isRtl ? 'הצטרפות' : 'Join free'}
                 </Link>
               </div>
             )}
 
-            <div className="h-8 w-[1px] bg-gray-100 mx-2" />
-            
-            <button 
+            {/* Lang toggle */}
+            <button
               onClick={toggleLang}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-xs font-bold hover:bg-gray-50 transition-all uppercase tracking-widest"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
             >
-              <Globe size={14} />
-              {isRtl ? 'EN' : 'HE'}
+              <Globe size={12} />
+              {isRtl ? 'EN' : 'עב'}
             </button>
 
-            {user && (
-              <button 
-                onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                title={isRtl ? 'התנתקות' : 'Logout'}
+            {/* Mobile menu toggle (only for non-logged-in on mobile) */}
+            {!user && (
+              <button
+                onClick={() => setMenuOpen(v => !v)}
+                className="md:hidden p-1.5 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <LogOut size={20} />
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-3">
-            <button 
-              onClick={toggleLang}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-[9px] font-black uppercase tracking-widest bg-gray-50"
-            >
-              <Globe size={12} />
-              {isRtl ? 'EN' : 'HE'}
-            </button>
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-black p-1.5 bg-gray-50 rounded-xl border border-gray-100"
-            >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Mobile Nav Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 py-4 px-4 space-y-2 animate-in slide-in-from-top duration-200">
-          {user ? (
-            <>
-              {navItems.map((item: any) => (
+        {/* Mobile dropdown — only for guests */}
+        {menuOpen && !user && (
+          <div className="md:hidden bg-white border-t border-slate-100 px-4 py-3 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-150">
+            <Link to="/auth?mode=login" onClick={() => setMenuOpen(false)} className="w-full py-2.5 text-center text-sm font-semibold text-slate-700 border border-slate-200 rounded-lg">
+              {isRtl ? 'כניסה' : 'Sign in'}
+            </Link>
+            <Link to="/auth?mode=signup" onClick={() => setMenuOpen(false)} className="w-full py-2.5 text-center text-sm font-semibold bg-blue-600 text-white rounded-lg">
+              {isRtl ? 'הצטרפות חינם' : 'Join free'}
+            </Link>
+          </div>
+        )}
+      </nav>
+
+      {/* ── MOBILE BOTTOM TAB BAR ── (logged-in only) */}
+      {user && mobileNavItems.length > 0 && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
+          <div className="flex items-center justify-around h-14">
+            {mobileNavItems.map((item: any) => {
+              const active = isActive(item.path);
+              return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-colors relative ${
-                    location.pathname === item.path ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
+                  className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors"
                 >
-                  <item.icon size={20} />
-                  <span className="font-bold">{item.label}</span>
-                  {item.count > 0 && (
-                    <span className="absolute top-3 left-8 min-w-[20px] h-[20px] px-1 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
-                      {item.count}
+                  <item.icon
+                    size={22}
+                    strokeWidth={active ? 2.5 : 1.8}
+                    className={active ? 'text-slate-900' : 'text-slate-400'}
+                  />
+                  <span className={`text-[10px] font-medium ${active ? 'text-slate-900' : 'text-slate-400'}`}>
+                    {item.label}
+                  </span>
+                  {item.badge > 0 && (
+                    <span className="absolute top-2 left-1/2 ml-2 min-w-[15px] h-[15px] px-1 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                      {item.badge}
                     </span>
                   )}
                 </Link>
-              ))}
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut size={20} />
-                <span className="font-bold">{isRtl ? 'התנתקות' : 'Logout'}</span>
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col gap-2 p-2">
-              <Link 
-                to="/auth?mode=login" 
-                onClick={() => setIsMenuOpen(false)}
-                className="w-full py-3 text-center font-bold text-gray-600 border border-gray-200 rounded-xl"
-              >
-                {isRtl ? 'התחברות' : 'Sign in'}
-              </Link>
-              <Link 
-                to="/auth?mode=signup" 
-                onClick={() => setIsMenuOpen(false)}
-                className="w-full py-3 text-center font-bold bg-blue-600 text-white rounded-xl"
-              >
-                {isRtl ? 'הצטרפות חינם' : 'Join free'}
-              </Link>
-            </div>
-          )}
+              );
+            })}
+            {/* Center FAB — post opportunity */}
+            <Link
+              to="/app/opportunities/new"
+              className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5"
+            >
+              <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center -mt-5 shadow-lg border-4 border-white">
+                <Plus size={20} className="text-white" />
+              </div>
+              <span className="text-[10px] font-medium text-slate-400 mt-0.5">{isRtl ? 'פרסם' : 'Post'}</span>
+            </Link>
+          </div>
         </div>
       )}
-    </nav>
+    </>
   );
 }

@@ -98,66 +98,54 @@ export default function Home({ isRtl }: HomeProps) {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-8">
-        <div className="space-y-2 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
-            SkillLink Marketplace
-          </div>
-          <h1 className="text-2xl sm:text-5xl font-black text-slate-900 tracking-tight">
-            {isRtl ? 'זירת ההתמחות' : 'The Apprenticeship Arena'}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isRtl ? 'הזדמנויות התמחות' : 'Apprenticeship Feed'}
           </h1>
-          <p className="text-slate-500 font-medium text-sm sm:text-lg">
-            {isRtl ? 'מצא מנטור מומחה או חניך רציני לבניית העתיד המקצועי שלך.' : 'Find an expert Master or a serious Apprentice to build your professional future.'}
+          <p className="text-sm text-slate-500 mt-0.5">
+            {isRtl ? 'מנטורים וחניכים מחפשים זה את זה' : 'Masters and apprentices looking for each other'}
           </p>
         </div>
         {user && (
-          <Link 
+          <Link
             to="/app/opportunities/new"
-            className="w-full md:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+            className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
           >
-            <Plus size={20} />
-            {isRtl ? 'פרסם הצעה' : 'Post Opportunity'}
+            <Plus size={16} />
+            {isRtl ? 'פרסם' : 'Post'}
           </Link>
         )}
       </div>
 
-      {/* Filters & Search - Moved up for better accessibility */}
-      <div className="flex flex-col md:flex-row gap-4 sm:gap-6 sticky top-[4.5rem] z-40 bg-slate-50/80 backdrop-blur-md p-2 -mx-2 rounded-3xl">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={20} />
-          <input 
-            type="text" 
-            placeholder={isRtl ? 'חפש מקצוע, מיקום או מיומנות...' : 'Search trade, location, or skill...'}
+      {/* Filters & Search */}
+      <div className="flex flex-col sm:flex-row gap-3 sticky top-14 z-40 bg-slate-50/95 backdrop-blur-sm py-3 -my-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            placeholder={isRtl ? 'חיפוש לפי מקצוע, מיקום...' : 'Search by trade, location...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all font-medium shadow-sm outline-none text-sm sm:text-base"
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none text-sm transition-all"
           />
         </div>
-        <div className="flex p-1 bg-slate-200/50 rounded-2xl border border-slate-200">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-6 py-2.5 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all ${
-              filter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'הכל' : 'All'}
-          </button>
-          <button
-            onClick={() => setFilter('mentor_offer')}
-            className={`px-6 py-2.5 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all ${
-              filter === 'mentor_offer' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'מנטורים' : 'Masters'}
-          </button>
-          <button
-            onClick={() => setFilter('mentee_seeking')}
-            className={`px-6 py-2.5 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all ${
-              filter === 'mentee_seeking' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            {isRtl ? 'מתלמדים' : 'Apprentices'}
-          </button>
+        <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200 gap-0.5">
+          {[
+            { value: 'all', labelHe: 'הכל', labelEn: 'All' },
+            { value: 'mentor_offer', labelHe: 'מנטורים', labelEn: 'Masters' },
+            { value: 'mentee_seeking', labelHe: 'חניכים', labelEn: 'Apprentices' },
+          ].map(({ value, labelHe, labelEn }) => (
+            <button
+              key={value}
+              onClick={() => setFilter(value as any)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                filter === value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {isRtl ? labelHe : labelEn}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -165,26 +153,15 @@ export default function Home({ isRtl }: HomeProps) {
       <ProductShowcase isRtl={isRtl} />
 
       {/* Opportunity Feed */}
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-black text-slate-900">
-              {isRtl ? 'הזדמנויות בשבילך' : 'Opportunities for You'}
-            </h2>
-            <p className="text-slate-500 text-sm font-medium">
-              {isRtl ? 'הזדמנויות אחרונות ומומלצות המותאמות אישית' : 'Latest and recommended matches tailored for you'}
-            </p>
-          </div>
-        </div>
-
+      <div className="space-y-4">
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-96 bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
+              <div key={i} className="h-56 bg-slate-100 rounded-xl animate-pulse border border-slate-200" />
             ))}
           </div>
         ) : opportunities.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Show recommended first if available and score is high */}
             {recommended.length > 0 && searchQuery === '' && filter === 'all' && (
               recommended.map((opp) => (

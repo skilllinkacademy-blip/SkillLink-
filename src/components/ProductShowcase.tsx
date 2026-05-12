@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, MapPin, Star, MessageSquare, Zap, ArrowUpRight, Shield, Users, Hammer, Wrench, Zap as ZapIcon, Scissors, HardHat, Lightbulb } from 'lucide-react';
+import { CheckCircle, MapPin, MessageSquare, Zap, ArrowUpRight, Shield, Hammer, Wrench, Scissors, HardHat, Lightbulb, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ProductShowcaseProps {
@@ -9,7 +9,7 @@ interface ProductShowcaseProps {
 
 const TRADES = [
   { label: 'נגרות', labelEn: 'Carpentry', icon: Hammer, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-200' },
-  { label: 'חשמלאות', labelEn: 'Electrical', icon: ZapIcon, color: 'text-yellow-500', bg: 'bg-yellow-50 border-yellow-200' },
+  { label: 'חשמלאות', labelEn: 'Electrical', icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-50 border-yellow-200' },
   { label: 'ספרות', labelEn: 'Barbering', icon: Scissors, color: 'text-pink-500', bg: 'bg-pink-50 border-pink-200' },
   { label: 'שיפוצים', labelEn: 'Renovations', icon: HardHat, color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' },
   { label: 'אינסטלציה', labelEn: 'Plumbing', icon: Wrench, color: 'text-blue-500', bg: 'bg-blue-50 border-blue-200' },
@@ -152,15 +152,7 @@ function TradeScene({ isRtl }: { isRtl: boolean }) {
   const TradeIcon = trade.icon;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <div className="w-1 h-5 bg-slate-900 rounded-full" />
-        <span className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">
-          {isRtl ? 'כך מנטור מעביר ידע' : 'How a master transfers knowledge'}
-        </span>
-      </div>
-
-      <div className="relative rounded-2xl overflow-hidden bg-slate-900 shadow-xl border border-slate-200" style={{ minHeight: 260 }}>
+    <div className="relative rounded-2xl overflow-hidden bg-slate-900 shadow-xl border border-slate-200" style={{ minHeight: 260 }}>
         {/* Subtle grid bg */}
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}
@@ -261,58 +253,50 @@ function TradeScene({ isRtl }: { isRtl: boolean }) {
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
     </div>
   );
 }
 
 export default function ProductShowcase({ isRtl }: ProductShowcaseProps) {
   return (
-    <div className="bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm">
-      <div className="px-6 md:px-10 pt-8 pb-6">
+    <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+      <div className="px-5 md:px-8 pt-6 pb-5">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-700 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-emerald-200">
-              <Zap size={9} className="fill-current" />
-              {isRtl ? 'כך זה עובד' : 'How it works'}
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-              {isRtl
-                ? <><span className="text-emerald-600">ללמוד מקצוע</span> — ישירות מהשטח</>
-                : <><span className="text-emerald-600">Learning a trade</span> — straight from the pros</>}
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              {isRtl ? <>ללמוד מקצוע — <span className="text-emerald-600">ישירות מהשטח</span></> : <>Learn a trade — <span className="text-emerald-600">straight from the pros</span></>}
             </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {isRtl ? 'SkillLink מחברת מנטורים וחניכים בכל רחבי ישראל' : 'SkillLink connects masters and apprentices across Israel'}
+            </p>
           </div>
           <Link
             to="/auth"
-            className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
           >
-            {isRtl ? 'הצטרף בחינם' : 'Join Free'}
+            {isRtl ? 'הצטרף' : 'Join free'}
             <ArrowUpRight size={13} />
           </Link>
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Left: steps + mockup */}
-          <div className="space-y-6">
-            <div className="space-y-2.5">
+          <div className="space-y-4">
+            <div className="space-y-2">
               {STEPS.map(({ step, en, he, icon: Icon, color, bg }) => (
-                <div key={step} className={`flex items-start gap-3 p-3.5 rounded-2xl border ${bg}`}>
-                  <div className={`w-8 h-8 rounded-xl bg-white border ${bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                    <Icon size={14} className={color} />
+                <div key={step} className={`flex items-center gap-3 p-3 rounded-xl border ${bg}`}>
+                  <div className={`w-7 h-7 rounded-lg bg-white border ${bg} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={13} className={color} />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`text-[9px] font-black ${color} uppercase tracking-widest`}>{step}</span>
-                      <span className="text-slate-900 text-xs font-black">{isRtl ? he.title : en.title}</span>
-                    </div>
-                    <p className="text-slate-500 text-[11px] leading-relaxed">{isRtl ? he.desc : en.desc}</p>
+                    <span className="text-slate-900 text-sm font-semibold">{isRtl ? he.title : en.title}</span>
+                    <p className="text-slate-500 text-xs leading-relaxed">{isRtl ? he.desc : en.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-
             <AppMockup isRtl={isRtl} />
           </div>
 
@@ -322,15 +306,15 @@ export default function ProductShowcase({ isRtl }: ProductShowcaseProps) {
       </div>
 
       {/* Bottom stats bar */}
-      <div className="border-t border-slate-200 grid grid-cols-3 divide-x divide-slate-200 bg-white">
+      <div className="border-t border-slate-100 grid grid-cols-3 divide-x divide-slate-100">
         {[
-          { value: '100%', label: isRtl ? 'בחינם לחלוטין' : 'Completely Free' },
-          { value: '< 5min', label: isRtl ? 'להתחיל' : 'To Get Started' },
-          { value: '4.9★', label: isRtl ? 'דירוג ממוצע' : 'Avg. Rating' },
+          { value: '100%', label: isRtl ? 'בחינם' : 'Free' },
+          { value: '< 5min', label: isRtl ? 'להתחיל' : 'To Start' },
+          { value: '4.9★', label: isRtl ? 'דירוג' : 'Rating' },
         ].map(({ value, label }) => (
-          <div key={label} className="py-4 px-4 text-center">
-            <p className="text-slate-900 font-black text-lg">{value}</p>
-            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mt-0.5">{label}</p>
+          <div key={label} className="py-3 text-center">
+            <p className="text-slate-900 font-bold text-sm">{value}</p>
+            <p className="text-slate-400 text-[10px] mt-0.5">{label}</p>
           </div>
         ))}
       </div>

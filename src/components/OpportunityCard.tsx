@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, Trash2, ExternalLink, ShieldCheck, Zap, ArrowRight, Pencil } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { MapPin, Clock, Briefcase, GraduationCap, Trash2, ShieldCheck, Zap, Pencil, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore } from '../utils/matchScore';
 import { resolveAsset } from '../lib/assets';
@@ -41,6 +40,7 @@ interface Opportunity {
   whoIWantToTeach?: string;
   availability_days?: string[];
   availabilityDays?: string[];
+  profession?: string;
   profiles?: {
     full_name: string;
     avatar_url?: string;
@@ -48,6 +48,7 @@ interface Opportunity {
     location?: string;
     is_verified?: boolean;
     username?: string;
+    role?: string;
   };
   ownerUsername?: string;
   ownerSupabaseId?: string;
@@ -71,16 +72,13 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
   const { profile: myProfile } = useAuth();
 
   const imageUrl = opportunity.image_url || opportunity.imageUrl;
-  const workHours = opportunity.work_hours || opportunity.workHours;
   const payAmount = opportunity.pay_amount || opportunity.payAmount;
   const payPeriod = opportunity.pay_period || opportunity.payPeriod;
   const desiredSalary = opportunity.desired_salary || opportunity.desiredSalary;
   const aboutWork = opportunity.about_work || opportunity.aboutWork;
-  const whoIWantToTeach = opportunity.who_i_want_to_teach || opportunity.whoIWantToTeach;
   const whatIWantToLearn = opportunity.what_i_want_to_learn || opportunity.whatIWantToLearn;
-  const opportunityType = opportunity.opportunity_type || opportunity.opportunityType;
-  const commitmentLevel = opportunity.commitment_level || opportunity.commitmentLevel;
   const durationDescription = opportunity.duration_description || opportunity.durationDescription;
+  const aiReason = opportunity.aiReason || opportunity.ai_reason;
 
   const matchScore = useMemo(() => {
     if (opportunity.matchScore !== undefined) return opportunity.matchScore;
@@ -89,199 +87,146 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
     return score;
   }, [opportunity, myProfile, isRtl]);
 
-  const opportunityTypeLabel = useMemo(() => {
-    if (!opportunityType) return null;
-    const labels: any = {
-      apprenticeship: isRtl ? 'חניכה' : 'Apprenticeship',
-      project: isRtl ? 'עבודה מזדמנת' : 'Project Work'
-    };
-    return labels[opportunityType];
-  }, [opportunityType, isRtl]);
+  const pay = payAmount || desiredSalary;
+  const snippet = aiReason || (isMentorOffer ? aboutWork : whatIWantToLearn);
+  const location = opportunity.location || opportunity.profiles?.location;
+  const ownerName = opportunity.profiles?.full_name;
+  const ownerOccupation = opportunity.profiles?.occupation || opportunity.profession;
+  const isVerified = opportunity.profiles?.is_verified;
+  const avatarUrl = opportunity.profiles?.avatar_url;
+  const profileLink = `/app/u/${opportunity.ownerSupabaseId || opportunity.ownerUsername || opportunity.profiles?.username}`;
 
-  const aiReason = opportunity.aiReason || opportunity.ai_reason;
+  const daysAgo = useMemo(() => {
+    const d = new Date(opportunity.created_at || opportunity.createdAt || '');
+    const diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (diff === 0) return isRtl ? 'היום' : 'Today';
+    if (diff === 1) return isRtl ? 'אתמול' : 'Yesterday';
+    return isRtl ? `לפני ${diff} ימים` : `${diff}d ago`;
+  }, [opportunity.created_at, isRtl]);
 
   return (
-    <div 
+    <div
       onClick={() => navigate(`/app/opportunities/${opportunity.id}`)}
-      className="industrial-card group flex flex-col h-full relative block overflow-hidden cursor-pointer"
+      className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 cursor-pointer flex flex-col overflow-hidden"
     >
-      {/* Image Header */}
-      <div className="h-64 bg-slate-100 relative overflow-hidden">
-        {imageUrl ? (
-          <img 
-            src={resolveAsset(imageUrl) || ''} 
+      {/* Image strip — only when image exists */}
+      {imageUrl && (
+        <div className="h-44 overflow-hidden relative flex-shrink-0">
+          <img
+            src={resolveAsset(imageUrl) || ''}
             alt={opportunity.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+            className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-            {isMentorOffer ? <Briefcase size={80} strokeWidth={1} /> : <GraduationCap size={80} strokeWidth={1} />}
-          </div>
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-
-        {/* Type Badges */}
-        <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} flex flex-col gap-2`}>
-          <div className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
-            isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
-          }`}>
-            {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מתלמד מחפש') : (isMentorOffer ? 'Master Offer' : 'Apprentice Seeking')}
-          </div>
-          {opportunityTypeLabel && (
-            <div className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/5 bg-white/20 text-white">
-              {opportunityTypeLabel}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          {matchScore > 0 && (
+            <div className="absolute top-3 right-3 bg-white/95 text-slate-900 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+              <Zap size={9} className={matchScore > 85 ? 'text-emerald-500 fill-emerald-500' : 'text-slate-400'} />
+              {matchScore}%
             </div>
           )}
         </div>
+      )}
 
-        {/* Match Score Badge */}
-        {matchScore > 0 && (
-          <div className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} px-4 py-2 rounded-lg bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-2 border border-slate-200 animate-in zoom-in duration-500 ${
-            matchScore > 85 ? 'ring-4 ring-emerald-500/30' : ''
+      <div className="p-4 flex-1 flex flex-col gap-3">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Avatar */}
+            <div
+              onClick={(e) => { e.stopPropagation(); navigate(profileLink); }}
+              className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              {avatarUrl
+                ? <img src={resolveAsset(avatarUrl) || ''} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                : ownerName?.charAt(0) || 'U'}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-semibold text-slate-900 truncate">{ownerName || (isRtl ? 'משתמש' : 'User')}</span>
+                {isVerified && <ShieldCheck size={13} className="text-emerald-500 flex-shrink-0" />}
+              </div>
+              <p className="text-xs text-slate-400 truncate">{ownerOccupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
+            </div>
+          </div>
+
+          {/* Type pill */}
+          <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            isMentorOffer
+              ? 'bg-slate-900 text-white'
+              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
           }`}>
-            <Zap size={12} className={`${matchScore > 85 ? 'text-emerald-500 fill-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-            <span>{isRtl ? 'התאמה' : 'Match'} {matchScore}%</span>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className={`p-5 sm:p-8 flex-1 flex flex-col space-y-4 sm:space-y-6 transition-colors duration-500 ${
-        matchScore > 85 ? 'bg-emerald-50/20' : ''
-      }`}>
-        <div className="flex-1 space-y-3 sm:space-y-4">
-          <div className="space-y-1 sm:space-y-2">
-            <div className="flex justify-between items-start gap-4">
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2 tracking-tight">
-                {opportunity.title}
-              </h3>
-            </div>
-            
-            {/* Match Bar */}
-            {matchScore > 0 && (
-              <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-1 mb-3">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${matchScore}%` }}
-                  className={`h-full ${matchScore > 85 ? 'bg-emerald-500' : 'bg-blue-500'}`}
-                />
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-3 sm:gap-4">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                <MapPin size={14} className="text-slate-300" />
-                <span>{opportunity.location || opportunity.profiles?.location || (isRtl ? 'לא צוין מיקום' : 'No location')}</span>
-              </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                <Clock size={14} className="text-slate-300" />
-                <span>{durationDescription || workHours || (isRtl ? 'גמיש' : 'Flexible')}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Learning Focus / About */}
-          <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1.5 sm:space-y-2 relative overflow-hidden">
-            {aiReason && (
-              <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-blue-500" />
-            )}
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-emerald-600">
-               {aiReason ? (
-                 <span className="flex items-center gap-1.5">
-                   <Zap size={12} className="fill-current" />
-                   {isRtl ? 'למה זה מתאים לך:' : 'Why it matches you:'}
-                 </span>
-               ) : (
-                 <span className="flex items-center gap-1.5 text-slate-400">
-                   <GraduationCap size={14} className="text-slate-300" />
-                   {isRtl ? 'מה תלמד / על העבודה' : 'Learning Focus / About'}
-                 </span>
-               )}
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-2 leading-relaxed italic">
-              {aiReason || (isMentorOffer ? (aboutWork || whoIWantToTeach) : whatIWantToLearn)}
-            </p>
-          </div>
+            {isRtl ? (isMentorOffer ? 'מנטור' : 'חניך') : (isMentorOffer ? 'Master' : 'Apprentice')}
+          </span>
         </div>
 
-        {/* Financials */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-3 sm:pt-4 border-t border-slate-100">
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'שכר בסיס' : 'Base Pay'}</div>
-            <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
-              <span className="text-emerald-600 font-bold">₪</span>
-              {payAmount || desiredSalary || '---'}
-              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{payPeriod === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
-            </div>
-          </div>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'סטטוס' : 'Status'}</div>
-            <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse" />
-              {isRtl ? 'פעיל' : 'Active'}
-            </div>
-          </div>
+        {/* Title */}
+        <h3 className="text-base font-bold text-slate-900 leading-snug line-clamp-2 -mt-1">
+          {opportunity.title}
+        </h3>
+
+        {/* Snippet */}
+        {snippet && (
+          <p className={`text-sm text-slate-500 line-clamp-2 leading-relaxed ${aiReason ? 'text-emerald-700' : ''}`}>
+            {aiReason && <Zap size={11} className="inline mr-1 text-emerald-500 fill-emerald-500" />}
+            {snippet}
+          </p>
+        )}
+
+        {/* Meta chips */}
+        <div className="flex flex-wrap gap-2 mt-auto pt-1">
+          {location && (
+            <span className="flex items-center gap-1 text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
+              <MapPin size={10} className="text-slate-400" />
+              {location}
+            </span>
+          )}
+          {durationDescription && (
+            <span className="flex items-center gap-1 text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
+              <Clock size={10} className="text-slate-400" />
+              {durationDescription}
+            </span>
+          )}
+          {pay ? (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
+              ₪{pay}/{payPeriod === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}
+            </span>
+          ) : null}
+          {matchScore > 0 && !imageUrl && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-full px-2.5 py-1">
+              <Zap size={10} className={matchScore > 85 ? 'text-emerald-500 fill-emerald-500' : 'text-slate-400'} />
+              {matchScore}% {isRtl ? 'התאמה' : 'match'}
+            </span>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="pt-4 sm:pt-6 border-t border-slate-100 flex items-center justify-between">
-          <Link 
-            to={`/app/u/${opportunity.ownerSupabaseId || opportunity.ownerUsername || opportunity.profiles?.username}`}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs sm:text-sm overflow-hidden border border-slate-200">
-              {opportunity.profiles?.avatar_url ? (
-                <img src={resolveAsset(opportunity.profiles.avatar_url) || ''} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                opportunity.profiles?.full_name?.charAt(0) || 'U'
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <p className="text-xs sm:text-sm font-black text-slate-900">{opportunity.profiles?.full_name || (isRtl ? 'משתמש' : 'User')}</p>
-                {opportunity.profiles?.is_verified && (
-                  <ShieldCheck size={14} className="text-emerald-500 fill-emerald-500/10" />
-                )}
-              </div>
-              <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
-            </div>
-          </Link>
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-1">
+          <span className="text-[11px] text-slate-400">{daysAgo}</span>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1">
             {showActions && (
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                <button 
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    e.stopPropagation();
-                    navigate(`/app/opportunities/${opportunity.id}/edit`);
-                  }}
-                  className="p-2 sm:p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+              <>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/app/opportunities/${opportunity.id}/edit`); }}
+                  className="p-1.5 text-slate-300 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
                 >
-                  <Pencil size={20} />
+                  <Pencil size={15} />
                 </button>
                 {onDelete && (
-                  <button 
-                    onClick={(e) => { 
-                      e.preventDefault(); 
-                      e.stopPropagation();
-                      onDelete(opportunity.id); 
-                    }}
-                    className="p-2 sm:p-3 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(opportunity.id); }}
+                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={15} />
                   </button>
                 )}
-              </div>
+              </>
             )}
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm border border-slate-100">
-              <ArrowRight size={24} />
-            </div>
+            <span className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors px-2">
+              {isRtl ? 'פרטים ←' : 'View →'}
+            </span>
           </div>
         </div>
       </div>

@@ -44,7 +44,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
       <div className={`min-h-screen bg-white text-black selection:bg-blue-600 selection:text-white font-sans`}>
         <Navbar isRtl={isRtl} toggleLang={toggleLang} />
         
-        <main className={user ? 'max-w-6xl mx-auto px-4 py-8' : ''}>
+        <main className={user ? 'max-w-6xl mx-auto px-4 py-6 pb-20 md:pb-8' : ''}>
           <Routes>
             {/* ... rest of routes stay same ... */}
           {/* Public Routes */}
