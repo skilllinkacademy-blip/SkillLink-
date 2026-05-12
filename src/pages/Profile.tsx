@@ -201,7 +201,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     };
 
     fetchProfile();
-  }, [isPublicView, username, myProfile, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPublicView, username, myProfile?.id, user?.id]);
 
   useEffect(() => {
     if (activeTab === 'reviews' && profile?.id) {
@@ -543,6 +544,23 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     return isRtl ? 'מתלמד מתחיל' : 'Junior Apprentice';
   }, [profile?.role, formData.skills, isRtl]);
 
+  const profileCompleteness = useMemo(() => {
+    if (!profile) return 0;
+    const checks = [
+      !!formData.full_name,
+      !!formData.bio,
+      !!formData.occupation,
+      !!formData.location,
+      !!profile.avatar_url,
+      !!formData.phone,
+      !!formData.headline,
+      (formData.skills || []).length > 0,
+      (formData.years_experience || 0) > 0,
+      (formData.portfolio_urls || []).length > 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [profile, formData]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -664,12 +682,12 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             <div className="flex-1 md:w-64 space-y-3">
               <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <span>{isRtl ? 'התקדמות למאסטרי' : 'Mastery Progress'}</span>
-                <span>{isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%`}</span>
+                <span>{`${profileCompleteness}%`}</span>
               </div>
               <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-white/5 p-1">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
-                  style={{ width: isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%` }} 
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                  style={{ width: `${profileCompleteness}%` }}
                 />
               </div>
             </div>

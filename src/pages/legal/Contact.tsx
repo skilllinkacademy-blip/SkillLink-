@@ -48,7 +48,7 @@ export default function Contact({ isRtl }: { isRtl: boolean }) {
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'טלפון ותמיכה' : 'Phone & Support'}</p>
-                  <p className="text-lg font-black text-black" dir="ltr">050-000-0000</p>
+                  <p className="text-lg font-black text-black" dir="ltr">yarinlavi1@gmail.com</p>
                 </div>
               </div>
 

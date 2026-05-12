@@ -34,7 +34,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     if (opportunity && user && opportunity.owner_id === user.id) {
       fetchInterests();
     }
-  }, [opportunity, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opportunity?.id, user?.id]);
 
   const fetchInterests = async () => {
     setLoadingInterests(true);
@@ -127,7 +128,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     };
 
     fetchOpportunity();
-  }, [id, navigate, profile, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user?.id, profile?.id]);
 
   const handleShare = async () => {
     if (!opportunity) return;
@@ -465,7 +467,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                         <Zap size={18} />
                       </div>
-                      <span className="capitalize">{opportunity.commitment_level} {isRtl ? 'התחייבות' : 'Commitment'}</span>
+                      <span>{isRtl ? (
+                        opportunity.commitment_level === 'high' ? 'התחייבות גבוהה' :
+                        opportunity.commitment_level === 'low' ? 'התחייבות נמוכה' : 'התחייבות גמישה'
+                      ) : (
+                        opportunity.commitment_level === 'high' ? 'High Commitment' :
+                        opportunity.commitment_level === 'low' ? 'Low Commitment' : 'Flexible Commitment'
+                      )}</span>
                     </div>
                   )}
                   {(opportunity.pay_amount || opportunity.desired_salary) && (

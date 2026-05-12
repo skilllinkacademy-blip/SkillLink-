@@ -4,21 +4,23 @@ export async function getOrCreateConversation(supabase: SupabaseClient, otherUse
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) throw new Error('User not authenticated');
 
-  const { data: existingConversation, error: fetchError } = await supabase
+  const { data: conv1 } = await supabase
     .from('conversations')
     .select('*')
-    .or(
-      `and(participant_1.eq.${user.id},participant_2.eq.${otherUserId}),and(participant_1.eq.${otherUserId},participant_2.eq.${user.id})`
-    )
-    .single();
+    .eq('participant_1', user.id)
+    .eq('participant_2', otherUserId)
+    .maybeSingle();
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    throw fetchError;
-  }
+  if (conv1) return conv1;
 
-  if (existingConversation) {
-    return existingConversation;
-  }
+  const { data: conv2 } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('participant_1', otherUserId)
+    .eq('participant_2', user.id)
+    .maybeSingle();
+
+  if (conv2) return conv2;
 
   const { data: newConversation, error: insertError } = await supabase
     .from('conversations')

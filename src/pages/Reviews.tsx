@@ -27,7 +27,7 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
         // 1. Get profile by username
         const { data: profileData, error: pError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, role, verified, occupation')
+          .select('id, full_name, username, avatar_url, role, is_verified, occupation')
           .eq('username', username)
           .single();
 
