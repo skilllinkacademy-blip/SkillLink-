@@ -6,10 +6,7 @@ import {
   Briefcase, GraduationCap, Star, CheckCircle2, ChevronDown, Link2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import {
-  barberMentorImg, carpenterMentorImg,
-  electricianMentorImg, constructionMentorImg,
-} from '../lib/assets';
+import { carpenterMentorImg } from '../lib/assets';
 
 const AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80',
@@ -78,7 +75,7 @@ function MentorApprenticeScene({ isRtl }: { isRtl: boolean }) {
           className="w-[140px] sm:w-[200px] lg:w-[240px] rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/15 border-2 border-blue-200 flex-shrink-0"
         >
           <div className="aspect-[3/4] relative">
-            <img src={barberMentorImg} alt="Mentor" className="w-full h-full object-cover" />
+            <img src={carpenterMentorImg} alt="Mentor" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
             <div className="absolute top-3 left-3 px-2.5 py-1 bg-blue-600 rounded-full text-[10px] font-black text-white uppercase tracking-wider">
               {isRtl ? 'מנטור' : 'Mentor'}
@@ -306,7 +303,7 @@ export default function Landing({ isRtl }: LandingProps) {
             <div className="absolute inset-8 bg-blue-400/20 rounded-[3rem] blur-[60px]" />
             <div className="float-anim relative w-[280px] rounded-3xl overflow-hidden border-2 border-blue-100 shadow-2xl shadow-blue-900/15">
               <div className="aspect-[4/5] relative">
-                <img src={electricianMentorImg} alt="Mentor" className="w-full h-full object-cover" />
+                <img src={carpenterMentorImg} alt="Mentor" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                 <div className="absolute top-4 left-4 px-3 py-1 bg-blue-600 rounded-full text-white text-[11px] font-black uppercase tracking-widest">
                   {isRtl ? 'מנטור' : 'Mentor'}
@@ -512,30 +509,51 @@ export default function Landing({ isRtl }: LandingProps) {
               {isRtl ? 'איך זה עובד?' : 'How does it work?'}
             </motion.h2>
           </Section>
-          <Section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Section className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { n:'01', icon: GraduationCap, img: electricianMentorImg,
-                t:{ he:'צור פרופיל', en:'Create Profile' },
-                d:{ he:'הגדר כישורים, מיקום וסוג ההזדמנות שאתה מחפש.', en:"Set your skills, location and opportunity type." } },
-              { n:'02', icon: Zap, img: barberMentorImg,
-                t:{ he:'התאמת AI', en:'AI Match' },
-                d:{ he:'AI מוצא את ההתאמה הטובה ביותר.', en:'AI finds your best match by location and trade.' } },
-              { n:'03', icon: Briefcase, img: constructionMentorImg,
-                t:{ he:'התחל בשטח', en:'Start in the Field' },
-                d:{ he:'צבור ניסיון מעשי אמיתי תחת הנחיית מקצוען מנוסה.', en:'Gain real hands-on experience under a pro.' } },
+              {
+                n: '01',
+                icon: GraduationCap,
+                gradient: 'from-blue-50 to-blue-100/60',
+                iconBg: 'bg-blue-600',
+                num: 'text-blue-200',
+                t: { he: 'צור פרופיל', en: 'Create Profile' },
+                d: { he: 'הגדר כישורים, מיקום וסוג ההזדמנות שאתה מחפש.', en: 'Set your skills, location and the opportunity type you\'re looking for.' },
+              },
+              {
+                n: '02',
+                icon: Zap,
+                gradient: 'from-gray-950 to-gray-900',
+                iconBg: 'bg-blue-600',
+                num: 'text-white/10',
+                t: { he: 'התאמת AI', en: 'AI Match' },
+                d: { he: 'AI מוצא את ההתאמה הטובה ביותר לפי מיקום ומקצוע.', en: 'AI finds your best match by location and trade — instantly.' },
+                dark: true,
+              },
+              {
+                n: '03',
+                icon: Briefcase,
+                gradient: 'from-blue-600 to-blue-700',
+                iconBg: 'bg-white/20',
+                num: 'text-white/10',
+                t: { he: 'התחל בשטח', en: 'Start in the Field' },
+                d: { he: 'צבור ניסיון מעשי אמיתי תחת הנחיית מקצוען מנוסה.', en: 'Gain real hands-on experience under a seasoned professional.' },
+                blue: true,
+              },
             ].map((step, i) => (
-              <motion.div key={i} variants={fadeUp} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100">
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <img src={step.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                  <span className="absolute top-4 left-5 text-[4rem] font-black text-white/15 leading-none select-none">{step.n}</span>
-                  <div className="absolute bottom-4 left-5 w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                    <step.icon size={18} className="text-white" />
-                  </div>
+              <motion.div key={i} variants={fadeUp}
+                className={`group relative rounded-3xl overflow-hidden p-8 min-h-[260px] flex flex-col justify-between bg-gradient-to-br ${step.gradient} hover:scale-[1.01] transition-all duration-500`}>
+                <span className={`absolute top-5 right-6 text-[6rem] font-black leading-none select-none pointer-events-none ${step.num}`}>{step.n}</span>
+                <div className={`w-11 h-11 rounded-2xl ${step.iconBg} flex items-center justify-center mb-auto`}>
+                  <step.icon size={20} className={step.blue || step.dark ? 'text-white' : 'text-white'} />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-base font-black mb-1.5 text-gray-950">{isRtl ? step.t.he : step.t.en}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{isRtl ? step.d.he : step.d.en}</p>
+                <div className="mt-16">
+                  <h3 className={`text-lg font-black mb-2 ${step.blue || step.dark ? 'text-white' : 'text-gray-950'}`}>
+                    {isRtl ? step.t.he : step.t.en}
+                  </h3>
+                  <p className={`text-sm leading-relaxed ${step.blue ? 'text-blue-100' : step.dark ? 'text-white/50' : 'text-gray-500'}`}>
+                    {isRtl ? step.d.he : step.d.en}
+                  </p>
                 </div>
               </motion.div>
             ))}
