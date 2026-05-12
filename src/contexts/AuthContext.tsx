@@ -6,7 +6,7 @@ interface Profile {
   id: string;
   full_name: string;
   role: 'mentor' | 'mentee' | 'admin';
-  location?: string;
+  city?: string;
   occupation?: string;
   years_experience?: number;
   workload?: string;

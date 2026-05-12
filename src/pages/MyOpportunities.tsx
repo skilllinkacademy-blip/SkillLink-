@@ -19,8 +19,8 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
     const fetch = async () => {
       const { data } = await supabase
         .from('opportunities')
-        .select('*, profiles(full_name, avatar_url, occupation, username, is_verified)')
-        .eq('user_id', user.id)
+        .select('*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified)')
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
       setOpportunities(data || []);
       setLoading(false);
@@ -30,7 +30,7 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm(isRtl ? 'האם אתה בטוח שברצונך למחוק הזדמנות זו?' : 'Are you sure you want to delete this opportunity?')) return;
-    await supabase.from('opportunities').delete().eq('id', id).eq('user_id', user!.id);
+    await supabase.from('opportunities').delete().eq('id', id).eq('owner_id', user!.id);
     setOpportunities(prev => prev.filter(o => o.id !== id));
   };
 

@@ -98,7 +98,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
     if (profile && !isEditing && !initialized.current) {
       initialized.current = true;
       setType(profile.role === 'mentor' ? 'mentor_offer' : 'mentee_seeking');
-      setLocation(profile.location || '');
+      setLocation(profile.city || '');
       setProfession(profile.occupation || '');
     }
   }, [profile?.id, isEditing]);
@@ -113,7 +113,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           .eq('id', id)
           .single();
         if (fetchErr || !data) { setError('Opportunity not found'); return; }
-        if (data.user_id !== user.id) { navigate('/my-opportunities'); return; }
+        if (data.owner_id !== user.id) { navigate('/my-opportunities'); return; }
         setType(data.type);
         setTitle(data.title);
         setLocation(data.location);
@@ -227,13 +227,13 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           .from('opportunities')
           .update(payload)
           .eq('id', id)
-          .eq('user_id', user!.id);
+          .eq('owner_id', user!.id);
         if (updateErr) throw updateErr;
         navigate(`/opportunities/${id}`);
       } else {
         const { data: newOpp, error: insertErr } = await supabase
           .from('opportunities')
-          .insert({ ...payload, user_id: user!.id, status: 'active' })
+          .insert({ ...payload, owner_id: user!.id, status: 'active' })
           .select('id')
           .single();
         if (insertErr) throw insertErr;

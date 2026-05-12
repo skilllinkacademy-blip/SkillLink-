@@ -25,7 +25,7 @@ export default function Saved({ isRtl }: SavedProps) {
     try {
       const { data } = await supabase
         .from('saved_opportunities')
-        .select('opportunity_id, opportunities(*, profiles(full_name, avatar_url, occupation, username, is_verified, role))')
+        .select('opportunity_id, opportunities(*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified, role))')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setSavedOpportunities((data || []).map((r: any) => r.opportunities).filter(Boolean));

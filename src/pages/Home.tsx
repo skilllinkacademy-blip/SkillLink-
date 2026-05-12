@@ -27,9 +27,9 @@ export default function Home({ isRtl }: HomeProps) {
       try {
         const { data: rawOpps } = await supabase
           .from('opportunities')
-          .select('*, profiles(full_name, avatar_url, occupation, username, is_verified, role)')
+          .select('*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified, role)')
           .eq('status', 'active')
-          .neq('user_id', user.id)
+          .neq('owner_id', user.id)
           .limit(20);
         if (!rawOpps?.length) return;
         const { getAIOpportunityRecommendations } = await import('../services/aiService');
@@ -50,7 +50,7 @@ export default function Home({ isRtl }: HomeProps) {
       try {
         let query = supabase
           .from('opportunities')
-          .select('*, profiles(full_name, avatar_url, occupation, username, is_verified, role)')
+          .select('*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified, role)')
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(30);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import api from '../lib/api';
+import { MapPin, Clock, Briefcase, GraduationCap, ArrowLeft, ShieldCheck, User, Calendar, Info, Share2, Heart, MessageSquare, Users, Award, Pencil, ArrowRight, Loader2, Trash2, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMatchScore, MatchBreakdown } from '../utils/matchScore';
 import { resolveAsset } from '../lib/assets';
@@ -15,7 +15,7 @@ interface OpportunityDetailsProps {
 export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile, sqliteId, refreshSavedCount } = useAuth();
+  const { user, profile, refreshSavedCount } = useAuth();
   const [opportunity, setOpportunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -31,16 +31,27 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [loadingInterests, setLoadingInterests] = useState(false);
 
   useEffect(() => {
-    if (opportunity && sqliteId && opportunity.owner_id === sqliteId) {
+    if (opportunity && user && opportunity.owner_id === user.id) {
       fetchInterests();
     }
-  }, [opportunity, sqliteId]);
+  }, [opportunity?.id, user?.id]);
 
   const fetchInterests = async () => {
+    if (!id) return;
     setLoadingInterests(true);
     try {
-      const response = await api.get(`/opportunities/${id}/interests`);
-      setInterestedUsers(response.data);
+      const { data } = await supabase
+        .from('opportunity_interests')
+        .select('user_id, profiles!opportunity_interests_user_id_fkey(id, full_name, avatar_url, occupation, username)')
+        .eq('opportunity_id', id);
+      setInterestedUsers((data || []).map((r: any) => ({
+        userId: r.user_id,
+        userName: r.profiles?.full_name,
+        userAvatar: r.profiles?.avatar_url,
+        userTrade: r.profiles?.occupation,
+        userUsername: r.profiles?.username,
+        userSupabaseId: r.profiles?.id,
+      })));
     } catch (error) {
       console.error('Error fetching interests:', error);
     } finally {
@@ -51,7 +62,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const removeInterest = async (userId: string) => {
     if (!window.confirm(isRtl ? 'האם אתה בטוח שברצונך להסיר את המשתמש מרשימת המעוניינים?' : 'Are you sure you want to remove this user from the interested list?')) return;
     try {
-      await api.delete(`/opportunities/${id}/interest/${userId}`);
+      await supabase
+        .from('opportunity_interests')
+        .delete()
+        .eq('opportunity_id', id)
+        .eq('user_id', userId);
       setInterestedUsers(prev => prev.filter(u => u.userId !== userId));
     } catch (error) {
       console.error('Error removing interest:', error);
@@ -62,56 +77,34 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     const fetchOpportunity = async () => {
       if (!id) return;
       try {
-        const response = await api.get(`/opportunities/${id}`);
-        const data = response.data;
-        
-        // Transform data to match frontend expectations
-        const transformedData = {
-          ...data,
-          owner_id: data.ownerId,
-          image_url: data.imageUrl,
-          work_hours: data.workHours,
-          pay_amount: data.payAmount,
-          pay_period: data.payPeriod,
-          about_work: data.aboutWork,
-          who_i_want_to_teach: data.whoIWantToTeach,
-          mentee_will_learn: data.menteeWillLearn,
-          requirements: data.requirements,
-          what_i_want_to_learn: data.whatIWantToLearn,
-          experience_note: data.experienceNote,
-          desired_salary: data.desiredSalary,
-          created_at: data.createdAt,
-          ownerUsername: data.ownerUsername,
-          ownerSupabaseId: data.ownerSupabaseId,
-          opportunity_type: data.opportunityType,
-          commitment_level: data.commitmentLevel,
-          learning_focus: data.learningFocus,
-          duration_description: data.durationDescription,
-          profiles: {
-            full_name: data.ownerName,
-            avatar_url: data.ownerAvatar,
-            occupation: data.ownerTrade,
-            role: data.ownerRole,
-            is_verified: data.ownerVerified === 1,
-            username: data.ownerUsername || data.ownerSupabaseId || data.ownerName?.toLowerCase().replace(/\s+/g, '_'),
-            location: data.location,
-            created_at: data.createdAt
-          }
-        };
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select('*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified, role, city, created_at)')
+          .eq('id', id)
+          .single();
 
-        setOpportunity(transformedData);
-        setIsSaved(data.isSaved === 1);
-        setIsInterested(data.isInterested === 1);
+        if (error || !data) {
+          navigate('/app/opportunities');
+          return;
+        }
 
-        // Calculate match score if user is logged in
-        if (profile && transformedData) {
-          const { score, breakdown } = calculateMatchScore(transformedData, profile, isRtl);
+        setOpportunity(data);
+
+        if (user) {
+          const [savedRes, interestRes] = await Promise.all([
+            supabase.from('saved_opportunities').select('id').eq('opportunity_id', id).eq('user_id', user.id).maybeSingle(),
+            supabase.from('opportunity_interests').select('id').eq('opportunity_id', id).eq('user_id', user.id).maybeSingle(),
+          ]);
+          setIsSaved(!!savedRes.data);
+          setIsInterested(!!interestRes.data);
+        }
+
+        if (profile && data) {
+          const { score, breakdown } = calculateMatchScore(data, profile, isRtl);
           setMatchScore(score);
           setMatchBreakdown(breakdown);
-          
-          // Trigger AI Analysis via Backend
           setLoadingAi(true);
-          analyzeMatch(transformedData, profile, isRtl).then(analysis => {
+          analyzeMatch(data, profile, isRtl).then(analysis => {
             if (analysis) setAiAnalysis(analysis);
             setLoadingAi(false);
           });
@@ -127,44 +120,15 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     fetchOpportunity();
   }, [id, navigate, profile]);
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!sqliteId || !id || !opportunity) return;
-      
-      try {
-        // Check if already expressed interest for this specific opportunity
-        const response = await api.get('/notifications');
-        const notifications = response.data;
-        
-        const hasInterest = notifications.some((n: any) => 
-          n.senderId === sqliteId && 
-          n.type === 'interest' && 
-          n.link === `/app/opportunities/${id}`
-        );
-        
-        if (hasInterest) {
-          setIsInterested(true);
-        }
-      } catch (err) {
-        console.error('Error checking status:', err);
-      }
-    };
-
-    if (opportunity && user) {
-      checkStatus();
-    }
-  }, [user, id, opportunity]);
-
   const handleShare = async () => {
     if (!opportunity) return;
     const shareData = {
       title: opportunity.title,
-      text: isRtl 
+      text: isRtl
         ? `היי, מצאתי הזדמנות מעניינת ב-SkillLink: ${opportunity.title}`
         : `Hey, I found an interesting opportunity on SkillLink: ${opportunity.title}`,
       url: window.location.href,
     };
-
     try {
       if (navigator.share) {
         await navigator.share(shareData);
@@ -178,33 +142,30 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   };
 
   const handleInterested = async () => {
-    if (!sqliteId || !opportunity) return;
-    
+    if (!user || !opportunity) return;
     if (interesting || isInterested) return;
-    
-    // Prevent self-interest
-    if (sqliteId === opportunity.owner_id) {
+    if (user.id === opportunity.owner_id) {
       alert(isRtl ? 'אינך יכול להביע עניין בהזדמנות של עצמך' : 'You cannot express interest in your own opportunity');
       return;
     }
 
     setInteresting(true);
     try {
-      // 1. Save interest in DB
-      await api.post(`/opportunities/${id}/interest`);
+      await supabase.from('opportunity_interests').insert({ opportunity_id: id, user_id: user.id });
 
       const senderName = profile?.full_name || (isRtl ? 'משתמש' : 'User');
-      
-      await api.post('/notifications', {
-        userId: opportunity.owner_id,
+      await supabase.from('notifications').insert({
+        user_id: opportunity.owner_id,
+        sender_id: user.id,
         type: 'interest',
         title: isRtl ? 'מישהו מעוניין בהזדמנות שלך!' : 'Someone is interested in your opportunity!',
-        content: isRtl 
+        content: isRtl
           ? `${senderName} התעניין בעבודה "${opportunity.title}", במידה וזה רלוונטי שווה לחזור אליו.`
           : `${senderName} is interested in "${opportunity.title}". If relevant, it's worth getting back to them.`,
-        link: `/app/opportunities/${opportunity.id}`
+        link: `/app/opportunities/${opportunity.id}`,
+        is_read: false,
       });
-      
+
       setIsInterested(true);
       alert(isRtl ? 'הודעה נשלחה למפרסם ההזדמנות!' : 'Notification sent to the opportunity poster!');
     } catch (error: any) {
@@ -219,7 +180,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
     if (!user || !id) return;
     setSaving(true);
     try {
-      await api.post(`/opportunities/${id}/save`);
+      if (isSaved) {
+        await supabase.from('saved_opportunities').delete().eq('opportunity_id', id).eq('user_id', user.id);
+      } else {
+        await supabase.from('saved_opportunities').insert({ opportunity_id: id, user_id: user.id });
+      }
       setIsSaved(!isSaved);
       refreshSavedCount();
     } catch (error) {
@@ -240,11 +205,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   if (!opportunity) return null;
 
   const isMentorOffer = opportunity.type === 'mentor_offer';
+  const isOwner = user?.id === opportunity.owner_id;
 
   return (
     <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.2em] group"
       >
@@ -261,8 +227,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             {/* Image Header */}
             <div className="h-64 sm:h-96 bg-slate-50 relative overflow-hidden">
               {opportunity.image_url ? (
-                <img 
-                  src={resolveAsset(opportunity.image_url) || ''} 
+                <img
+                  src={resolveAsset(opportunity.image_url) || ''}
                   alt={opportunity.title}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
@@ -293,46 +259,14 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <div className="flex items-center gap-4 sm:gap-6">
                       <div className="relative w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center">
                         <svg className="w-full h-full transform -rotate-90">
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="transparent"
-                            className="text-slate-200 sm:hidden"
-                          />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="36"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            className="text-slate-200 hidden sm:block"
-                          />
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="transparent"
-                            strokeDasharray={150.8}
-                            strokeDashoffset={150.8 - (150.8 * matchScore) / 100}
-                            className="text-emerald-500 transition-all duration-1000 ease-out sm:hidden"
-                          />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="36"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            strokeDasharray={226.2}
-                            strokeDashoffset={226.2 - (226.2 * matchScore) / 100}
-                            className="text-emerald-500 transition-all duration-1000 ease-out hidden sm:block"
-                          />
+                          <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-200 sm:hidden" />
+                          <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 hidden sm:block" />
+                          <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent"
+                            strokeDasharray={150.8} strokeDashoffset={150.8 - (150.8 * matchScore) / 100}
+                            className="text-emerald-500 transition-all duration-1000 ease-out sm:hidden" />
+                          <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent"
+                            strokeDasharray={226.2} strokeDashoffset={226.2 - (226.2 * matchScore) / 100}
+                            className="text-emerald-500 transition-all duration-1000 ease-out hidden sm:block" />
                         </svg>
                         <span className="absolute text-sm sm:text-lg font-black text-slate-900">{matchScore}%</span>
                       </div>
@@ -350,7 +284,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                           </p>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setShowMatchDetails(!showMatchDetails)}
                         className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
                       >
@@ -360,12 +294,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   </div>
 
                   {showMatchDetails && matchBreakdown && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className="bg-slate-900 text-white rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 space-y-8 overflow-hidden"
                     >
-                      {/* Breakdown Stats */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</p>
@@ -396,7 +329,6 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         </div>
                       </div>
 
-                      {/* AI Insights Section */}
                       <div className="pt-8 border-t border-slate-800 space-y-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -413,39 +345,37 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
                         {aiAnalysis ? (
                           <div className="space-y-6 animate-in fade-in duration-700">
-                             <div className="p-5 bg-slate-800/50 rounded-2xl border border-slate-700 italic text-slate-300 leading-relaxed">
-                               "{aiAnalysis.explanation}"
-                             </div>
-                             
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                               <div className="space-y-3">
-                                 <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{isRtl ? 'נקודות חוזק' : 'Strengths'}</p>
-                                 <ul className="space-y-2">
-                                   {aiAnalysis.pros.map((pro, i) => (
-                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                                       {pro}
-                                     </li>
-                                   ))}
-                                 </ul>
-                               </div>
-                               <div className="space-y-3">
-                                 <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{isRtl ? 'נקודות לשיפור' : 'Gaps to Note'}</p>
-                                 <ul className="space-y-2">
-                                   {aiAnalysis.cons.map((con, i) => (
-                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                       <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
-                                       {con}
-                                     </li>
-                                   ))}
-                                 </ul>
-                               </div>
-                             </div>
-
-                             <div className="p-4 bg-emerald-600/10 rounded-xl border border-emerald-600/20">
-                               <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{isRtl ? 'עצה מצוות ה-AI' : 'AI Team Advice'}</p>
-                               <p className="text-sm font-medium text-emerald-100">{aiAnalysis.advice}</p>
-                             </div>
+                            <div className="p-5 bg-slate-800/50 rounded-2xl border border-slate-700 italic text-slate-300 leading-relaxed">
+                              "{aiAnalysis.explanation}"
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{isRtl ? 'נקודות חוזק' : 'Strengths'}</p>
+                                <ul className="space-y-2">
+                                  {aiAnalysis.pros.map((pro, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                                      {pro}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="space-y-3">
+                                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{isRtl ? 'נקודות לשיפור' : 'Gaps to Note'}</p>
+                                <ul className="space-y-2">
+                                  {aiAnalysis.cons.map((con, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                                      {con}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                            <div className="p-4 bg-emerald-600/10 rounded-xl border border-emerald-600/20">
+                              <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{isRtl ? 'עצה מצוות ה-AI' : 'AI Team Advice'}</p>
+                              <p className="text-sm font-medium text-emerald-100">{aiAnalysis.advice}</p>
+                            </div>
                           </div>
                         ) : !loadingAi && (
                           <p className="text-slate-500 text-sm italic">{isRtl ? 'לא ניתן לנתח את ההתאמה כרגע' : 'Match analysis unavailable at the moment'}</p>
@@ -496,7 +426,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         ₪
                       </div>
                       <span className="text-base sm:text-xl">
-                        {isMentorOffer 
+                        {isMentorOffer
                           ? `${opportunity.pay_amount} ₪ / ${opportunity.pay_period === 'hour' ? (isRtl ? 'שעה' : 'hr') : opportunity.pay_period === 'day' ? (isRtl ? 'יום' : 'day') : (isRtl ? 'חודש' : 'mo')}`
                           : `${isRtl ? 'שכר מבוקש:' : 'Desired:'} ${opportunity.desired_salary} ₪`}
                       </span>
@@ -591,8 +521,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           {/* Owner Card */}
           <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
-            <Link 
-            to={`/app/u/${opportunity.ownerSupabaseId || opportunity.ownerUsername || opportunity.profiles?.username}`}
+            <Link
+              to={`/app/u/${opportunity.profiles?.username || opportunity.owner_id}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl sm:text-3xl shadow-xl overflow-hidden border border-slate-200 group-hover/owner:scale-105 transition-transform">
@@ -614,8 +544,8 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </Link>
 
             {/* Interested Users (Owner Only) */}
-            {sqliteId === opportunity.owner_id && (
-              <div className="industrial-card p-6 sm:p-10 space-y-6 sm:space-y-8">
+            {isOwner && (
+              <div className="industrial-card p-6 sm:p-8 space-y-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
                   <span className="px-3 py-1 bg-slate-100 text-slate-900 text-[10px] font-black rounded-full border border-slate-200">
@@ -631,9 +561,9 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   <div className="space-y-4">
                     {interestedUsers.map((interestedUser) => (
                       <div key={interestedUser.userId} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group/user">
-                        <div 
+                        <div
                           className="flex items-center gap-4 cursor-pointer"
-                          onClick={() => navigate(`/app/u/${interestedUser.userSupabaseId || interestedUser.userUsername || interestedUser.userId}`)}
+                          onClick={() => navigate(`/app/u/${interestedUser.userUsername || interestedUser.userSupabaseId}`)}
                         >
                           <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden border border-slate-300">
                             {interestedUser.userAvatar ? (
@@ -650,14 +580,14 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover/user:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => navigate('/app/messages', { state: { recipientId: interestedUser.userId, recipientName: interestedUser.userName } })}
+                          <button
+                            onClick={() => navigate('/app/messages', { state: { recipientId: interestedUser.userSupabaseId, recipientName: interestedUser.userName } })}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                             title={isRtl ? 'שלח הודעה' : 'Send Message'}
                           >
                             <MessageSquare size={18} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => removeInterest(interestedUser.userId)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title={isRtl ? 'התעלם/מחק' : 'Ignore/Delete'}
@@ -676,18 +606,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               </div>
             )}
 
-            {/* Trust Score Element */}
+            {/* Trust Score */}
             <div className="p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</span>
                 <span className="text-xs font-black text-slate-900">
-                  {Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0) + (opportunity.profiles?.reviews_count || 0) * 2)}%
+                  {Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0))}%
                 </span>
               </div>
               <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-slate-900 rounded-full transition-all duration-1000"
-                  style={{ width: `${Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0) + (opportunity.profiles?.reviews_count || 0) * 2)}%` }}
+                  style={{ width: `${Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0))}%` }}
                 />
               </div>
             </div>
@@ -695,18 +625,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-400">{isRtl ? 'מיקום' : 'Location'}</span>
-                <span className="text-slate-900">{opportunity.profiles?.location}</span>
+                <span className="text-slate-900">{opportunity.profiles?.city || opportunity.location}</span>
               </div>
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-400">{isRtl ? 'חבר מאז' : 'Member Since'}</span>
-                <span className="text-slate-900">{new Date(opportunity.profiles?.created_at).getFullYear()}</span>
+                <span className="text-slate-900">{opportunity.profiles?.created_at ? new Date(opportunity.profiles.created_at).getFullYear() : '—'}</span>
               </div>
             </div>
-            
+
             <div className="space-y-3 sm:space-y-4 pt-2 sm:pt-4">
               {user ? (
-                sqliteId === opportunity.owner_id ? (
-                  <button 
+                isOwner ? (
+                  <button
                     onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
                     className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
@@ -715,23 +645,23 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   </button>
                 ) : (
                   <>
-                    <button 
+                    <button
                       onClick={handleInterested}
                       disabled={interesting || isInterested}
                       className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                        isInterested 
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' 
+                        isInterested
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default'
                           : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
                       }`}
                     >
                       {isInterested ? <ShieldCheck size={18} /> : <Heart size={18} />}
-                      {isInterested 
-                        ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent') 
+                      {isInterested
+                        ? (isRtl ? 'כבר הבעת עניין' : 'Interest Sent')
                         : (isRtl ? 'אני מעוניין!' : "I'm Interested!")}
                     </button>
 
-                    <button 
-                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.ownerSupabaseId, recipientName: opportunity.profiles?.full_name } })}
+                    <button
+                      onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
                       className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       <MessageSquare size={18} />
@@ -740,7 +670,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                   </>
                 )
               ) : (
-                <Link 
+                <Link
                   to="/auth?mode=login"
                   className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
@@ -754,19 +684,19 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           {/* Actions */}
           <div className="flex flex-col gap-4">
             <div className="flex gap-4">
-              <button 
+              <button
                 onClick={handleShare}
                 className="flex-1 bg-white text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
               >
                 <Share2 size={16} />
                 {isRtl ? 'שתף' : 'Share'}
               </button>
-              <button 
+              <button
                 onClick={toggleSave}
                 disabled={saving}
                 className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 border shadow-sm ${
-                  isSaved 
-                    ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' 
+                  isSaved
+                    ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
                     : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -774,11 +704,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 {isRtl ? (isSaved ? 'הסר' : 'שמור') : (isSaved ? 'Saved' : 'Save')}
               </button>
             </div>
-            
+
             <div className="text-center">
               <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isSaved ? 'text-red-600' : 'text-slate-400'}`}>
-                {isSaved 
-                  ? (isRtl ? 'נוסף למועדפים' : 'Added to favorites') 
+                {isSaved
+                  ? (isRtl ? 'נוסף למועדפים' : 'Added to favorites')
                   : (isRtl ? 'שמור להמשך' : 'Save for later')}
               </p>
             </div>
