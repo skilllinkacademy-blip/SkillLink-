@@ -30,11 +30,11 @@ assetMap['/skillink_post1_apprentice_v2.png'] = assetMap['trade_carpentry'];
 assetMap['/skillink_post2_mentor_v2.png'] = assetMap['trade_electrical'];
 assetMap['/skillink_post3_general_v2.png'] = assetMap['trade_construction'];
 
-// Real Israeli trade photos (place in /public)
-export const barberMentorImg  = '/barber_mentor.jpg';
-export const carpenterMentorImg = '/carpenter_mentor.jpg';
-export const electricianMentorImg = '/electrician_mentor.jpg';
-export const constructionMentorImg = '/construction_mentor.jpg';
+// Mentorship trade photos — swap to '/barber_mentor.jpg' etc. once saved to public/
+export const barberMentorImg       = 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1200';
+export const carpenterMentorImg    = 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1200';
+export const electricianMentorImg  = 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200';
+export const constructionMentorImg = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1200';
 
 export const barberShop = assetMap['trade_barber'];
 export const apprenticeImg = assetMap['trade_mentorship_1'];
