@@ -18,7 +18,7 @@ function getAI() {
   }
 }
 
-const MODEL_NAME = "gemini-flash-latest";
+const MODEL_NAME = "gemini-2.0-flash";
 
 
 export interface SmartMatchAnalysis {
