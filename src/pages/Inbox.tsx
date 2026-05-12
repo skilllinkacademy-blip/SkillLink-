@@ -25,42 +25,38 @@ export default function Inbox({ isRtl }: InboxProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] animate-in fade-in duration-500">
-      <div className="flex flex-col h-full space-y-6">
-        {/* Modern Tab Switcher */}
-        <div className="flex justify-center">
-          <div className="inline-flex p-1.5 bg-slate-100 rounded-[2rem] shadow-inner border border-slate-200">
-            <button
-              onClick={() => handleTabChange('messages')}
-              className={`flex items-center gap-3 px-8 sm:px-12 py-3 rounded-[1.5rem] font-black text-[10px] sm:text-xs uppercase tracking-[0.1em] transition-all duration-300 ${
-                activeTab === 'messages' ? 'bg-white text-slate-900 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              <MessageSquare size={18} />
-              {isRtl ? 'הודעות' : 'Messages'}
-            </button>
-            <button
-              onClick={() => handleTabChange('notifications')}
-              className={`flex items-center gap-3 px-8 sm:px-12 py-3 rounded-[1.5rem] font-black text-[10px] sm:text-xs uppercase tracking-[0.1em] transition-all duration-300 ${
-                activeTab === 'notifications' ? 'bg-white text-slate-900 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              <Bell size={18} />
-              {isRtl ? 'התראות' : 'Notifications'}
-            </button>
-          </div>
-        </div>
+    <div className="max-w-6xl mx-auto h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] animate-in fade-in duration-500 flex flex-col gap-4">
+      {/* Tab Bar */}
+      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl self-start">
+        <button
+          onClick={() => handleTabChange('messages')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'messages' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <MessageSquare size={15} />
+          {isRtl ? 'הודעות' : 'Messages'}
+        </button>
+        <button
+          onClick={() => handleTabChange('notifications')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'notifications' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Bell size={15} />
+          {isRtl ? 'התראות' : 'Notifications'}
+        </button>
+      </div>
 
-        {/* Content Area */}
-        <div className="flex-1 min-h-0 bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden industrial-card-container">
-          {activeTab === 'messages' ? (
-            <Messaging isRtl={isRtl} />
-          ) : (
-            <div className="h-full overflow-y-auto no-scrollbar">
-              <Notifications isRtl={isRtl} />
-            </div>
-          )}
-        </div>
+      {/* Content */}
+      <div className="flex-1 min-h-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {activeTab === 'messages' ? (
+          <Messaging isRtl={isRtl} />
+        ) : (
+          <div className="h-full overflow-y-auto">
+            <Notifications isRtl={isRtl} />
+          </div>
+        )}
       </div>
     </div>
   );

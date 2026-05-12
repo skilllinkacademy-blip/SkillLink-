@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Briefcase, MessageSquare, Search, Filter, MapPin, Clock, DollarSign, ArrowRight, ChevronDown, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Plus, Briefcase, Search, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
@@ -197,30 +196,28 @@ export default function Home({ isRtl }: HomeProps) {
               ))}
           </div>
         ) : (
-          <div className="industrial-card p-24 text-center space-y-8">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
-              <Briefcase className="text-slate-200" size={48} />
+          <div className="bg-white border border-slate-100 rounded-2xl p-16 text-center space-y-4">
+            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100">
+              <Briefcase className="text-slate-200" size={24} strokeWidth={1.5} />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-                {isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}
-              </h2>
-              <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+            <div>
+              <h2 className="font-semibold text-slate-900">{isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}</h2>
+              <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
                 {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה המקצועית שלך!' : 'Be the first to post an opportunity in your professional community!'}
               </p>
             </div>
             {user ? (
-              <Link 
+              <Link
                 to="/app/opportunities/new"
-                className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
               >
-                <Plus size={24} />
+                <Plus size={16} />
                 {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
               </Link>
             ) : (
-              <Link 
+              <Link
                 to="/auth?mode=login"
-                className="px-12 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-3 mx-auto inline-flex"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all active:scale-95"
               >
                 {isRtl ? 'התחבר לפרסום הצעה' : 'Sign in to Post'}
               </Link>

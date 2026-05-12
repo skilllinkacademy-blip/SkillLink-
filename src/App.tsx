@@ -79,12 +79,12 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             element={<OpportunityDetails isRtl={isRtl} />} 
           />
           <Route 
-            path="/app/search" 
+            path="/app/explore"
             element={
               <ProtectedRoute>
                 <Explore isRtl={isRtl} />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route 
             path="/app/messages" 

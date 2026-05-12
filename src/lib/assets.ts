@@ -6,7 +6,7 @@ const assetMap: Record<string, string> = {
   'trade_construction': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1200',
   'trade_welding': 'https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&q=80&w=1200',
   'trade_mechanic': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=1200',
-  'trade_plumbing': 'https://images.unsplash.com/photo-1504150559433-c516936e9271?auto=format&fit=crop&q=80&w=1200',
+  'trade_plumbing': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=1200',
   
   // Specific Mentorship Moments
   'trade_mentorship_1': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1200',

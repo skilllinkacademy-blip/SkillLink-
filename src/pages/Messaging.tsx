@@ -306,32 +306,32 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
   return (
-    <div className="h-[calc(100vh-8rem)] bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden flex animate-in fade-in duration-500">
+    <div className="h-full bg-white overflow-hidden flex animate-in fade-in duration-500">
       {/* Sidebar: Chat List */}
-      <div className={`w-full md:w-80 lg:w-96 border-r border-slate-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-8 border-b border-slate-100 space-y-6">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'הודעות' : 'Messages'}</h1>
-          <div className="relative group">
-            <Search className={`absolute ${isRtl ? 'right-5' : 'left-5'} top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors`} size={18} />
-            <input 
-              type="text" 
-              placeholder={isRtl ? 'חפש הודעות...' : 'Search messages...'}
+      <div className={`w-full md:w-72 lg:w-80 border-r border-slate-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-4 border-b border-slate-100 space-y-3">
+          <h1 className="text-base font-bold text-slate-900">{isRtl ? 'הודעות' : 'Messages'}</h1>
+          <div className="relative">
+            <Search className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-slate-400`} size={15} />
+            <input
+              type="text"
+              placeholder={isRtl ? 'חפש...' : 'Search...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full ${isRtl ? 'pr-14 pl-5' : 'pl-14 pr-5'} py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-slate-900 transition-all font-bold text-sm outline-none shadow-inner`}
+              className={`w-full ${isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all`}
             />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
           {loading ? (
-            <div className="p-8 space-y-6">
+            <div className="p-4 space-y-3">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex gap-5 animate-pulse">
-                  <div className="w-14 h-14 bg-slate-100 rounded-2xl" />
-                  <div className="flex-1 space-y-3 py-1">
-                    <div className="h-4 bg-slate-100 rounded-lg w-1/2" />
-                    <div className="h-3 bg-slate-50 rounded-lg w-3/4" />
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="w-10 h-10 bg-slate-100 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    <div className="h-2.5 bg-slate-50 rounded w-3/4" />
                   </div>
                 </div>
               ))}
@@ -345,95 +345,90 @@ export default function Messaging({ isRtl }: MessagingProps) {
                     setSelectedConversationId(conv.id);
                     setSelectedOtherUserId(conv.other_user?.id || null);
                   }}
-                  className={`w-full p-6 flex gap-5 hover:bg-slate-50 transition-all text-start relative group ${
+                  className={`w-full p-3.5 flex gap-3 hover:bg-slate-50 transition-all text-start relative ${
                     selectedConversationId === conv.id ? 'bg-slate-50' : ''
                   }`}
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xl relative shrink-0 overflow-hidden border border-slate-200 group-hover:scale-105 transition-transform">
+                  {selectedConversationId === conv.id && (
+                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} bottom-0 w-0.5 bg-slate-900`} />
+                  )}
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-semibold text-sm relative shrink-0 overflow-hidden border border-slate-200">
                     {conv.other_user?.avatar_url ? (
                       <img src={resolveAsset(conv.other_user.avatar_url) || ''} alt={conv.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       conv.other_user?.full_name?.charAt(0) || 'U'
                     )}
                     {conv.unread_count > 0 && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-900 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                      <div className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] bg-blue-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">
                         {conv.unread_count}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-black text-slate-900 truncate text-lg">{conv.other_user?.full_name}</h4>
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span className={`text-sm font-semibold truncate ${conv.unread_count > 0 ? 'text-slate-900' : 'text-slate-700'}`}>{conv.other_user?.full_name}</span>
                       {conv.last_message_at && (
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                        <span className="text-[10px] text-slate-400 flex-shrink-0">
                           {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs font-bold truncate mt-1 ${conv.unread_count > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
+                    <p className={`text-xs truncate mt-0.5 ${conv.unread_count > 0 ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
                       {conv.last_message || (isRtl ? 'התחל שיחה...' : 'Start a conversation...')}
                     </p>
                   </div>
-                  {selectedConversationId === conv.id && (
-                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} bottom-0 w-1 bg-slate-900`} />
-                  )}
                 </button>
               ))}
             </div>
           ) : (
-            <div className="p-16 text-center space-y-8">
-              <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner border border-slate-100">
-                <MessageSquare className="text-slate-200" size={32} />
+            <div className="p-12 text-center space-y-3">
+              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto border border-slate-100">
+                <MessageSquare className="text-slate-200" size={20} strokeWidth={1.5} />
               </div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">{isRtl ? 'אין הודעות' : 'No messages yet'}</h3>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed max-w-[200px] mx-auto">
-                  {isRtl ? 'התחבר למנטורים או מתלמדים כדי להתחיל שיחה.' : 'Connect with mentors or apprentices to start a conversation.'}
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-slate-700">{isRtl ? 'אין הודעות' : 'No messages yet'}</p>
+              <p className="text-xs text-slate-400 max-w-[180px] mx-auto">
+                {isRtl ? 'התחבר למנטורים או מתלמדים כדי להתחיל שיחה.' : 'Connect with mentors or apprentices to start a conversation.'}
+              </p>
             </div>
           )}
         </div>
       </div>
 
       {/* Main: Chat Interface */}
-      <div className={`flex-1 flex flex-col bg-slate-50/30 ${!selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col ${!selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
         {!selectedConversationId ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-10">
-            <div className="w-32 h-32 bg-white rounded-[3rem] flex items-center justify-center shadow-2xl border border-slate-100 animate-in zoom-in duration-700">
-              <MessageSquare className="text-slate-100" size={64} strokeWidth={1} />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
+              <MessageSquare className="text-slate-200" size={28} strokeWidth={1.5} />
             </div>
-            <div className="space-y-4">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tight">{isRtl ? 'בחר שיחה' : 'Select a conversation'}</h2>
-              <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed text-lg">
-                {isRtl 
-                  ? 'בחר צ׳אט מהרשימה כדי להתחיל להתכתב. השיחות שלך פרטיות ומאובטחות.' 
-                  : 'Choose a chat from the sidebar to start messaging. Your conversations are private and secure.'}
+            <div>
+              <h2 className="font-semibold text-slate-900">{isRtl ? 'בחר שיחה' : 'Select a conversation'}</h2>
+              <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
+                {isRtl
+                  ? 'בחר צ׳אט מהרשימה כדי להתחיל להתכתב.'
+                  : 'Choose a chat from the list to start messaging.'}
               </p>
             </div>
           </div>
         ) : (
           <>
             {/* Chat Header */}
-            <div className="px-10 py-6 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-10">
-              <div 
-                className="flex items-center gap-5 cursor-pointer group/header"
+            <div className="px-4 py-3 bg-white border-b border-slate-100 flex justify-between items-center">
+              <div
+                className="flex items-center gap-3 cursor-pointer"
                 onClick={() => {
                   if (selectedConversation?.other_user?.username) {
                     navigate(`/app/u/${selectedConversation.other_user.username}`);
                   }
                 }}
               >
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedConversationId(null);
-                  }} 
-                  className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900 transition-colors"
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedConversationId(null); }}
+                  className="md:hidden p-1.5 text-slate-400 hover:text-slate-900 transition-colors"
                 >
-                  <ArrowLeft size={24} className="rtl:rotate-180" />
+                  <ArrowLeft size={18} className="rtl:rotate-180" />
                 </button>
-                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black text-xl overflow-hidden shadow-lg group-hover/header:scale-105 transition-transform border border-slate-800">
+                <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm overflow-hidden border border-slate-200">
                   {selectedConversation?.other_user?.avatar_url ? (
                     <img src={resolveAsset(selectedConversation.other_user.avatar_url) || ''} alt={selectedConversation.other_user.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -441,55 +436,55 @@ export default function Messaging({ isRtl }: MessagingProps) {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 group-hover/header:text-emerald-600 transition-colors">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-200" />
-                    <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Online</p>
+                  <p className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    <span className="text-[10px] text-emerald-600 font-medium">Online</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
-                  <Info size={20} />
+              <div className="flex items-center gap-1">
+                <button className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                  <Info size={16} />
                 </button>
-                <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
-                  <MoreHorizontal size={20} />
+                <button className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                  <MoreHorizontal size={16} />
                 </button>
               </div>
             </div>
 
             {/* Chat Messages Area */}
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar bg-slate-50/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40">
               {messages.map((msg, idx) => {
                 const isOwn = msg.sender_id === user?.id;
                 const showDate = idx === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[idx-1].created_at).toDateString();
-                
+
                 return (
                   <React.Fragment key={msg.id}>
                     {showDate && (
-                      <div className="flex justify-center py-4">
-                        <span className="px-4 py-1.5 bg-white border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] rounded-full shadow-sm">
+                      <div className="flex justify-center py-2">
+                        <span className="px-3 py-1 bg-white border border-slate-200 text-[10px] font-medium text-slate-400 rounded-full">
                           {new Date(msg.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </div>
                     )}
-                    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                      <div className={`max-w-[75%] space-y-2 ${isOwn ? 'items-end' : 'items-start'}`}>
-                        <div className={`px-6 py-4 rounded-[2rem] text-sm font-medium shadow-sm border ${
-                          isOwn 
-                            ? 'bg-slate-900 text-white border-slate-800 rounded-tr-none' 
-                            : 'bg-white text-slate-900 border-slate-100 rounded-tl-none'
+                    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[72%] space-y-1`}>
+                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          isOwn
+                            ? 'bg-slate-900 text-white rounded-tr-sm'
+                            : 'bg-white text-slate-900 border border-slate-100 rounded-tl-sm shadow-sm'
                         }`}>
                           {renderMessageContent(msg.content)}
                         </div>
-                        <div className={`flex items-center gap-2 px-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                        <div className={`flex items-center gap-1.5 px-1 ${isOwn ? 'flex-row-reverse' : ''}`}>
+                          <span className="text-[10px] text-slate-400">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isOwn && (
-                            msg.is_read 
-                              ? <CheckCheck size={14} className="text-emerald-500" /> 
-                              : <Check size={14} className="text-slate-300" />
+                            msg.is_read
+                              ? <CheckCheck size={12} className="text-emerald-500" />
+                              : <Check size={12} className="text-slate-300" />
                           )}
                         </div>
                       </div>
@@ -501,26 +496,26 @@ export default function Messaging({ isRtl }: MessagingProps) {
             </div>
 
             {/* Chat Input Area */}
-            <div className="p-10 bg-white border-t border-slate-100">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-5 bg-slate-50 p-3 rounded-[2.5rem] border-2 border-transparent focus-within:border-slate-900 focus-within:bg-white transition-all shadow-inner group">
-                <label className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl transition-all text-slate-400 hover:text-slate-900 shadow-sm cursor-pointer border border-slate-100 hover:border-slate-900">
-                  <Image size={20} />
+            <div className="p-3 bg-white border-t border-slate-100">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-slate-50 pl-2 pr-2 py-2 rounded-xl border border-slate-200 focus-within:border-slate-400 transition-colors">
+                <label className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer rounded-lg transition-colors">
+                  <Image size={16} />
                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={sending} />
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder={isRtl ? 'הקלד הודעה...' : 'Type a message...'}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 bg-transparent border-none focus:ring-0 font-bold text-slate-900 placeholder:text-slate-300 text-lg outline-none"
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-slate-900 placeholder:text-slate-400 outline-none"
                   disabled={sending}
                 />
-                <button 
+                <button
                   type="submit"
                   disabled={!newMessage.trim() || sending}
-                  className="w-12 h-12 flex items-center justify-center bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:bg-slate-200"
+                  className="w-8 h-8 flex items-center justify-center bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors active:scale-95 disabled:opacity-40"
                 >
-                  <Send size={20} className={isRtl ? 'rotate-180' : ''} />
+                  <Send size={14} className={isRtl ? 'rotate-180' : ''} />
                 </button>
               </form>
             </div>

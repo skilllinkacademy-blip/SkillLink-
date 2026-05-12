@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Briefcase, Plus, ArrowLeft } from 'lucide-react';
+import { Heart, Briefcase, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,66 +44,54 @@ export default function Saved({ isRtl }: SavedProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-8 sm:space-y-12 animate-in fade-in duration-500">
-      {/* Back Button */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-[10px] sm:text-xs font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.2em] group"
-      >
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
-          <ArrowLeft size={18} className="rtl:rotate-180" />
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Back + Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all"
+        >
+          <ArrowLeft size={16} className="rtl:rotate-180" />
+        </button>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">{isRtl ? 'הזדמנויות שמורות' : 'Saved Opportunities'}</h1>
+          <p className="text-sm text-slate-400">{isRtl ? 'כל מה שסימנת לעיון מאוחר יותר' : 'Everything you bookmarked for later'}</p>
         </div>
-        {isRtl ? 'חזרה' : 'Back'}
-      </button>
-
-      <div className="space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-600 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
-          Personal Collection
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-          {isRtl ? 'הזדמנויות שמורות' : 'Saved Opportunities'}
-        </h1>
-        <p className="text-slate-500 font-medium text-sm sm:text-xl max-w-2xl">
-          {isRtl ? 'כל ההזדמנויות ששמרת לעיון מאוחר יותר במקום אחד.' : 'All the opportunities you saved for later in one place.'}
-        </p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-[400px] bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
+            <div key={i} className="h-56 bg-slate-100 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : savedOpportunities.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {savedOpportunities.map((opp) => (
-            <div key={opp.id} className="relative group">
-              <OpportunityCard 
-                opportunity={opp} 
-                isRtl={isRtl} 
-                currentUserId={user?.id}
-              />
-            </div>
+            <OpportunityCard
+              key={opp.id}
+              opportunity={opp}
+              isRtl={isRtl}
+              currentUserId={user?.id}
+            />
           ))}
         </div>
       ) : (
-        <div className="industrial-card p-16 sm:p-32 text-center space-y-8 sm:space-y-12">
-          <div className="w-24 h-24 sm:w-32 sm:h-32 bg-slate-50 rounded-[2rem] sm:rounded-[3rem] flex items-center justify-center mx-auto border border-slate-100 shadow-inner">
-            <Heart className="text-slate-200" size={60} strokeWidth={1} />
+        <div className="bg-white border border-slate-100 rounded-2xl p-16 text-center space-y-4">
+          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100">
+            <Heart className="text-slate-200" size={24} strokeWidth={1.5} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              {isRtl ? 'עדיין לא שמרת כלום' : 'No saved items yet'}
-            </h2>
-            <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed text-sm sm:text-base">
-              {isRtl ? 'כשמשהו מעניין אותך, לחץ על הלב כדי לשמור אותו כאן.' : 'When something interests you, click the heart icon to save it here.'}
+          <div>
+            <h2 className="font-semibold text-slate-900">{isRtl ? 'עדיין לא שמרת כלום' : 'Nothing saved yet'}</h2>
+            <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
+              {isRtl ? 'לחץ על הלב בכל הזדמנות כדי לשמור אותה כאן.' : 'Tap the heart on any opportunity to save it here.'}
             </p>
           </div>
-          <Link 
+          <Link
             to="/app/opportunities"
-            className="px-10 sm:px-12 py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-slate-800 transition-all active:scale-95 inline-flex items-center gap-3"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
           >
-            <Briefcase size={20} />
+            <Briefcase size={16} />
             {isRtl ? 'גלה הזדמנויות' : 'Explore Opportunities'}
           </Link>
         </div>

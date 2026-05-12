@@ -4,7 +4,7 @@ import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
+
 import OpportunityCard from '../components/OpportunityCard';
 import { resolveAsset } from '../lib/assets';
 
@@ -213,9 +213,19 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const fetchReviews = async (profileId: string) => {
     setLoadingReviews(true);
     try {
-      const res = await api.get(`/ratings/user/${profileId}`);
-      setReviews(res.data.reviews || []);
-      setReviewsStats(res.data);
+      const { data } = await supabase
+        .from('reviews')
+        .select('*, reviewer:profiles!reviewer_id(full_name, avatar_url, username)')
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
+      const reviewList = data || [];
+      setReviews(reviewList);
+      if (reviewList.length > 0) {
+        const avg = reviewList.reduce((s: number, r: any) => s + (r.rating || 0), 0) / reviewList.length;
+        setReviewsStats({ averageRating: avg.toFixed(1), totalReviews: reviewList.length, reviews: reviewList });
+      } else {
+        setReviewsStats({ averageRating: 0, totalReviews: 0, reviews: [] });
+      }
     } catch (err) {
       console.error('Error fetching reviews:', err);
     } finally {
@@ -231,14 +241,18 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     }
     setSaving(true);
     try {
-      await api.post('/ratings', {
-        toId: profile.id,
+      const rating = Math.round((newReview.professional + newReview.teaching + newReview.workEthic + newReview.reliability) / 4);
+      const { error: insertError } = await supabase.from('reviews').insert({
+        profile_id: profile.id,
+        reviewer_id: user.id,
         professional: newReview.professional,
         teaching: newReview.teaching,
-        workEthic: newReview.workEthic,
+        work_ethic: newReview.workEthic,
         reliability: newReview.reliability,
-        comment: newReview.comment
+        rating,
+        comment: newReview.comment,
       });
+      if (insertError) throw insertError;
 
       setNewReview({ 
         rating: 5, 
@@ -264,26 +278,12 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       const fetchSaved = async () => {
         setLoadingSaved(true);
         try {
-          const response = await api.get('/opportunities/saved');
-          const saved = response.data;
-          
-          // Transform to match frontend expectations
-          const transformedSaved = saved.map((opp: any) => ({
-            ...opp,
-            owner_id: opp.ownerId,
-            image_url: opp.imageUrl,
-            work_hours: opp.workHours,
-            pay_amount: opp.payAmount,
-            pay_period: opp.payPeriod,
-            profiles: {
-              full_name: opp.ownerName,
-              avatar_url: opp.ownerAvatar,
-              occupation: opp.ownerTrade,
-              username: opp.ownerUsername || opp.ownerSupabaseId
-            }
-          }));
-          
-          setSavedOpportunities(transformedSaved);
+          const { data } = await supabase
+            .from('saved_opportunities')
+            .select('opportunity_id, opportunities(*, profiles!opportunities_owner_id_fkey(full_name, avatar_url, occupation, username, is_verified, role))')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          setSavedOpportunities((data || []).map((r: any) => r.opportunities).filter(Boolean));
         } catch (err) {
           console.error('Error fetching saved opportunities:', err);
         } finally {
@@ -317,14 +317,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         delete updatePayload.portfolio_urls;
       }
 
-      // 1. Update SQLite backend
-      try {
-        await api.put('/users/me', updatePayload);
-      } catch (err) {
-        console.error('Error updating SQLite profile:', err);
-      }
-      
-      // 2. Update Supabase
+      // Update Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -437,13 +430,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       if (updateError) throw updateError;
       
-      // Update SQLite backend
-      try {
-        await api.put('/users/me', { avatar: publicUrl });
-      } catch (err) {
-        console.error('Error updating SQLite avatar:', err);
-      }
-
       await refreshProfile();
     } catch (err: any) {
       console.error('Error uploading avatar:', err.message);
@@ -459,14 +445,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     try {
       const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
       if (error) throw error;
-
-      // Update SQLite backend
-      try {
-        await api.put('/users/me', { avatar: null });
-      } catch (err) {
-        console.error('Error removing SQLite avatar:', err);
-      }
-
       await refreshProfile();
     } catch (err: any) {
       console.error('Error removing avatar:', err.message);
