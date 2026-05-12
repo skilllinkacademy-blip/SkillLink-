@@ -1,17 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize Gemini Client lazily
 let aiInstance: any = null;
 
 function getAI() {
   if (aiInstance) return aiInstance;
-  
-  const key = (process.env as any).GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  const key = import.meta.env.VITE_GEMINI_API_KEY;
   if (!key) {
-    console.warn("GEMINI_API_KEY is not defined in the environment.");
+    console.warn("VITE_GEMINI_API_KEY is not defined.");
     return null;
   }
-  
   try {
     aiInstance = new GoogleGenAI({ apiKey: key });
     return aiInstance;
@@ -21,7 +18,7 @@ function getAI() {
   }
 }
 
-const MODEL_NAME = "gemini-flash-latest";
+const MODEL_NAME = "gemini-2.5-flash";
 
 export interface SmartMatchAnalysis {
   score: number;
@@ -38,19 +35,19 @@ export async function analyzeMatch(opportunity: any, profile: any, isRtl: boolea
 
     const prompt = `
       Analyze the match between a user profile and a job/apprenticeship opportunity.
-      
+
       USER PROFILE:
       - Name: ${profile.full_name || profile.name}
       - Occupation: ${profile.occupation || profile.trade}
       - Location: ${profile.location}
       - Bio: ${profile.bio}
-      
+
       OPPORTUNITY:
       - Title: ${opportunity.title}
       - Trade: ${opportunity.trade || opportunity.profession}
       - Location: ${opportunity.location}
       - Description: ${opportunity.about_work || opportunity.description || opportunity.aboutWork}
-      
+
       Provide the analysis in ${isRtl ? 'Hebrew' : 'English'}.
       Focus on semantic relevance, skills overlap, and geographic proximity.
       Return as JSON object with score (0-100), explanation, pros (array), cons (array), advice.

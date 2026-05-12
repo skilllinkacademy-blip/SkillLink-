@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, Zap, Users, Briefcase, GraduationCap } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapPin, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 
@@ -9,7 +9,6 @@ interface RadarMapProps {
 }
 
 export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
-  const [pulse, setPulse] = useState(0);
   const [counts, setCounts] = useState({ mentors: 0, apprentices: 0 });
 
   useEffect(() => {
@@ -18,7 +17,7 @@ export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'mentor');
-      
+
       const { count: menteeCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
@@ -33,20 +32,15 @@ export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
     fetchCounts();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulse(p => (p + 1) % 100);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Mock "Live" projects for the radar effect
-  const liveProjects = opportunities.slice(0, 5).map((opp, i) => ({
-    ...opp,
-    x: 20 + Math.random() * 60,
-    y: 20 + Math.random() * 60,
-    delay: i * 0.5
-  }));
+  const liveProjects = useMemo(() =>
+    opportunities.slice(0, 5).map((opp, i) => ({
+      ...opp,
+      x: 20 + Math.random() * 60,
+      y: 20 + Math.random() * 60,
+      delay: i * 0.5
+    })),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [opportunities.length]);
 
   return (
     <div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden border border-slate-800">
@@ -58,12 +52,12 @@ export default function RadarMap({ isRtl, opportunities }: RadarMapProps) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] border border-slate-800 rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] border border-slate-800 rounded-full" />
         
-        {/* Radar Sweep */}
-        <div 
+        {/* Radar Sweep — CSS animation, no JS re-renders */}
+        <div
           className="absolute top-1/2 left-1/2 w-full h-full origin-top-left bg-gradient-to-tr from-emerald-500/10 to-transparent"
-          style={{ 
-            transform: `rotate(${pulse * 3.6}deg)`,
-            clipPath: 'polygon(0 0, 100% 0, 100% 100%)'
+          style={{
+            clipPath: 'polygon(0 0, 100% 0, 100% 100%)',
+            animation: 'radar-spin 5s linear infinite'
           }}
         />
       </div>

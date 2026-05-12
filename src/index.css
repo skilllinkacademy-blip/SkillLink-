@@ -11,6 +11,11 @@
   --color-brand-border: #E2E8F0;  /* Slate 200 */
 }
 
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @layer base {
   body, button, input, optgroup, select, textarea {
     @apply font-sans;
