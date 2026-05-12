@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Briefcase, Search, ShieldCheck } from 'lucide-react';
+import { Plus, Briefcase, Search, ShieldCheck, Zap, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
@@ -10,19 +10,29 @@ interface HomeProps {
   isRtl: boolean;
 }
 
+function getGreeting(isRtl: boolean) {
+  const h = new Date().getHours();
+  if (isRtl) {
+    if (h < 12) return 'בוקר טוב';
+    if (h < 17) return 'צהריים טובים';
+    return 'ערב טוב';
+  }
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function Home({ isRtl }: HomeProps) {
   const { user, profile } = useAuth();
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [recommended, setRecommended] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingRecs, setLoadingRecs] = useState(false);
   const [filter, setFilter] = useState<'all' | 'mentor_offer' | 'mentee_seeking'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!user || !profile) return;
     const fetchRecommended = async () => {
-      setLoadingRecs(true);
       try {
         const { data: rawOpps } = await supabase
           .from('opportunities')
@@ -34,11 +44,7 @@ export default function Home({ isRtl }: HomeProps) {
         const { getAIOpportunityRecommendations } = await import('../services/aiService');
         const aiRecs = await getAIOpportunityRecommendations(profile, rawOpps);
         setRecommended(Array.isArray(aiRecs) ? aiRecs : rawOpps);
-      } catch (error) {
-        console.error('Error fetching recommendations:', error);
-      } finally {
-        setLoadingRecs(false);
-      }
+      } catch {}
     };
     fetchRecommended();
   }, [user?.id, profile?.id]);
@@ -57,79 +63,80 @@ export default function Home({ isRtl }: HomeProps) {
         if (searchQuery) query = query.or(`title.ilike.%${searchQuery}%,profession.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
         const { data } = await query;
         setOpportunities(data || []);
-      } catch (error) {
-        console.error('Error fetching opportunities:', error);
-      } finally {
-        setLoading(false);
-      }
+      } catch {}
+      finally { setLoading(false); }
     };
     const timer = setTimeout(fetchOpportunities, 300);
     return () => clearTimeout(timer);
   }, [filter, searchQuery]);
 
+  const firstName = profile?.full_name?.split(' ')[0];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Verification Banner for Mentors */}
+    <div className="space-y-6 animate-in fade-in duration-500">
+
+      {/* Verification Banner */}
       {profile?.role === 'mentor' && (profile?.verification_status === 'none' || profile?.verification_status === 'rejected') && (
-        <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl animate-in slide-in-from-top-4 duration-700">
-          <div className="flex items-center gap-4 text-center sm:text-start">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="text-emerald-400" size={24} />
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-700">
+          <div className="flex items-center gap-3 text-center sm:text-start">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+              <ShieldCheck className="text-emerald-400" size={20} />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black uppercase tracking-widest">
-                {isRtl ? 'אמת את החשבון שלך' : 'Verify Your Account'}
-              </h3>
-              <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-                {isRtl 
-                  ? 'מנטורים מאומתים מקבלים פי 5 יותר פניות וזוכים לאמון הקהילה.' 
-                  : 'Verified mentors get 5x more responses and gain community trust.'}
+              <p className="text-sm font-bold">{isRtl ? 'אמת את החשבון שלך' : 'Verify Your Account'}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {isRtl ? 'מנטורים מאומתים מקבלים פי 5 יותר פניות.' : 'Verified mentors get 5x more responses.'}
               </p>
             </div>
           </div>
-          <Link 
+          <Link
             to="/app/verify"
-            className="w-full sm:w-auto px-8 py-3 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all text-center"
+            className="shrink-0 px-5 py-2 bg-white text-slate-900 rounded-xl font-semibold text-sm hover:bg-slate-100 transition-all active:scale-95"
           >
-            {isRtl ? 'התחל אימות עכשיו' : 'Start Verification'}
+            {isRtl ? 'התחל אימות' : 'Get Verified'}
           </Link>
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="flex items-center justify-between gap-4">
+      {/* Personalized header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
+          {profile?.full_name && (
+            <p className="text-sm text-slate-400 font-medium mb-0.5">
+              {getGreeting(isRtl)}{firstName ? `, ${firstName}` : ''} 👋
+            </p>
+          )}
           <h1 className="text-2xl font-bold text-slate-900">
             {isRtl ? 'הזדמנויות התמחות' : 'Apprenticeship Feed'}
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-400 mt-0.5">
             {isRtl ? 'מנטורים וחניכים מחפשים זה את זה' : 'Masters and apprentices looking for each other'}
           </p>
         </div>
         {user && (
           <Link
             to="/app/opportunities/new"
-            className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
+            className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             {isRtl ? 'פרסם' : 'Post'}
           </Link>
         )}
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-3 sticky top-14 z-40 bg-slate-50/95 backdrop-blur-sm py-3 -my-3">
+      {/* Search + Filter — sticky */}
+      <div className="flex flex-col sm:flex-row gap-2.5 sticky top-14 z-40 bg-white/95 backdrop-blur-sm py-3 -my-3 border-b border-transparent">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 rtl:left-auto rtl:right-3" size={15} />
           <input
             type="text"
             placeholder={isRtl ? 'חיפוש לפי מקצוע, מיקום...' : 'Search by trade, location...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none text-sm transition-all"
+            className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none text-sm transition-all"
           />
         </div>
-        <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200 gap-0.5">
+        <div className="flex p-1 bg-slate-100 rounded-xl gap-0.5">
           {[
             { value: 'all', labelHe: 'הכל', labelEn: 'All' },
             { value: 'mentor_offer', labelHe: 'מנטורים', labelEn: 'Masters' },
@@ -138,7 +145,7 @@ export default function Home({ isRtl }: HomeProps) {
             <button
               key={value}
               onClick={() => setFilter(value as any)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 filter === value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -148,83 +155,72 @@ export default function Home({ isRtl }: HomeProps) {
         </div>
       </div>
 
-      {/* Product Showcase Section */}
+      {/* Product Showcase */}
       <ProductShowcase isRtl={isRtl} />
 
-      {/* Opportunity Feed */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-56 bg-slate-100 rounded-xl animate-pulse border border-slate-200" />
+      {/* AI Recommended section label */}
+      {recommended.length > 0 && searchQuery === '' && filter === 'all' && (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
+            <Sparkles size={12} className="text-emerald-600" />
+            <span className="text-xs font-bold text-emerald-700">{isRtl ? 'המלצות AI בשבילך' : 'AI picks for you'}</span>
+          </div>
+          <div className="flex-1 h-px bg-slate-100" />
+        </div>
+      )}
+
+      {/* Feed */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="h-56 bg-slate-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : opportunities.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {recommended.length > 0 && searchQuery === '' && filter === 'all' && recommended.map((opp) => (
+            <div key={`rec-${opp.id}`} className="relative">
+              <div className="absolute -top-2 right-3 z-10 flex items-center gap-1 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
+                <Zap size={8} className="fill-white" />
+                {opp.matchScore}% {isRtl ? 'התאמה' : 'match'}
+              </div>
+              <OpportunityCard
+                opportunity={{ ...opp, matchScore: opp.matchScore, aiReason: opp.aiReason }}
+                isRtl={isRtl}
+                currentUserId={user?.id}
+              />
+            </div>
+          ))}
+
+          {opportunities
+            .filter(opp => searchQuery === '' && filter === 'all' ? !recommended.find(r => r.id === opp.id) : true)
+            .map((opp) => (
+              <OpportunityCard key={opp.id} opportunity={opp} isRtl={isRtl} currentUserId={user?.id} />
             ))}
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-100 rounded-2xl p-16 text-center space-y-4">
+          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100">
+            <Briefcase className="text-slate-200" size={24} strokeWidth={1.5} />
           </div>
-        ) : opportunities.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Show recommended first if available and score is high */}
-            {recommended.length > 0 && searchQuery === '' && filter === 'all' && (
-              recommended.map((opp) => (
-                <div key={`rec-${opp.id}`} className="relative group">
-                  <div className="absolute -top-3 -right-3 z-10 bg-slate-900 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg transform group-hover:scale-110 transition-transform">
-                    {opp.matchScore}% Match
-                  </div>
-                  <OpportunityCard 
-                    opportunity={{...opp, matchScore: opp.matchScore, aiReason: opp.aiReason}} 
-                    isRtl={isRtl} 
-                    currentUserId={user?.id}
-                  />
-                </div>
-              ))
-            )}
-            
-            {/* Show other opportunities, filtering out ones already shown in recommended if in default view */}
-            {opportunities
-              .filter(opp => {
-                if (searchQuery === '' && filter === 'all') {
-                  return !recommended.find(r => r.id === opp.id);
-                }
-                return true;
-              })
-              .map((opp) => (
-                <div key={opp.id}>
-                  <OpportunityCard 
-                    opportunity={opp} 
-                    isRtl={isRtl} 
-                    currentUserId={user?.id}
-                  />
-                </div>
-              ))}
+          <div>
+            <h2 className="font-semibold text-slate-900">{isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}</h2>
+            <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
+              {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה!' : 'Be the first to post an opportunity!'}
+            </p>
           </div>
-        ) : (
-          <div className="bg-white border border-slate-100 rounded-2xl p-16 text-center space-y-4">
-            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100">
-              <Briefcase className="text-slate-200" size={24} strokeWidth={1.5} />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-900">{isRtl ? 'אין הזדמנויות כרגע' : 'No opportunities yet'}</h2>
-              <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
-                {isRtl ? 'היה הראשון לפרסם הזדמנות בקהילה המקצועית שלך!' : 'Be the first to post an opportunity in your professional community!'}
-              </p>
-            </div>
-            {user ? (
-              <Link
-                to="/app/opportunities/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95"
-              >
-                <Plus size={16} />
-                {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
-              </Link>
-            ) : (
-              <Link
-                to="/auth?mode=login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all active:scale-95"
-              >
-                {isRtl ? 'התחבר לפרסום הצעה' : 'Sign in to Post'}
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
+          {user ? (
+            <Link to="/app/opportunities/new" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95">
+              <Plus size={16} />
+              {isRtl ? 'צור פוסט ראשון' : 'Create First Post'}
+            </Link>
+          ) : (
+            <Link to="/auth?mode=login" className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all active:scale-95">
+              {isRtl ? 'התחבר לפרסום' : 'Sign in to Post'}
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

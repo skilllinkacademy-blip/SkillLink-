@@ -4,7 +4,7 @@ const assetMap: Record<string, string> = {
   'trade_carpentry': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1200',
   'trade_electrical': 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200',
   'trade_construction': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1200',
-  'trade_welding': 'https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&q=80&w=1200',
+  'trade_welding': 'https://images.unsplash.com/photo-1504222490345-c075b2b99b01?auto=format&fit=crop&q=80&w=1200',
   'trade_mechanic': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=1200',
   'trade_plumbing': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=1200',
   
