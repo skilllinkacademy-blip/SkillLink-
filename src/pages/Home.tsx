@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
-import LiveCommunity from '../components/LiveCommunity';
+import ProductShowcase from '../components/ProductShowcase';
 
 interface HomeProps {
   isRtl: boolean;
@@ -194,8 +194,8 @@ export default function Home({ isRtl }: HomeProps) {
         </div>
       </div>
 
-      {/* Community Stats Section */}
-      <LiveCommunity isRtl={isRtl} />
+      {/* Product Showcase Section */}
+      <ProductShowcase isRtl={isRtl} />
 
       {/* Opportunity Feed */}
       <div className="space-y-8">
