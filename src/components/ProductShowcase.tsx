@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, MapPin, Star, MessageSquare, Zap, ArrowUpRight, Shield, Users, Play } from 'lucide-react';
+import { CheckCircle, MapPin, Star, MessageSquare, Zap, ArrowUpRight, Shield, Users, Hammer, Wrench, Zap as ZapIcon, Scissors, HardHat, Lightbulb } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ProductShowcaseProps {
   isRtl: boolean;
 }
 
-// Replace with your preferred YouTube video ID showing tradespeople/apprentices
-const YOUTUBE_VIDEO_ID = 'g9YnSSdSXTI';
+const TRADES = [
+  { label: 'נגרות', labelEn: 'Carpentry', icon: Hammer, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-200' },
+  { label: 'חשמלאות', labelEn: 'Electrical', icon: ZapIcon, color: 'text-yellow-500', bg: 'bg-yellow-50 border-yellow-200' },
+  { label: 'ספרות', labelEn: 'Barbering', icon: Scissors, color: 'text-pink-500', bg: 'bg-pink-50 border-pink-200' },
+  { label: 'שיפוצים', labelEn: 'Renovations', icon: HardHat, color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' },
+  { label: 'אינסטלציה', labelEn: 'Plumbing', icon: Wrench, color: 'text-blue-500', bg: 'bg-blue-50 border-blue-200' },
+];
+
+const PARTICLES = Array.from({ length: 8 }, (_, i) => ({
+  id: i,
+  delay: i * 0.35,
+  x: 20 + Math.sin(i * 1.2) * 15,
+  size: 6 + (i % 3) * 3,
+}));
 
 const STEPS = [
   {
@@ -122,50 +134,133 @@ function AppMockup({ isRtl }: { isRtl: boolean }) {
   );
 }
 
-function VideoSection({ isRtl }: { isRtl: boolean }) {
-  const [playing, setPlaying] = useState(false);
+function TradeScene({ isRtl }: { isRtl: boolean }) {
+  const [tradeIdx, setTradeIdx] = useState(0);
+  const [msgIdx, setMsgIdx] = useState(0);
+
+  const messages = isRtl
+    ? ['תראה איך אני עושה את זה...', 'עכשיו תנסה בעצמך', 'מצוין! ממש כמוני', 'שאל אותי כל שאלה']
+    : ['Watch how I do this...', 'Now you try it yourself', 'Perfect! Just like me', 'Ask me anything'];
+
+  useEffect(() => {
+    const t1 = setInterval(() => setTradeIdx(i => (i + 1) % TRADES.length), 2800);
+    const t2 = setInterval(() => setMsgIdx(i => (i + 1) % messages.length), 2200);
+    return () => { clearInterval(t1); clearInterval(t2); };
+  }, []);
+
+  const trade = TRADES[tradeIdx];
+  const TradeIcon = trade.icon;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="w-1 h-5 bg-slate-900 rounded-full" />
         <span className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">
-          {isRtl ? 'ראה את הקסם בפעולה' : 'See the magic in action'}
+          {isRtl ? 'כך מנטור מעביר ידע' : 'How a master transfers knowledge'}
         </span>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video shadow-xl border border-slate-200">
-        {!playing ? (
-          <>
-            <img
-              src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
-              alt="Video thumbnail"
-              className="w-full h-full object-cover opacity-80"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-            <button
-              onClick={() => setPlaying(true)}
-              className="absolute inset-0 flex items-center justify-center group"
-            >
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                <Play size={22} className="text-slate-900 fill-slate-900 ml-1" />
+      <div className="relative rounded-2xl overflow-hidden bg-slate-900 shadow-xl border border-slate-200" style={{ minHeight: 260 }}>
+        {/* Subtle grid bg */}
+        <div className="absolute inset-0 opacity-5"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)', backgroundSize: '32px 32px' }}
+        />
+
+        {/* LIVE badge */}
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-red-500 rounded-full px-2.5 py-1 z-10">
+          <motion.div animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1.2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-white" />
+          <span className="text-white text-[9px] font-black uppercase tracking-widest">Live</span>
+        </div>
+
+        {/* Trade badge top-right */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={trade.label}
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.4 }}
+            className={`absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black z-10 ${trade.bg} ${trade.color}`}
+          >
+            <TradeIcon size={11} />
+            {isRtl ? trade.label : trade.labelEn}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Main scene */}
+        <div className="relative flex items-center justify-center gap-0 py-10 px-6">
+          {/* Mentor avatar */}
+          <div className="flex flex-col items-center gap-2 z-10">
+            <div className="w-16 h-16 rounded-2xl bg-slate-700 border-2 border-slate-600 flex items-center justify-center shadow-xl relative">
+              <span className="text-2xl font-black text-white">מ</span>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-900">
+                <CheckCircle size={10} className="text-white" />
               </div>
-            </button>
-            <div className="absolute bottom-4 left-4 right-4">
-              <p className="text-white font-black text-sm">
-                {isRtl ? 'מנטור מקצועי מלמד חניך — יחסי אמון אמיתיים' : 'Real master-apprentice bonds built through work'}
-              </p>
             </div>
-          </>
-        ) : (
-          <iframe
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title="SkillLink — apprenticeship video"
-          />
-        )}
+            <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
+              {isRtl ? 'מנטור' : 'Master'}
+            </span>
+          </div>
+
+          {/* Skill transfer channel */}
+          <div className="relative flex-1 flex items-center justify-center mx-2" style={{ height: 64 }}>
+            {/* Base line */}
+            <div className="absolute w-full h-0.5 bg-slate-700" />
+
+            {/* Flowing particles */}
+            {PARTICLES.map(p => (
+              <motion.div
+                key={p.id}
+                className={`absolute rounded-full ${trade.color.replace('text-', 'bg-')}`}
+                style={{ width: p.size, height: p.size, top: `calc(50% - ${p.size / 2}px + ${p.x - 20}%` }}
+                animate={{ left: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
+                transition={{ duration: 1.6, delay: p.delay, repeat: Infinity, ease: 'linear' }}
+              />
+            ))}
+
+            {/* Central skill icon */}
+            <motion.div
+              key={trade.label + '-icon'}
+              animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 2.0, repeat: Infinity, ease: 'easeInOut' }}
+              className={`relative z-10 w-10 h-10 rounded-xl flex items-center justify-center shadow-xl border ${trade.bg} ${trade.color}`}
+            >
+              <TradeIcon size={18} />
+            </motion.div>
+          </div>
+
+          {/* Apprentice avatar */}
+          <div className="flex flex-col items-center gap-2 z-10">
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-slate-600 flex items-center justify-center shadow-xl relative">
+              <span className="text-2xl font-black text-white">ח</span>
+              <motion.div
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 1 }}
+                className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-slate-900"
+              >
+                <Lightbulb size={9} className="text-white fill-white" />
+              </motion.div>
+            </div>
+            <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
+              {isRtl ? 'חניך' : 'Apprentice'}
+            </span>
+          </div>
+        </div>
+
+        {/* Speech bubble */}
+        <div className="px-6 pb-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={msgIdx}
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.35 }}
+              className="bg-white/8 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3"
+            >
+              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-black text-white">מ</span>
+              </div>
+              <span className="text-white/80 text-xs font-medium italic">"{messages[msgIdx]}"</span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
@@ -221,8 +316,8 @@ export default function ProductShowcase({ isRtl }: ProductShowcaseProps) {
             <AppMockup isRtl={isRtl} />
           </div>
 
-          {/* Right: video */}
-          <VideoSection isRtl={isRtl} />
+          {/* Right: looping trade scene */}
+          <TradeScene isRtl={isRtl} />
         </div>
       </div>
 
