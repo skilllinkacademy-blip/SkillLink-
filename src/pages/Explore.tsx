@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck, Zap } from 'lucide-react';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveAsset } from '../lib/assets';
@@ -36,20 +36,27 @@ export default function Explore({ isRtl }: ExploreProps) {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/search', {
-        params: {
-          q: searchQuery,
-          trade: categoryFilter !== 'all' ? categoryFilter : undefined,
-          location: locationQuery,
-          role: roleFilter !== 'all' ? roleFilter : undefined,
-          experience: experienceFilter || undefined,
-          verified: verifiedOnly || undefined,
-          isBusiness: businessOnly || undefined
-        }
-      });
-      
-      const rawResults = response.data || [];
-      
+      let query = supabase
+        .from('profiles')
+        .select('id, full_name, username, occupation, location, bio, avatar_url, role, is_verified, years_experience, updated_at')
+        .neq('role', 'admin');
+
+      if (roleFilter !== 'all') query = query.eq('role', roleFilter);
+      if (verifiedOnly) query = query.eq('is_verified', true);
+      if (locationQuery) query = query.ilike('location', `%${locationQuery}%`);
+      if (experienceFilter) query = query.gte('years_experience', experienceFilter);
+      if (searchQuery) {
+        query = query.or(
+          `full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`
+        );
+      }
+      if (categoryFilter !== 'all') {
+        query = query.ilike('occupation', `%${categoryFilter}%`);
+      }
+
+      const { data } = await query.order('updated_at', { ascending: false }).limit(50);
+      const rawResults = data || [];
+
       if (profile && rawResults.length > 0) {
         const { getAIProfileRecommendations } = await import('../services/aiService');
         const aiResults = await getAIProfileRecommendations(profile, rawResults);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Briefcase, Plus, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
 
@@ -20,24 +20,15 @@ export default function Saved({ isRtl }: SavedProps) {
   }, []);
 
   const fetchSaved = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const response = await api.get('/opportunities/saved');
-      
-      // Transform data to match frontend expectations
-      const transformedData = response.data.map((opp: any) => ({
-        ...opp,
-        profiles: {
-          full_name: opp.ownerName,
-          avatar_url: opp.ownerAvatar,
-          occupation: opp.ownerTrade,
-          role: opp.ownerRole,
-          is_verified: opp.ownerVerified === 1,
-          username: opp.ownerSupabaseId || opp.ownerUsername || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
-        }
-      }));
-      
-      setSavedOpportunities(transformedData);
+      const { data } = await supabase
+        .from('saved_opportunities')
+        .select('opportunity_id, opportunities(*, profiles(full_name, avatar_url, occupation, username, is_verified, role))')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setSavedOpportunities((data || []).map((r: any) => r.opportunities).filter(Boolean));
     } catch (error) {
       console.error('Error fetching saved opportunities:', error);
     } finally {
@@ -46,13 +37,10 @@ export default function Saved({ isRtl }: SavedProps) {
   };
 
   const handleUnsave = async (id: string) => {
-    try {
-      await api.post(`/opportunities/${id}/save`);
-      setSavedOpportunities(prev => prev.filter(opp => opp.id !== id));
-      refreshSavedCount();
-    } catch (error) {
-      console.error('Error unsaving:', error);
-    }
+    if (!user) return;
+    await supabase.from('saved_opportunities').delete().eq('opportunity_id', id).eq('user_id', user.id);
+    setSavedOpportunities(prev => prev.filter(opp => opp.id !== id));
+    refreshSavedCount();
   };
 
   return (

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Briefcase, MessageSquare, Search, Filter, MapPin, Clock, DollarSign, ArrowRight, ChevronDown, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
 import ProductShowcase from '../components/ProductShowcase';
@@ -21,82 +21,49 @@ export default function Home({ isRtl }: HomeProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    if (!user || !profile) return;
     const fetchRecommended = async () => {
-      if (!user || !profile) return;
       setLoadingRecs(true);
       try {
-        const response = await api.get('/opportunities/recommended');
-        const rawOpps = response.data;
-        
-        if (!Array.isArray(rawOpps)) {
-          console.warn('Recommended opportunities response is not an array:', rawOpps);
-          return;
-        }
-
-        // Use AI service to filter and score
+        const { data: rawOpps } = await supabase
+          .from('opportunities')
+          .select('*, profiles(full_name, avatar_url, occupation, username, is_verified, role)')
+          .eq('status', 'active')
+          .neq('user_id', user.id)
+          .limit(20);
+        if (!rawOpps?.length) return;
         const { getAIOpportunityRecommendations } = await import('../services/aiService');
         const aiRecs = await getAIOpportunityRecommendations(profile, rawOpps);
-
-        if (!Array.isArray(aiRecs)) {
-          console.warn('AI recommendations did not return an array:', aiRecs);
-          setRecommended([]);
-          return;
-        }
-
-        const transformedData = aiRecs.map((opp: any) => ({
-          ...opp,
-          profiles: {
-            full_name: opp.ownerName,
-            avatar_url: opp.ownerAvatar,
-            occupation: opp.ownerTrade,
-            role: opp.ownerRole,
-            is_verified: opp.ownerVerified === 1,
-            username: opp.ownerSupabaseId || opp.ownerUsername || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
-          }
-        }));
-        setRecommended(transformedData);
+        setRecommended(Array.isArray(aiRecs) ? aiRecs : rawOpps);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
       } finally {
         setLoadingRecs(false);
       }
     };
-
-    if (user && profile) fetchRecommended();
-  }, [user, profile]);
+    fetchRecommended();
+  }, [user?.id, profile?.id]);
 
   useEffect(() => {
     const fetchOpportunities = async () => {
       setLoading(true);
       try {
-        const response = await api.get('/opportunities', {
-          params: {
-            type: filter,
-            q: searchQuery
-          }
-        });
-        
-        // Transform data to match frontend expectations if needed
-        const transformedData = response.data.map((opp: any) => ({
-          ...opp,
-          profiles: {
-            full_name: opp.ownerName,
-            avatar_url: opp.ownerAvatar,
-            occupation: opp.ownerTrade,
-            role: opp.ownerRole,
-            is_verified: opp.ownerVerified === 1,
-            username: opp.ownerSupabaseId || opp.ownerUsername || opp.ownerName?.toLowerCase().replace(/\s+/g, '_')
-          }
-        }));
-        
-        setOpportunities(transformedData);
+        let query = supabase
+          .from('opportunities')
+          .select('*, profiles(full_name, avatar_url, occupation, username, is_verified, role)')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (filter !== 'all') query = query.eq('type', filter);
+        if (searchQuery) query = query.or(`title.ilike.%${searchQuery}%,profession.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
+        const { data } = await query;
+        setOpportunities(data || []);
       } catch (error) {
         console.error('Error fetching opportunities:', error);
       } finally {
         setLoading(false);
       }
     };
-
     const timer = setTimeout(fetchOpportunities, 300);
     return () => clearTimeout(timer);
   }, [filter, searchQuery]);
