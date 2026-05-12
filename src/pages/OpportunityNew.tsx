@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  Presentation, 
-  GraduationCap, 
-  MapPin, 
-  Clock, 
-  Image as ImageIcon, 
-  ArrowLeft, 
-  ArrowRight, 
-  ShieldCheck, 
-  AlertCircle,
+import {
+  Presentation,
+  GraduationCap,
+  MapPin,
+  Clock,
+  Image as ImageIcon,
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
   Sparkles,
   Lightbulb,
   Info,
@@ -19,7 +18,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveAsset } from '../lib/assets';
 
@@ -31,7 +30,8 @@ interface OpportunityNewProps {
 export default function OpportunityNew({ isRtl, isEditing = false }: OpportunityNewProps) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, profile, sqliteId, loading: authLoading, isSupabaseConfigured } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const initialized = useRef(false);
   
   const [step, setStep] = useState(isEditing ? 2 : 1);
   const [subStep, setSubStep] = useState(1);
@@ -95,39 +95,45 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   }, [postStrength]);
 
   useEffect(() => {
-    if (profile && !isEditing && step === 1) {
+    if (profile && !isEditing && !initialized.current) {
+      initialized.current = true;
       setType(profile.role === 'mentor' ? 'mentor_offer' : 'mentee_seeking');
       setLocation(profile.location || '');
       setProfession(profile.occupation || '');
     }
-  }, [profile, isEditing, step]);
+  }, [profile?.id, isEditing]);
 
   useEffect(() => {
     const fetchOpportunity = async () => {
-      if (!isEditing || !id || !sqliteId) return;
+      if (!isEditing || !id || !user) return;
       try {
-        const response = await api.get(`/opportunities/${id}`);
-        const data = response.data;
-        if (data.ownerId !== sqliteId) { navigate('/app/opportunities'); return; }
+        const { data, error: fetchErr } = await supabase
+          .from('opportunities')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (fetchErr || !data) { setError('Opportunity not found'); return; }
+        if (data.user_id !== user.id) { navigate('/my-opportunities'); return; }
         setType(data.type);
         setTitle(data.title);
         setLocation(data.location);
-        setWorkHours(data.workHours || '');
-        setPayAmount(data.payAmount?.toString() || '');
-        setPayPeriod(data.payPeriod || 'hour');
-        setAboutWork(data.aboutWork || '');
+        setWorkHours(data.work_hours || '');
+        setPayAmount(data.pay_amount?.toString() || '');
+        setPayPeriod(data.pay_period || 'hour');
+        setAboutWork(data.about_work || '');
         setRequirements(data.requirements || '');
-        setMenteeWillLearn(data.menteeWillLearn || '');
-        setWhoIWantToTeach(data.whoIWantToTeach || '');
+        setMenteeWillLearn(data.mentee_will_learn || '');
+        setWhoIWantToTeach(data.who_i_want_to_teach || '');
         setAvailabilityDays(data.availability_days || []);
-        setDesiredSalary(data.desiredSalary?.toString() || '');
-        setWhatIWantToLearn(data.whatIWantToLearn || '');
-        setExperienceNote(data.experienceNote || '');
-        setImagePreview(data.imageUrl);
+        setDesiredSalary(data.desired_salary?.toString() || '');
+        setWhatIWantToLearn(data.what_i_want_to_learn || '');
+        setExperienceNote(data.experience_note || '');
+        setImagePreview(data.image_url || null);
         setProfession(data.profession || profile?.occupation || '');
         setLearningFocus(data.learning_focus || '');
         setDurationDescription(data.duration_description || '');
         setCommitmentLevel(data.commitment_level || 'high');
+        setOpportunityType(data.opportunity_type || 'apprenticeship');
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -135,7 +141,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
       }
     };
     fetchOpportunity();
-  }, [isEditing, id, user, navigate, sqliteId, profile]);
+  }, [isEditing, id, user?.id]);
 
   const getFieldContent = (fieldName: string) => {
     const isMentor = type === 'mentor_offer';
@@ -184,44 +190,57 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
 
     try {
       let imageUrl = imagePreview;
-      if (imageFile) {
-        imageUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(imageFile);
-        });
+      if (imageFile && user) {
+        const ext = imageFile.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('opportunities_images')
+          .upload(path, imageFile, { upsert: true });
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('opportunities_images').getPublicUrl(path);
+          imageUrl = urlData.publicUrl;
+        }
       }
 
-      const opportunityData = {
-        type, 
-        opportunity_type: opportunityType, 
+      const payload = {
+        type,
+        opportunity_type: opportunityType,
         commitment_level: commitmentLevel,
-        learning_focus: learningFocus, 
+        learning_focus: learningFocus,
         duration_description: durationDescription,
-        title, 
-        location, 
+        title,
+        location,
         profession,
-        aboutWork, 
-        requirements, 
-        whoIWantToTeach, 
-        menteeWillLearn,
-        availabilityDays, 
-        desiredSalary: desiredSalary ? parseFloat(desiredSalary) : null,
-        whatIWantToLearn, 
-        experienceNote,
-        imageUrl
+        about_work: aboutWork,
+        requirements,
+        who_i_want_to_teach: whoIWantToTeach,
+        mentee_will_learn: menteeWillLearn,
+        availability_days: availabilityDays,
+        desired_salary: desiredSalary ? parseFloat(desiredSalary) : null,
+        what_i_want_to_learn: whatIWantToLearn,
+        experience_note: experienceNote,
+        image_url: imageUrl,
       };
 
       if (isEditing && id) {
-        await api.put(`/opportunities/${id}`, opportunityData);
-        navigate(`/app/opportunities/${id}`);
+        const { error: updateErr } = await supabase
+          .from('opportunities')
+          .update(payload)
+          .eq('id', id)
+          .eq('user_id', user!.id);
+        if (updateErr) throw updateErr;
+        navigate(`/opportunities/${id}`);
       } else {
-        const response = await api.post('/opportunities', opportunityData);
-        navigate(`/app/opportunities/${response.data.id}`);
+        const { data: newOpp, error: insertErr } = await supabase
+          .from('opportunities')
+          .insert({ ...payload, user_id: user!.id, status: 'active' })
+          .select('id')
+          .single();
+        if (insertErr) throw insertErr;
+        navigate(`/opportunities/${newOpp.id}`);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || (isRtl ? 'שגיאה בשמירה' : 'Error saving'));
     } finally {
       setIsSubmitting(false);
     }
