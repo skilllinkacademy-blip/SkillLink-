@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
-import RadarMap from '../components/RadarMap';
+import LiveCommunity from '../components/LiveCommunity';
 
 interface HomeProps {
   isRtl: boolean;
@@ -194,10 +194,8 @@ export default function Home({ isRtl }: HomeProps) {
         </div>
       </div>
 
-      {/* Radar Map Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-        <RadarMap isRtl={isRtl} opportunities={opportunities} />
-      </div>
+      {/* Community Stats Section */}
+      <LiveCommunity isRtl={isRtl} />
 
       {/* Opportunity Feed */}
       <div className="space-y-8">
