@@ -113,7 +113,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           .eq('id', id)
           .single();
         if (fetchErr || !data) { setError('Opportunity not found'); return; }
-        if (data.owner_id !== user.id) { navigate('/my-opportunities'); return; }
+        if (data.owner_id !== user.id) { navigate('/app/my-opportunities'); return; }
         setType(data.type);
         setTitle(data.title);
         setLocation(data.location);
@@ -211,6 +211,9 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         title,
         location,
         profession,
+        work_hours: workHours || null,
+        pay_amount: payAmount ? parseFloat(payAmount) : null,
+        pay_period: payAmount ? payPeriod : null,
         about_work: aboutWork,
         requirements,
         who_i_want_to_teach: whoIWantToTeach,
@@ -229,7 +232,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           .eq('id', id)
           .eq('owner_id', user!.id);
         if (updateErr) throw updateErr;
-        navigate(`/opportunities/${id}`);
+        navigate(`/app/opportunities/${id}`);
       } else {
         const { data: newOpp, error: insertErr } = await supabase
           .from('opportunities')
@@ -237,7 +240,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
           .select('id')
           .single();
         if (insertErr) throw insertErr;
-        navigate(`/opportunities/${newOpp.id}`);
+        navigate(`/app/opportunities/${newOpp.id}`);
       }
     } catch (err: any) {
       setError(err.message || (isRtl ? 'שגיאה בשמירה' : 'Error saving'));

@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ArrowRight, ArrowLeft, Loader2, User as UserIcon, ShieldCheck, Filter, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
 
 interface ReviewsPageProps {
   isRtl: boolean;
@@ -28,17 +27,54 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
         // 1. Get profile by username
         const { data: profileData, error: pError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, role, verified, occupation')
+          .select('id, full_name, username, avatar_url, role, is_verified, occupation')
           .eq('username', username)
           .single();
 
         if (pError) throw pError;
         setProfile(profileData);
 
-        // 2. Get reviews from our custom SQLite endpoint
-        // Wait, SQLite endpoint is local to server.ts. We should use api.get
-        const res = await api.get(`/ratings/user/${profileData.id}`);
-        setReviewsData(res.data);
+        // 2. Get reviews with reviewer info from Supabase
+        const { data: rawReviews } = await supabase
+          .from('reviews')
+          .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, avatar_url, username, is_verified)')
+          .eq('profile_id', profileData.id)
+          .order('created_at', { ascending: false });
+
+        const reviews = (rawReviews || []).map((r: any) => ({
+          id: r.id,
+          professional: r.professionalism ?? r.professional ?? 0,
+          teaching: r.teaching_quality ?? r.teaching ?? 0,
+          workEthic: r.work_ethic ?? 0,
+          reliability: r.reliability ?? 0,
+          comment: r.comment || '',
+          createdAt: r.created_at,
+          fromName: r.reviewer?.full_name || 'Anonymous',
+          fromAvatar: r.reviewer?.avatar_url || null,
+          fromVerified: r.reviewer?.is_verified ? 1 : 0,
+        }));
+
+        // Compute stats locally
+        const total = reviews.length;
+        const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+        const overallScores = reviews.map((r: any) => (r.professional + r.teaching + r.workEthic + r.reliability) / 4);
+        const overallAvg = avg(overallScores);
+
+        const stats = {
+          total,
+          overallAvg,
+          avgProfessional: avg(reviews.map((r: any) => r.professional)),
+          avgTeaching: avg(reviews.map((r: any) => r.teaching)),
+          avgWorkEthic: avg(reviews.map((r: any) => r.workEthic)),
+          avgReliability: avg(reviews.map((r: any) => r.reliability)),
+        };
+
+        const distribution = [1, 2, 3, 4, 5].map(star => ({
+          stars: star,
+          count: overallScores.filter(s => Math.round(s) === star).length,
+        }));
+
+        setReviewsData({ reviews, stats, distribution });
       } catch (err) {
         console.error('Error fetching reviews page data:', err);
       } finally {
