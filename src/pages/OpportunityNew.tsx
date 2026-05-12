@@ -263,7 +263,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         )}
       </div>
       <div className="relative">
-        <div className="absolute inset-0 bg-slate-900/5 rounded-[2.5rem] -m-1 opacity-0 group-focus-within:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-slate-900/5 rounded-[2.5rem] -m-1 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
         {children}
       </div>
     </div>
