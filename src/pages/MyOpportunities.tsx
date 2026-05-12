@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Briefcase, AlertCircle, Trash2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
 
@@ -18,19 +18,26 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
   const fetchMyOpportunities = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          *,
-          profiles:owner_id (
-            full_name, avatar_url, occupation, username
-          )
-        `)
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setOpportunities(data || []);
+      const response = await api.get('/opportunities/me');
+      
+      // Transform data to match frontend expectations
+      const transformedData = response.data.map((opp: any) => ({
+        ...opp,
+        owner_id: opp.ownerId,
+        image_url: opp.imageUrl,
+        work_hours: opp.workHours,
+        pay_amount: opp.payAmount,
+        pay_period: opp.payPeriod,
+        about_work: opp.aboutWork,
+        profiles: {
+          full_name: opp.ownerName,
+          avatar_url: opp.ownerAvatar,
+          occupation: opp.ownerTrade,
+          username: opp.ownerUsername || opp.ownerSupabaseId
+        }
+      }));
+      
+      setOpportunities(transformedData);
     } catch (err: any) {
       console.error('Error fetching my opportunities:', err);
       setError(err.message);
@@ -47,8 +54,7 @@ export default function MyOpportunities({ isRtl }: MyOpportunitiesProps) {
     if (!window.confirm(isRtl ? 'האם אתה בטוח שברצונך למחוק הזדמנות זו?' : 'Are you sure you want to delete this opportunity?')) return;
     
     try {
-      const { error } = await supabase.from('opportunities').delete().eq('id', id).eq('owner_id', user!.id);
-      if (error) throw error;
+      await api.delete(`/opportunities/${id}`);
       setOpportunities(opportunities.filter(o => o.id !== id));
     } catch (err: any) {
       alert(err.message);

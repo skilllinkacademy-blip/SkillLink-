@@ -44,7 +44,6 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [selectedOtherUserId, setSelectedOtherUserId] = useState<string | null>(null);
-  const [pendingOtherUser, setPendingOtherUser] = useState<{ id: string; name: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -56,10 +55,11 @@ export default function Messaging({ isRtl }: MessagingProps) {
   useEffect(() => {
     const state = location.state as { recipientId?: string; recipientName?: string };
     if (state?.recipientId) {
-      setPendingOtherUser({ id: state.recipientId, name: state.recipientName || '' });
       setSelectedOtherUserId(state.recipientId);
+      fetchConversations();
+    } else {
+      fetchConversations();
     }
-    fetchConversations();
   }, [location.state]);
 
   useEffect(() => {
@@ -68,8 +68,6 @@ export default function Messaging({ isRtl }: MessagingProps) {
         try {
           const conv = await getOrCreateConversation(supabase, selectedOtherUserId);
           setSelectedConversationId(conv.id);
-          // Re-fetch conversations so the new one appears in the list with full user data
-          await fetchConversations();
         } catch (err) {
           console.error('Error setting up chat:', err);
         }
@@ -82,25 +80,21 @@ export default function Messaging({ isRtl }: MessagingProps) {
     if (selectedConversationId) {
       fetchMessages(selectedConversationId);
 
-      // Subscribe to new and updated messages for this conversation
+      // Subscribe to new messages for this conversation
       const channel = supabase
         .channel(`chat:${selectedConversationId}`)
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'messages',
             filter: `conversation_id=eq.${selectedConversationId}`
           },
           (payload) => {
-            if (payload.eventType === 'INSERT') {
-              const newMsg = payload.new as Message;
-              if (newMsg.sender_id !== user?.id) {
-                setMessages(prev => [...prev, newMsg]);
-              }
-            } else if (payload.eventType === 'UPDATE') {
-              setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new as Message } : m));
+            const newMsg = payload.new as Message;
+            if (newMsg.sender_id !== user?.id) {
+              setMessages((prev) => [...prev, newMsg]);
             }
           }
         )
@@ -213,13 +207,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
 
       // Update local conversation unread count
       setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
-
-      // Update individual message is_read state so read-receipt icons update immediately
-      setMessages(prev => prev.map(m =>
-        m.conversation_id === conversationId && m.recipient_id === user.id && !m.is_read
-          ? { ...m, is_read: true } : m
-      ));
-
+      
       // Update global unread count
       refreshUnreadCount();
     } catch (err) {
@@ -301,8 +289,6 @@ export default function Messaging({ isRtl }: MessagingProps) {
             ...prev.filter(c => c.id !== selectedConversationId)
           ];
         }
-        // New conversation not yet in list — refresh to pick it up
-        fetchConversations();
         return prev;
       });
     } catch (err) {
@@ -320,7 +306,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
   return (
-    <div className="h-full flex overflow-hidden animate-in fade-in duration-500">
+    <div className="h-[calc(100vh-8rem)] bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden flex animate-in fade-in duration-500">
       {/* Sidebar: Chat List */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-slate-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-8 border-b border-slate-100 space-y-6">
@@ -455,7 +441,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 group-hover/header:text-emerald-600 transition-colors">{selectedConversation?.other_user?.full_name || pendingOtherUser?.name || (isRtl ? 'טוען...' : 'Loading...')}</h3>
+                  <h3 className="text-xl font-black text-slate-900 group-hover/header:text-emerald-600 transition-colors">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</h3>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-200" />
                     <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Online</p>

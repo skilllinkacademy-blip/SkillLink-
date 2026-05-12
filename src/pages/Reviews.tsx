@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ArrowRight, ArrowLeft, Loader2, User as UserIcon, ShieldCheck, Filter, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 
 interface ReviewsPageProps {
   isRtl: boolean;
@@ -27,35 +28,17 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
         // 1. Get profile by username
         const { data: profileData, error: pError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, role, is_verified, occupation')
+          .select('id, full_name, username, avatar_url, role, verified, occupation')
           .eq('username', username)
           .single();
 
         if (pError) throw pError;
         setProfile(profileData);
 
-        // 2. Get reviews from Supabase
-        const { data: reviewRows, error: rError } = await supabase
-          .from('reviews')
-          .select('*, reviewer:reviewer_id(full_name, avatar_url, is_verified, username)')
-          .eq('profile_id', profileData.id)
-          .order('created_at', { ascending: false });
-
-        if (rError) throw rError;
-        const reviews = reviewRows || [];
-        const total = reviews.length;
-        const overallAvg = total > 0
-          ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / total
-          : 0;
-        const avgProfessional = total > 0 ? reviews.reduce((s: number, r: any) => s + (r.professional || 0), 0) / total : 0;
-        const avgTeaching = total > 0 ? reviews.reduce((s: number, r: any) => s + (r.teaching || 0), 0) / total : 0;
-        const avgWorkEthic = total > 0 ? reviews.reduce((s: number, r: any) => s + (r.work_ethic || 0), 0) / total : 0;
-        const avgReliability = total > 0 ? reviews.reduce((s: number, r: any) => s + (r.reliability || 0), 0) / total : 0;
-        const distribution = [5, 4, 3, 2, 1].map(star => ({
-          stars: star,
-          count: reviews.filter((r: any) => r.rating === star).length,
-        }));
-        setReviewsData({ reviews, stats: { total, overallAvg, avgProfessional, avgTeaching, avgWorkEthic, avgReliability }, distribution });
+        // 2. Get reviews from our custom SQLite endpoint
+        // Wait, SQLite endpoint is local to server.ts. We should use api.get
+        const res = await api.get(`/ratings/user/${profileData.id}`);
+        setReviewsData(res.data);
       } catch (err) {
         console.error('Error fetching reviews page data:', err);
       } finally {
@@ -90,7 +73,7 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
   const { reviews = [], stats = {}, distribution = [] } = reviewsData || {};
   const filteredReviews = filterRating === 'all' 
     ? reviews 
-    : reviews.filter(r => Math.round((r.professional + r.teaching + (r.work_ethic || 0) + r.reliability) / 4) === filterRating);
+    : reviews.filter(r => Math.round((r.professional + r.teaching + r.workEthic + r.reliability) / 4) === filterRating);
 
   const starStats = [5, 4, 3, 2, 1].map(star => {
     const dist = distribution.find(d => d.stars === star);
@@ -224,8 +207,8 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden">
-                      {review.reviewer?.avatar_url ? (
-                        <img src={review.reviewer.avatar_url} alt={review.reviewer?.full_name} className="w-full h-full object-cover" />
+                      {review.fromAvatar ? (
+                        <img src={review.fromAvatar} alt={review.fromName} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
                           <UserIcon size={24} />
@@ -234,19 +217,19 @@ export default function ReviewsPage({ isRtl }: ReviewsPageProps) {
                     </div>
                     <div>
                       <h4 className="font-black text-sm flex items-center gap-1.5">
-                        {review.reviewer?.full_name}
-                        {review.reviewer?.is_verified && (
+                        {review.fromName}
+                        {review.fromVerified === 1 && (
                           <CheckCircle2 size={14} className="text-blue-500" />
                         )}
                       </h4>
                       <p className="text-xs text-gray-400 font-medium">
-                        {new Date(review.created_at).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
+                        {new Date(review.createdAt).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 px-3 py-1 bg-yellow-50 text-yellow-700 rounded-full text-xs font-black">
                     <Star size={14} className="fill-current" />
-                    {((review.professional + review.teaching + (review.work_ethic || 0) + review.reliability) / 4).toFixed(1)}
+                    {((review.professional + review.teaching + review.workEthic + review.reliability) / 4).toFixed(1)}
                   </div>
                 </div>
                 

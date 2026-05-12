@@ -20,7 +20,6 @@ import MyOpportunities from './pages/MyOpportunities';
 import OpportunityNew from './pages/OpportunityNew';
 import OpportunityDetails from './pages/OpportunityDetails';
 import Saved from './pages/Saved';
-import AIChatbot from './components/AIChatbot';
 import Privacy from './pages/legal/Privacy';
 import Terms from './pages/legal/Terms';
 import Contact from './pages/legal/Contact';
@@ -29,7 +28,7 @@ import About from './pages/legal/About';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isSyncing } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -176,10 +175,8 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
             } 
           />
 
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to={user ? "/app/opportunities" : "/"} replace />} />
         </Routes>
-        <AIChatbot isRtl={isRtl} />
       </main>
     </div>
     </ErrorBoundary>

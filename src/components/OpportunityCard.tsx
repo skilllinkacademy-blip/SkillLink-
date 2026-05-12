@@ -213,7 +213,7 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
             <div className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-1">
               <span className="text-emerald-600 font-bold">₪</span>
               {payAmount || desiredSalary || '---'}
-              {payPeriod && <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{payPeriod === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>}
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">/{payPeriod === 'hour' ? (isRtl ? 'שעה' : 'hr') : (isRtl ? 'יום' : 'day')}</span>
             </div>
           </div>
           <div className="space-y-0.5 sm:space-y-1">

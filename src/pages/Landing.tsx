@@ -34,11 +34,10 @@ export default function Landing({ isRtl }: LandingProps) {
         }
 
         const total = (mentorCount || 0) + (menteeCount || 0);
-        const DISPLAY_FLOOR = 500;
-        setCounts({
-          mentors: Math.max(mentorCount || 0, 50),
-          mentees: Math.max(menteeCount || 0, 120),
-          total: Math.max(total, DISPLAY_FLOOR)
+        setCounts({ 
+          mentors: mentorCount || 0, 
+          mentees: menteeCount || 0, 
+          total: total > 0 ? total : 500
         });
       } catch (err) {
         console.error('Landing: Failed to fetch counts:', err);

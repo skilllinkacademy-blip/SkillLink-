@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, MapPin, Filter, Star, Briefcase, ArrowRight, X, ChevronDown, User, ShieldCheck, Zap } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveAsset } from '../lib/assets';
@@ -36,36 +36,20 @@ export default function Explore({ isRtl }: ExploreProps) {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('profiles')
-        .select('id, username, full_name, role, city, occupation, avatar_url, years_experience, is_verified, workload, bio, headline, skills, created_at, updated_at')
-        .neq('role', 'admin');
-
-      if (searchQuery) {
-        query = query.or(`full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`);
-      }
-      if (categoryFilter !== 'all') {
-        query = query.ilike('occupation', `%${categoryFilter}%`);
-      }
-      if (locationQuery) {
-        query = query.ilike('city', `%${locationQuery}%`);
-      }
-      if (roleFilter !== 'all') {
-        query = query.eq('role', roleFilter);
-      }
-      if (experienceFilter !== null) {
-        query = query.gte('years_experience', experienceFilter);
-      }
-      if (verifiedOnly) {
-        query = query.eq('is_verified', true);
-      }
-
-      const { data, error } = await query.limit(50);
-      if (error) throw error;
-
-      // Map city → location for OpportunityCard / profile cards compatibility
-      const rawResults = (data || []).map((p: any) => ({ ...p, location: p.city }));
-
+      const response = await api.get('/search', {
+        params: {
+          q: searchQuery,
+          trade: categoryFilter !== 'all' ? categoryFilter : undefined,
+          location: locationQuery,
+          role: roleFilter !== 'all' ? roleFilter : undefined,
+          experience: experienceFilter || undefined,
+          verified: verifiedOnly || undefined,
+          isBusiness: businessOnly || undefined
+        }
+      });
+      
+      const rawResults = response.data || [];
+      
       if (profile && rawResults.length > 0) {
         const { getAIProfileRecommendations } = await import('../services/aiService');
         const aiResults = await getAIProfileRecommendations(profile, rawResults);
@@ -256,7 +240,7 @@ export default function Explore({ isRtl }: ExploreProps) {
             {results.map((profile) => (
               <Link 
                 key={profile.id}
-                to={`/app/u/${profile.username || profile.id}`}
+                to={`/app/u/${profile.supabase_id || profile.username || profile.id}`}
                 className="industrial-card p-8 group relative overflow-hidden flex flex-col h-full"
               >
                 {isRecentlyActive(profile.updated_at) && (

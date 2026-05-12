@@ -4,6 +4,7 @@ import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import OpportunityCard from '../components/OpportunityCard';
 import { resolveAsset } from '../lib/assets';
 
@@ -185,7 +186,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               businessDescription: data.businessDescription || '',
               businessLogo: data.businessLogo || '',
               businessWebsite: data.businessWebsite || '',
-              businessSocialLinks: (() => { try { return data.businessSocialLinks ? JSON.parse(data.businessSocialLinks) : { facebook: '', instagram: '', linkedin: '' }; } catch { return { facebook: '', instagram: '', linkedin: '' }; } })()
+              businessSocialLinks: data.businessSocialLinks ? JSON.parse(data.businessSocialLinks) : { facebook: '', instagram: '', linkedin: '' }
             });
             setIsInitialized(true);
             currentProfileId.current = data.id;
@@ -201,8 +202,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     };
 
     fetchProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPublicView, username, myProfile?.id, user?.id]);
+  }, [isPublicView, username, myProfile, user]);
 
   useEffect(() => {
     if (activeTab === 'reviews' && profile?.id) {
@@ -213,24 +213,9 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const fetchReviews = async (profileId: string) => {
     setLoadingReviews(true);
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*, reviewer:reviewer_id(full_name, avatar_url, is_verified, username)')
-        .eq('profile_id', profileId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      const reviewList = data || [];
-      const total = reviewList.length;
-      const overallAvg = total > 0
-        ? reviewList.reduce((sum: number, r: any) => sum + r.rating, 0) / total
-        : 0;
-      const distribution = [5, 4, 3, 2, 1].map(star => ({
-        stars: star,
-        count: reviewList.filter((r: any) => r.rating === star).length
-      }));
-      setReviews(reviewList);
-      setReviewsStats({ total, overallAvg, distribution });
+      const res = await api.get(`/ratings/user/${profileId}`);
+      setReviews(res.data.reviews || []);
+      setReviewsStats(res.data);
     } catch (err) {
       console.error('Error fetching reviews:', err);
     } finally {
@@ -246,20 +231,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     }
     setSaving(true);
     try {
-      const overallRating = Math.round(
-        (newReview.professional + newReview.teaching + newReview.workEthic + newReview.reliability) / 4
-      );
-      const { error } = await supabase.from('reviews').insert({
-        profile_id: profile.id,
-        reviewer_id: user.id,
-        rating: overallRating,
-        comment: newReview.comment,
+      await api.post('/ratings', {
+        toId: profile.id,
         professional: newReview.professional,
         teaching: newReview.teaching,
-        work_ethic: newReview.workEthic,
+        workEthic: newReview.workEthic,
         reliability: newReview.reliability,
+        comment: newReview.comment
       });
-      if (error) throw error;
 
       setNewReview({ 
         rating: 5, 
@@ -285,17 +264,25 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       const fetchSaved = async () => {
         setLoadingSaved(true);
         try {
-          const { data: savedData, error: savedError } = await supabase
-            .from('saved_opportunities')
-            .select(`*, opportunity:opportunity_id(*, profiles:owner_id(full_name, avatar_url, occupation, username))`)
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-
-          if (savedError) throw savedError;
-          const transformedSaved = (savedData || []).map((item: any) => ({
-            ...item.opportunity,
-            profiles: item.opportunity?.profiles,
+          const response = await api.get('/opportunities/saved');
+          const saved = response.data;
+          
+          // Transform to match frontend expectations
+          const transformedSaved = saved.map((opp: any) => ({
+            ...opp,
+            owner_id: opp.ownerId,
+            image_url: opp.imageUrl,
+            work_hours: opp.workHours,
+            pay_amount: opp.payAmount,
+            pay_period: opp.payPeriod,
+            profiles: {
+              full_name: opp.ownerName,
+              avatar_url: opp.ownerAvatar,
+              occupation: opp.ownerTrade,
+              username: opp.ownerUsername || opp.ownerSupabaseId
+            }
           }));
+          
           setSavedOpportunities(transformedSaved);
         } catch (err) {
           console.error('Error fetching saved opportunities:', err);
@@ -330,7 +317,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         delete updatePayload.portfolio_urls;
       }
 
-      // Update Supabase profile
+      // 1. Update SQLite backend
+      try {
+        await api.put('/users/me', updatePayload);
+      } catch (err) {
+        console.error('Error updating SQLite profile:', err);
+      }
+      
+      // 2. Update Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -443,6 +437,13 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       if (updateError) throw updateError;
       
+      // Update SQLite backend
+      try {
+        await api.put('/users/me', { avatar: publicUrl });
+      } catch (err) {
+        console.error('Error updating SQLite avatar:', err);
+      }
+
       await refreshProfile();
     } catch (err: any) {
       console.error('Error uploading avatar:', err.message);
@@ -458,6 +459,13 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     try {
       const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
       if (error) throw error;
+
+      // Update SQLite backend
+      try {
+        await api.put('/users/me', { avatar: null });
+      } catch (err) {
+        console.error('Error removing SQLite avatar:', err);
+      }
 
       await refreshProfile();
     } catch (err: any) {
@@ -543,23 +551,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     if (verifiedSkills >= 2) return isRtl ? 'מתלמד שנה ב\'' : 'Year 2 Apprentice';
     return isRtl ? 'מתלמד מתחיל' : 'Junior Apprentice';
   }, [profile?.role, formData.skills, isRtl]);
-
-  const profileCompleteness = useMemo(() => {
-    if (!profile) return 0;
-    const checks = [
-      !!formData.full_name,
-      !!formData.bio,
-      !!formData.occupation,
-      !!formData.location,
-      !!profile.avatar_url,
-      !!formData.phone,
-      !!formData.headline,
-      (formData.skills || []).length > 0,
-      (formData.years_experience || 0) > 0,
-      (formData.portfolio_urls || []).length > 0,
-    ];
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [profile, formData]);
 
   if (loading) {
     return (
@@ -682,12 +673,12 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             <div className="flex-1 md:w-64 space-y-3">
               <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <span>{isRtl ? 'התקדמות למאסטרי' : 'Mastery Progress'}</span>
-                <span>{`${profileCompleteness}%`}</span>
+                <span>{isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%`}</span>
               </div>
               <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-white/5 p-1">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                  style={{ width: `${profileCompleteness}%` }}
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
+                  style={{ width: isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%` }} 
                 />
               </div>
             </div>
@@ -1095,8 +1086,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                                     onBlur={() => handleSave('businessSocialLinks', formData.businessSocialLinks)}
                                   />
                                 </div>
-                              ) : profile.businessSocialLinks && (() => { try { return JSON.parse(profile.businessSocialLinks as string); } catch { return {}; } })()?.[typedPlatform] && (
-                                <a key={platform} href={(() => { try { return JSON.parse(profile.businessSocialLinks as string); } catch { return {}; } })()?.[typedPlatform]} target="_blank" rel="noopener noreferrer" className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-600">
+                              ) : profile.businessSocialLinks && JSON.parse(profile.businessSocialLinks)[typedPlatform] && (
+                                <a key={platform} href={JSON.parse(profile.businessSocialLinks)[typedPlatform]} target="_blank" rel="noopener noreferrer" className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-600">
                                   <Globe size={18} />
                                 </a>
                               );
@@ -1430,30 +1421,30 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-lg overflow-hidden border border-slate-100">
-                              {review.reviewer?.avatar_url ? (
-                                <img src={review.reviewer.avatar_url} alt="" className="w-full h-full object-cover" />
+                              {review.fromAvatar ? (
+                                <img src={review.fromAvatar} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                review.reviewer?.full_name?.charAt(0) || 'U'
+                                review.fromName?.charAt(0) || 'U'
                               )}
                             </div>
                             <div>
                               <p className="font-black text-slate-900 flex items-center gap-2">
-                                {review.reviewer?.full_name}
-                                {review.reviewer?.is_verified && <ShieldCheck size={14} className="text-blue-500" />}
+                                {review.fromName}
+                                {review.fromVerified === 1 && <ShieldCheck size={14} className="text-blue-500" />}
                               </p>
                               <div className="flex gap-0.5 text-yellow-500">
                                 {[1,2,3,4,5].map(star => (
-                                  <Star
-                                    key={star}
-                                    size={12}
-                                    fill={star <= ((review.professional + review.teaching + (review.work_ethic || 0) + review.reliability) / 4) ? "currentColor" : "none"}
+                                  <Star 
+                                    key={star} 
+                                    size={12} 
+                                    fill={star <= ((review.professional + review.teaching + review.workEthic + review.reliability) / 4) ? "currentColor" : "none"} 
                                   />
                                 ))}
                               </div>
                             </div>
                           </div>
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                            {new Date(review.created_at).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
+                            {new Date(review.createdAt).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
                           </span>
                         </div>
                         <p className="text-gray-600 font-medium leading-relaxed italic">

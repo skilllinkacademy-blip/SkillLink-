@@ -1,3 +1,4 @@
+import api from '../lib/api';
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Gemini Client lazily to avoid top-level crashes
