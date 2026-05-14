@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
   ArrowRight, ShieldCheck, Zap, Users,
-  Briefcase, GraduationCap, Star, CheckCircle2, Link2,
+  Briefcase, GraduationCap, Star, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
@@ -38,186 +38,14 @@ function Reveal({ children, className = '', delay = 0 }: { children: React.React
   );
 }
 
-/* ── Scroll-driven 3D mentor/apprentice scene ── */
-function MentorConnectionScene({ isRtl }: { isRtl: boolean }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start 0.95', 'center 0.45'],
-  });
-
-  const smooth = useSpring(scrollYProgress, { stiffness: 60, damping: 22 });
-
-  // Mentor card – slides in from the left (or right in RTL)
-  const mentorX    = useTransform(smooth, [0, 1], [isRtl ? '55%' : '-55%', '0%']);
-  const mentorRY   = useTransform(smooth, [0, 1], [isRtl ? -38 : 38, 0]);
-  const mentorRZ   = useTransform(smooth, [0, 1], [isRtl ? 6 : -6, 0]);
-  const mentorO    = useTransform(smooth, [0, 0.25], [0, 1]);
-
-  // Apprentice card – slides in from the right (or left in RTL), slight delay via offset
-  const apprenticeX  = useTransform(smooth, [0.08, 1], [isRtl ? '-55%' : '55%', '0%']);
-  const apprenticeRY = useTransform(smooth, [0.08, 1], [isRtl ? 38 : -38, 0]);
-  const apprenticeRZ = useTransform(smooth, [0.08, 1], [isRtl ? -6 : 6, 0]);
-  const apprenticeO  = useTransform(smooth, [0.08, 0.38], [0, 1]);
-
-  // Centre connector – appears last
-  const connScale = useTransform(smooth, [0.55, 1], [0, 1]);
-  const connO     = useTransform(smooth, [0.55, 0.85], [0, 1]);
-
-  // Badge that pops up when connection is made
-  const badgeScale = useTransform(smooth, [0.75, 1], [0, 1]);
-  const badgeO     = useTransform(smooth, [0.75, 1], [0, 1]);
-
-  return (
-    <section ref={ref} className="relative py-24 sm:py-36 overflow-hidden bg-gradient-to-b from-white via-blue-50/40 to-white">
-      {/* soft glow */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[400px] bg-blue-300/20 rounded-full blur-[120px]" />
-      </div>
-
-      {/* label */}
-      <Reveal className="text-center mb-14 px-5">
-        <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.28em] mb-3">
-          {isRtl ? 'הרעיון מאחורי SkillLink' : 'The SkillLink Connection'}
-        </p>
-        <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-950">
-          {isRtl ? 'מנטור פוגש ' : 'Mentor meets '}
-          <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-            {isRtl ? 'חניך.' : 'Apprentice.'}
-          </span>
-        </h2>
-      </Reveal>
-
-      {/* 3-D cards stage */}
-      <div
-        className="relative flex items-center justify-center gap-4 sm:gap-8 mx-auto px-5"
-        style={{ perspective: '1100px' }}
-      >
-        {/* ── Mentor card ── */}
-        <motion.div
-          style={{
-            x: mentorX, rotateY: mentorRY, rotateZ: mentorRZ, opacity: mentorO,
-            transformStyle: 'preserve-3d',
-          }}
-          className="relative w-[140px] sm:w-[200px] lg:w-[230px] rounded-[1.6rem] overflow-hidden
-                     shadow-[0_20px_60px_-12px_rgba(30,64,175,0.22)] border-2 border-blue-100 shrink-0"
-        >
-          <div className="aspect-[3/4] relative">
-            {/* crop to mentor (left half of photo) */}
-            <img
-              src={carpenterMentorImg} alt="Mentor"
-              className="w-full h-full object-cover"
-              style={{ objectPosition: '25% center' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-            <div className="absolute top-3 left-3 px-2.5 py-1 bg-blue-600 rounded-full text-[10px] font-black text-white uppercase tracking-wider">
-              {isRtl ? 'מנטור' : 'Mentor'}
-            </div>
-            <motion.div
-              style={{ scale: connScale, opacity: connO }}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center"
-            >
-              <ShieldCheck size={14} className="text-blue-600" />
-            </motion.div>
-          </div>
-          <div className="bg-white p-3 sm:p-4">
-            <div className="text-xs font-black text-gray-900">{isRtl ? 'משה לוי' : 'Moshe Levi'}</div>
-            <div className="text-[11px] text-gray-400 mt-0.5">{isRtl ? 'נגר · 15 שנה' : 'Carpenter · 15 yrs'}</div>
-            <div className="flex items-center gap-0.5 mt-1.5">
-              {[...Array(5)].map((_, i) => <Star key={i} size={8} className="text-yellow-400 fill-yellow-400" />)}
-              <span className="text-[10px] text-gray-400 ms-1">4.9</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ── Centre connector ── */}
-        <div className="relative flex flex-col items-center gap-3 shrink-0 z-10">
-          <div className="flex items-center">
-            <motion.div
-              style={{ scaleX: connScale, opacity: connO }}
-              className="w-6 sm:w-12 h-px bg-gradient-to-l from-blue-400 to-transparent origin-right"
-            />
-            <motion.div
-              style={{ scale: connScale, opacity: connO }}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-blue-600 flex items-center justify-center
-                         shadow-xl shadow-blue-600/40 mx-1"
-            >
-              <Link2 size={20} className="text-white sm:hidden" />
-              <Link2 size={26} className="text-white hidden sm:block" />
-            </motion.div>
-            <motion.div
-              style={{ scaleX: connScale, opacity: connO }}
-              className="w-6 sm:w-12 h-px bg-gradient-to-r from-blue-400 to-transparent origin-left"
-            />
-          </div>
-
-          {/* match badge */}
-          <motion.div
-            style={{ scale: badgeScale, opacity: badgeO }}
-            className="bg-white rounded-2xl shadow-xl border border-gray-100 px-3 py-2.5 text-center w-[90px] sm:w-[110px]"
-          >
-            <div className="text-[9px] text-gray-400 font-medium">{isRtl ? 'התאמה!' : 'Match!'}</div>
-            <div className="text-xl sm:text-2xl font-black text-blue-600 leading-tight">96%</div>
-            <div className="flex justify-center gap-0.5 mt-0.5">
-              {[...Array(5)].map((_, i) => <Star key={i} size={6} className="text-yellow-400 fill-yellow-400" />)}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Apprentice card ── */}
-        <motion.div
-          style={{
-            x: apprenticeX, rotateY: apprenticeRY, rotateZ: apprenticeRZ, opacity: apprenticeO,
-            transformStyle: 'preserve-3d',
-          }}
-          className="relative w-[140px] sm:w-[200px] lg:w-[230px] rounded-[1.6rem] overflow-hidden
-                     shadow-[0_20px_60px_-12px_rgba(0,0,0,0.12)] border-2 border-gray-200 shrink-0"
-        >
-          <div className="aspect-[3/4] relative">
-            {/* crop to apprentice (right half of photo) */}
-            <img
-              src={carpenterMentorImg} alt="Apprentice"
-              className="w-full h-full object-cover"
-              style={{ objectPosition: '75% center' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-            <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 rounded-full text-[10px] font-black text-gray-700 uppercase tracking-wider">
-              {isRtl ? 'חניך' : 'Apprentice'}
-            </div>
-            <motion.div
-              style={{ scale: badgeScale, opacity: badgeO }}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-900 shadow-md flex items-center justify-center"
-            >
-              <GraduationCap size={13} className="text-white" />
-            </motion.div>
-          </div>
-          <div className="bg-white p-3 sm:p-4">
-            <div className="text-xs font-black text-gray-900">{isRtl ? 'אלי בן-דוד' : 'Eli Ben-David'}</div>
-            <div className="text-[11px] text-gray-400 mt-0.5">{isRtl ? 'מחפש מנטור' : 'Seeking mentor'}</div>
-            {/* progress bar animates in */}
-            <div className="h-1 bg-gray-100 rounded-full mt-2 overflow-hidden">
-              <motion.div
-                style={{ scaleX: badgeScale, opacity: badgeO }}
-                className="h-full bg-blue-600 rounded-full origin-left"
-              />
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      <Reveal delay={0.1} className="text-center mt-10 px-5">
-        <p className="text-gray-400 text-sm max-w-xs mx-auto">
-          {isRtl
-            ? 'AI מוצא את ההתאמה המושלמת לפי מיקום, מקצוע וניסיון'
-            : 'AI finds the perfect match by location, trade and experience'}
-        </p>
-      </Reveal>
-    </section>
-  );
-}
-
 export default function Landing({ isRtl }: LandingProps) {
   const [total, setTotal] = useState(500);
+  const meetRef = useRef(null);
+  const { scrollYProgress: meetProgress } = useScroll({ target: meetRef, offset: ['start end', 'center center'] });
+  const rawMentorX = useTransform(meetProgress, [0, 1], ['-120px', '0px']);
+  const rawApprenticeX = useTransform(meetProgress, [0, 1], ['120px', '0px']);
+  const mentorX = useSpring(rawMentorX, { stiffness: 60, damping: 20 });
+  const apprenticeX = useSpring(rawApprenticeX, { stiffness: 60, damping: 20 });
 
   useEffect(() => {
     if (!supabase) return;
@@ -364,10 +192,59 @@ export default function Landing({ isRtl }: LandingProps) {
         </div>
       </div>
 
-      {/* ══════════════════ 3. CONNECTION SCENE ══════════════════ */}
-      <MentorConnectionScene isRtl={isRtl} />
+      {/* ══════════════════ MENTOR MEETS APPRENTICE ══════════════════ */}
+      <section ref={meetRef} className="bg-white overflow-hidden py-10 sm:py-16">
+        <Reveal className="text-center px-5 mb-2">
+          <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-3">
+            {isRtl ? 'SkillLink בפעולה' : 'SkillLink in action'}
+          </p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-950">
+            {isRtl ? 'מנטור פוגש חניך.' : 'Mentor meets Apprentice.'}
+          </h2>
+          <p className="text-gray-400 text-sm sm:text-base mt-3 max-w-xs mx-auto leading-relaxed">
+            {isRtl
+              ? 'הכלים עוברים מיד ליד — והידע עובר איתם.'
+              : 'The tools pass hand to hand — and so does the knowledge.'}
+          </p>
+        </Reveal>
 
-      {/* ══════════════════ 4. HOW IT WORKS ══════════════════ */}
+        {/* figures */}
+        <div className="relative max-w-3xl mx-auto flex items-end justify-between px-4 sm:px-10">
+          {/* Mentor — slides from left */}
+          <motion.div style={{ x: mentorX }} className="w-[46%] sm:w-[42%] relative">
+            <img src="/mentor_figure.jpg" alt={isRtl ? 'מנטור' : 'Mentor'} className="w-full object-contain select-none" draggable={false} />
+          </motion.div>
+
+          {/* Center badge */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[28%] flex flex-col items-center gap-1.5 z-10 pointer-events-none">
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+              className="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-600/40"
+            >
+              <Zap size={18} className="text-white fill-white" />
+            </motion.div>
+            <motion.span
+              initial={{ opacity: 0, y: 4 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ delay: 0.65 }}
+              className="text-[9px] font-black text-blue-600 uppercase tracking-[.22em] whitespace-nowrap"
+            >
+              {isRtl ? 'חיבור!' : 'Connected!'}
+            </motion.span>
+          </div>
+
+          {/* Apprentice — slides from right */}
+          <motion.div style={{ x: apprenticeX }} className="w-[46%] sm:w-[42%] relative">
+            <img src="/apprentice_figure.jpg" alt={isRtl ? 'חניך' : 'Apprentice'} className="w-full object-contain select-none" draggable={false} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════ 3. HOW IT WORKS ══════════════════ */}
       <section className="py-20 sm:py-28 bg-white px-5 sm:px-8 lg:px-14">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-14">
