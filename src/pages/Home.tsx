@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OpportunityCard from '../components/OpportunityCard';
 import ProductShowcase from '../components/ProductShowcase';
+import NetworkAnimation from '../components/NetworkAnimation';
 
 interface HomeProps {
   isRtl: boolean;
@@ -74,6 +75,9 @@ export default function Home({ isRtl }: HomeProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+
+      {/* Network Animation */}
+      <NetworkAnimation isRtl={isRtl} />
 
       {/* Verification Banner */}
       {profile?.role === 'mentor' && (profile?.verification_status === 'none' || profile?.verification_status === 'rejected') && (
