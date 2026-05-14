@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
-  ArrowRight, ShieldCheck, Briefcase, GraduationCap, CheckCircle2, Star,
+  ArrowRight, ShieldCheck, Briefcase, GraduationCap, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { carpenterMentorImg } from '../lib/assets';
@@ -62,7 +62,7 @@ function StepItem({ step, isRtl }: { step: StepDef; isRtl: boolean }) {
 }
 
 export default function Landing({ isRtl }: LandingProps) {
-  const [total, setTotal] = useState(500);
+  const [total, setTotal] = useState(0);
   const meetRef = useRef(null);
   const { scrollYProgress: meetProgress } = useScroll({ target: meetRef, offset: ['start end', 'center center'] });
   const rawMentorX = useTransform(meetProgress, [0, 1], ['-120px', '0px']);
@@ -122,8 +122,8 @@ export default function Landing({ isRtl }: LandingProps) {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-md">
               {isRtl
-                ? 'SkillLink מחברת בין אומנים מאומתים לבין חניכים שאפתניים. הגש מועמדות תוך דקות והתחל לבנות קריירה אמיתית.'
-                : 'SkillLink connects verified trade professionals with ambitious apprentices. Apply in minutes and start building a real career.'}
+                ? 'SkillLink מחברת בין בעלי מקצוע מאומתים לחניכים שרציניים ברצונם ללמוד. הצטרף תוך דקות.'
+                : 'SkillLink connects verified trade professionals with apprentices who are serious about learning. Join in minutes.'}
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -149,8 +149,10 @@ export default function Landing({ isRtl }: LandingProps) {
                 ))}
               </div>
               <p className="text-sm text-gray-500">
-                <span className="font-black text-gray-900">{total}+</span>{' '}
-                {isRtl ? 'אנשי מקצוע פעילים' : 'active professionals'}
+                {total > 10
+                  ? <><span className="font-black text-gray-900">{total}+</span>{' '}{isRtl ? 'אנשי מקצוע פעילים' : 'active professionals'}</>
+                  : <span className="font-semibold text-gray-400">{isRtl ? 'קהילה בצמיחה — הצטרף ראשון' : 'Growing community — join early'}</span>
+                }
               </p>
             </motion.div>
           </div>
@@ -186,9 +188,9 @@ export default function Landing({ isRtl }: LandingProps) {
 
               <div className="flex items-center justify-around border-t border-white/8 px-4 py-3 bg-white/3">
                 {[
-                  { n: '500+', l: { he: 'אנשי מקצוע', en: 'Professionals' } },
-                  { n: '15+',  l: { he: 'מקצועות',    en: 'Trades'        } },
-                  { n: '92%',  l: { he: 'דיוק התאמה', en: 'Match Accuracy' } },
+                  { n: '8+',   l: { he: 'מקצועות',      en: 'Trades'        } },
+                  { n: 'AI',   l: { he: 'התאמה חכמה',   en: 'Smart Matching' } },
+                  { n: '100%', l: { he: 'ללא עלות',      en: 'Free to Join'  } },
                 ].map((s, i) => (
                   <div key={i} className="text-center">
                     <p className="text-white font-black text-sm leading-none">{s.n}</p>
@@ -291,8 +293,8 @@ export default function Landing({ isRtl }: LandingProps) {
                 n: '03', numColor: '#10b981',
                 t: { he: 'צא לשטח', en: 'Get to Work' },
                 d: {
-                  he: 'צבור ניסיון מעשי תחת הנחיית מקצוען, ובנה קריירה שתחזיק לאורך זמן.',
-                  en: 'Gain hands-on experience under expert guidance and build a career that stands the test of time.',
+                  he: 'צבור ניסיון מעשי תחת הנחיית מקצוען, ובנה קריירה שמשלמת.',
+                  en: 'Gain hands-on experience under expert guidance and build a career that pays.',
                 },
               },
             ].map((step, i) => <StepItem key={i} step={step} isRtl={isRtl} />)}
@@ -319,8 +321,8 @@ export default function Landing({ isRtl }: LandingProps) {
                   </div>
                   <h3 className="text-2xl font-black leading-snug mb-3">
                     {isRtl
-                      ? <>הכשר את הדור הבא.<br />בנה מורשת מקצועית.</>
-                      : <>Train the next generation.<br />Build a lasting legacy.</>}
+                      ? <>חנך את הבא בתור.<br />תמצא כוח אדם שמתפתח אצלך.</>
+                      : <>Train the next one.<br />Find staff who grow with you.</>}
                   </h3>
                   <ul className="space-y-2">
                     {(isRtl
@@ -391,11 +393,8 @@ export default function Landing({ isRtl }: LandingProps) {
 
           {/* Final CTA */}
           <Reveal delay={0.1} className="mt-10 text-center">
-            <div className="flex justify-center gap-1 mb-5">
-              {[...Array(5)].map((_, i) => <Star key={i} size={14} className="text-yellow-400 fill-yellow-400" />)}
-            </div>
             <h2 className="text-3xl sm:text-5xl font-black text-gray-950 tracking-tight mb-2">
-              {isRtl ? 'מוכן להתחיל?' : 'Ready to get started?'}
+              {isRtl ? 'ההזדמנות הבאה שלך כבר מחכה.' : 'Your next opportunity is already here.'}
             </h2>
             <p className="text-gray-400 text-sm sm:text-base mb-6">
               {isRtl ? 'הצטרף בחינם. ללא כרטיס אשראי.' : 'Join for free. No credit card required.'}

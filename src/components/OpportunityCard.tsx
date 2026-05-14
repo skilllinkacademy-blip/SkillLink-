@@ -152,12 +152,12 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
           </div>
 
           {/* Type pill */}
-          <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+          <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
             isMentorOffer
-              ? 'bg-slate-900 text-white'
-              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              ? 'bg-blue-50 text-blue-700 border-blue-200'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
           }`}>
-            {isRtl ? (isMentorOffer ? 'מנטור' : 'חניך') : (isMentorOffer ? 'Master' : 'Apprentice')}
+            {isRtl ? (isMentorOffer ? 'מנטור' : 'חניך') : (isMentorOffer ? 'Mentor' : 'Apprentice')}
           </span>
         </div>
 
@@ -224,9 +224,6 @@ export default function OpportunityCard({ opportunity, isRtl, onDelete, showActi
                 )}
               </>
             )}
-            <span className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-colors px-2">
-              {isRtl ? 'פרטים ←' : 'View →'}
-            </span>
           </div>
         </div>
       </div>

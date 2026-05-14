@@ -22,10 +22,10 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const mobileNavItems = user ? [
-    { icon: Home, label: isRtl ? 'ראשי' : 'Home', path: '/app/opportunities' },
-    { icon: Search, label: isRtl ? 'חיפוש' : 'Explore', path: '/app/explore' },
-    { icon: MessageSquare, label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages', badge: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
-    { icon: User, label: isRtl ? 'פרופיל' : 'Profile', path: '/app/profile' },
+    { icon: Home,         label: isRtl ? 'ראשי'    : 'Home',     path: '/app/opportunities' },
+    { icon: Search,       label: isRtl ? 'חיפוש'   : 'Explore',  path: '/app/explore' },
+    { icon: MessageSquare,label: isRtl ? 'הודעות'  : 'Messages', path: '/app/messages', badge: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
+    { icon: User,         label: isRtl ? 'פרופיל'  : 'Profile',  path: '/app/profile' },
   ] : [];
 
   const desktopNavItems = user ? [
@@ -203,15 +203,6 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
               </div>
               <span className="text-[10px] font-medium text-slate-400 mt-0.5">{isRtl ? 'פרסם' : 'Post'}</span>
             </Link>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5"
-            >
-              <LogOut size={22} strokeWidth={1.8} className="text-slate-400" />
-              <span className="text-[10px] font-medium text-slate-400">{isRtl ? 'יציאה' : 'Logout'}</span>
-            </button>
           </div>
         </div>
       )}

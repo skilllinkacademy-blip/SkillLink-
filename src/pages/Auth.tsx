@@ -37,6 +37,7 @@ export default function Auth({ isRtl }: AuthProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState('');
@@ -102,11 +103,7 @@ export default function Auth({ isRtl }: AuthProps) {
         if (signUpError) throw signUpError;
         
         if (data.user) {
-          if (isRtl) {
-            alert('נרשמת בהצלחה! ברוך הבא ל-SkillLink.');
-          } else {
-            alert('Signed up successfully! Welcome to SkillLink.');
-          }
+          setSignupSuccess(true);
         }
       }
     } catch (err: any) {
@@ -184,9 +181,9 @@ export default function Auth({ isRtl }: AuthProps) {
       <ProgressBar />
       
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-black text-gray-900">{isRtl ? 'בחר את המסלול שלך' : 'Choose your path'}</h2>
+        <h2 className="text-2xl font-black text-gray-900">{isRtl ? 'מי אתה בפלטפורמה?' : 'What\'s your role?'}</h2>
         <p className="text-sm text-gray-500 font-medium">
-          {isRtl ? 'איך תרצה להשתמש ב-SkillLink?' : 'How would you like to use SkillLink?'}
+          {isRtl ? 'בחר תפקיד — ונתאים לך את הניסיון.' : 'Choose your role — we\'ll tailor your experience.'}
         </p>
       </div>
 
@@ -575,7 +572,7 @@ export default function Auth({ isRtl }: AuthProps) {
         {loading ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
         ) : (
-          isRtl ? 'התחבר' : 'Connect'
+          isRtl ? 'התחבר' : 'Sign in'
         )}
       </button>
 
@@ -597,9 +594,36 @@ export default function Auth({ isRtl }: AuthProps) {
     </form>
   );
 
+  const renderSuccess = () => (
+    <div className="space-y-6 py-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto">
+        <Check size={32} className="text-emerald-500" />
+      </div>
+      <div className="space-y-1">
+        <h2 className="text-2xl font-black text-gray-900">
+          {isRtl ? 'ברוך הבא ל-SkillLink!' : 'Welcome to SkillLink!'}
+        </h2>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          {isRtl
+            ? 'שלחנו אימייל אימות לכתובת שלך. לחץ על הקישור כדי להפעיל את החשבון.'
+            : 'We sent a confirmation email to your address. Click the link to activate your account.'}
+        </p>
+      </div>
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-700 font-medium">
+        {isRtl ? 'בדוק את תיבת הדואר שלך — כולל תיקיית הספאם.' : 'Check your inbox — including the spam folder.'}
+      </div>
+      <Link
+        to="/"
+        className="inline-flex items-center justify-center gap-2 w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all"
+      >
+        {isRtl ? 'חזרה לדף הבית' : 'Back to Home'}
+      </Link>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
@@ -614,7 +638,7 @@ export default function Auth({ isRtl }: AuthProps) {
             </div>
 
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-600 text-sm font-medium"
@@ -624,13 +648,15 @@ export default function Auth({ isRtl }: AuthProps) {
               </motion.div>
             )}
 
-            {isLogin 
-              ? renderLogin() 
-              : step === 1 
-                ? renderStep1() 
-                : step === 2 
-                  ? renderIntentStep() 
-                  : renderStep3()
+            {signupSuccess
+              ? renderSuccess()
+              : isLogin
+                ? renderLogin()
+                : step === 1
+                  ? renderStep1()
+                  : step === 2
+                    ? renderIntentStep()
+                    : renderStep3()
             }
           </div>
         </div>

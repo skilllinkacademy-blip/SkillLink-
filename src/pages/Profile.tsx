@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, Camera, Pencil, Briefcase, Info, Save, X, Loader2, User as UserIcon, Globe, ExternalLink, Hammer, Users, ArrowRight, Heart, Trash2, Upload, Phone, Plus, Zap, MessageSquare, CheckCircle2, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -16,7 +16,7 @@ interface ProfileProps {
 export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const { username } = useParams<{ username?: string }>();
   const navigate = useNavigate();
-  const { user, profile: myProfile, refreshProfile } = useAuth();
+  const { user, profile: myProfile, refreshProfile, signOut } = useAuth();
   
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -772,7 +772,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {isRtl ? 'שומר...' : 'Saving...'}
               </div>
             )}
-            
+
+            {isMyProfile && !saving && (
+              <button
+                onClick={async () => { await signOut(); navigate('/'); }}
+                className="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg transition-colors"
+              >
+                <LogOut size={13} />
+                {isRtl ? 'יציאה' : 'Logout'}
+              </button>
+            )}
+
             {!isMyProfile && (
               <button 
                 onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
