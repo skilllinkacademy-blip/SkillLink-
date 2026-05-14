@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
-  ArrowRight, ShieldCheck, Link2, Users,
-  Briefcase, GraduationCap, Star, CheckCircle2,
+  ArrowRight, ShieldCheck, Briefcase, GraduationCap, Star, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { carpenterMentorImg } from '../lib/assets';
@@ -215,129 +214,68 @@ export default function Landing({ isRtl }: LandingProps) {
         </div>
       </div>
 
-      {/* ══════════════════ MENTOR MEETS APPRENTICE ══════════════════ */}
-      <section ref={meetRef} className="bg-white overflow-hidden py-10 sm:py-16">
-        <Reveal className="text-center px-5 mb-2">
-          <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-3">
-            {isRtl ? 'SkillLink בפעולה' : 'SkillLink in action'}
-          </p>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-950">
-            {isRtl ? 'מנטור פוגש חניך.' : 'Mentor meets Apprentice.'}
-          </h2>
-          <p className="text-gray-400 text-sm sm:text-base mt-3 max-w-xs mx-auto leading-relaxed">
-            {isRtl
-              ? 'הכלים עוברים מיד ליד — והידע עובר איתם.'
-              : 'The tools pass hand to hand — and so does the knowledge.'}
-          </p>
-        </Reveal>
+      {/* ══════════════════ MENTOR MEETS APPRENTICE + HOW IT WORKS ══════════════════ */}
+      <section ref={meetRef} className="bg-white overflow-hidden py-14 sm:py-24 px-5 sm:px-8 lg:px-14">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-        {/* figures — always LTR so mentor(right-facing) stays left, apprentice(left-facing) stays right */}
-        <div dir="ltr" className="relative max-w-3xl mx-auto flex items-end justify-between px-4 sm:px-10">
-          {/* Mentor — slides from left */}
-          <motion.div style={{ x: mentorX }} className="w-[46%] sm:w-[42%]">
-            <img src="/mentor_figure.jpg" alt="Mentor" className="w-full object-contain select-none" draggable={false} />
-          </motion.div>
+          {/* LEFT — figures */}
+          <div className="order-2 lg:order-1">
+            <Reveal className="mb-2">
+              <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-2">
+                {isRtl ? 'SkillLink בפעולה' : 'SkillLink in action'}
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-950 leading-tight">
+                {isRtl ? 'מנטור פוגש חניך.' : 'Mentor meets Apprentice.'}
+              </h2>
+              <p className="text-gray-400 text-sm mt-2 leading-relaxed">
+                {isRtl ? 'הכלים עוברים מיד ליד — והידע עובר איתם.' : 'The tools pass hand to hand — and so does the knowledge.'}
+              </p>
+            </Reveal>
 
-          {/* Apprentice — slides from right */}
-          <motion.div style={{ x: apprenticeX }} className="w-[46%] sm:w-[42%]">
-            <img src="/apprentice_figure.jpg" alt="Apprentice" className="w-full object-contain select-none" draggable={false} />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ══════════════════ 3. HOW IT WORKS ══════════════════ */}
-      <section className="py-20 sm:py-28 bg-white px-5 sm:px-8 lg:px-14">
-        <div className="max-w-2xl mx-auto">
-          <Reveal className="mb-14">
-            <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-3">
-              {isRtl ? 'איך זה עובד?' : 'How it works'}
-            </p>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-950">
-              {isRtl ? 'שלושה צעדים.' : 'Three steps.'}
-              <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-                {isRtl ? ' קריירה שלמה.' : ' A whole career.'}
-              </span>
-            </h2>
-          </Reveal>
-
-          {[
-            {
-              n: '01', numColor: '#3b82f6',
-              t: { he: 'בנה פרופיל', en: 'Build Your Profile' },
-              d: { he: 'הגדר מקצוע, ניסיון ומיקום — תהליך של שתי דקות.', en: 'Set your trade, experience and location — a two-minute process.' },
-            },
-            {
-              n: '02', numColor: '#6366f1',
-              t: { he: 'קבל התאמת AI', en: 'Get AI Matched' },
-              d: { he: 'האלגוריתם מוצא את ההתאמה הטובה ביותר לפי מיקום ומקצוע.', en: 'The algorithm finds your best match by location and trade.' },
-            },
-            {
-              n: '03', numColor: '#10b981',
-              t: { he: 'התחל בשטח', en: 'Start in the Field' },
-              d: { he: 'צבור ניסיון אמיתי תחת הנחיית מקצוען מנוסה.', en: 'Gain real experience under a seasoned professional.' },
-            },
-          ].map((step, i) => <StepItem key={i} step={step} isRtl={isRtl} />)}
-        </div>
-      </section>
-
-      {/* ══════════════════ 5. WHY SKILLLINK ══════════════════ */}
-      <section className="py-20 sm:py-28 bg-gray-950 text-white px-5 sm:px-8 lg:px-14">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="mb-12 text-center">
-            <p className="text-[11px] font-black text-blue-400 uppercase tracking-[.26em] mb-3">
-              {isRtl ? 'למה SkillLink?' : 'Why SkillLink?'}
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-              {isRtl ? 'הפלטפורמה שנבנתה לשדה.' : 'Built for the field.'}
-            </h2>
-          </Reveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Link2, color: 'text-blue-400', bg: 'bg-blue-600/15',
-                t: { he: 'התאמת AI', en: 'AI Matching' },
-                d: { he: '92% דיוק — מנתח מיקום, מקצוע וניסיון.', en: '92% accuracy — analyzes location, trade & experience.' },
-              },
-              {
-                icon: ShieldCheck, color: 'text-green-400', bg: 'bg-green-600/15',
-                t: { he: 'מנטורים מאומתים', en: 'Verified Mentors' },
-                d: { he: 'כל מנטור עובר תהליך אימות מסמכים מקיף.', en: 'Every mentor undergoes thorough document verification.' },
-              },
-              {
-                icon: Users, color: 'text-purple-400', bg: 'bg-purple-600/15',
-                t: { he: 'חינם לחלוטין', en: 'Completely Free' },
-                d: { he: 'ללא תשלום, ללא עמלות — הכל בחינם לתמיד.', en: 'No fees, no commissions — free forever.' },
-              },
-            ].map((f, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/5 border border-white/8 hover:bg-white/8 transition-all">
-                  <div className={`w-11 h-11 rounded-2xl ${f.bg} flex items-center justify-center shrink-0`}>
-                    <f.icon size={20} className={f.color} />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-white mb-1">{isRtl ? f.t.he : f.t.en}</h3>
-                    <p className="text-sm text-white/45 leading-relaxed">{isRtl ? f.d.he : f.d.en}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+            {/* figures — always LTR so images always face each other */}
+            <div dir="ltr" className="relative flex items-end justify-between mt-4" style={{ background: '#ffffff' }}>
+              <motion.div style={{ x: mentorX }} className="w-[48%]">
+                <img src="/mentor_figure.jpg" alt="Mentor" className="w-full object-contain select-none" draggable={false} />
+              </motion.div>
+              <motion.div style={{ x: apprenticeX }} className="w-[48%]">
+                <img src="/apprentice_figure.jpg" alt="Apprentice" className="w-full object-contain select-none" draggable={false} />
+              </motion.div>
+            </div>
           </div>
 
-          {/* stats row */}
-          <div className="mt-14 pt-10 border-t border-white/8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {/* RIGHT — steps */}
+          <div className="order-1 lg:order-2">
+            <Reveal className="mb-8">
+              <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-2">
+                {isRtl ? 'איך זה עובד?' : 'How it works'}
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-950">
+                {isRtl ? 'שלושה צעדים.' : 'Three steps.'}
+                <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                  {isRtl ? ' קריירה שלמה.' : ' A whole career.'}
+                </span>
+              </h2>
+            </Reveal>
+
             {[
-              { n: '500+', l: { he: 'מקצוענים', en: 'Professionals' } },
-              { n: '15+', l: { he: 'מקצועות', en: 'Trades' } },
-              { n: '92%', l: { he: 'דיוק AI', en: 'AI Accuracy' } },
-              { n: '100%', l: { he: 'חינם', en: 'Free' } },
-            ].map((s, i) => (
-              <Reveal key={i} delay={i * 0.07}>
-                <p className="text-3xl sm:text-4xl font-black text-white leading-none">{s.n}</p>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1.5">{isRtl ? s.l.he : s.l.en}</p>
-              </Reveal>
-            ))}
+              {
+                n: '01', numColor: '#3b82f6',
+                t: { he: 'בנה פרופיל', en: 'Build Your Profile' },
+                d: { he: 'הגדר מקצוע, ניסיון ומיקום — תהליך של שתי דקות.', en: 'Set your trade, experience and location — a two-minute process.' },
+              },
+              {
+                n: '02', numColor: '#6366f1',
+                t: { he: 'קבל התאמת AI', en: 'Get AI Matched' },
+                d: { he: 'האלגוריתם מוצא את ההתאמה הטובה ביותר לפי מיקום ומקצוע.', en: 'The algorithm finds your best match by location and trade.' },
+              },
+              {
+                n: '03', numColor: '#10b981',
+                t: { he: 'התחל בשטח', en: 'Start in the Field' },
+                d: { he: 'צבור ניסיון אמיתי תחת הנחיית מקצוען מנוסה.', en: 'Gain real experience under a seasoned professional.' },
+              },
+            ].map((step, i) => <StepItem key={i} step={step} isRtl={isRtl} />)}
           </div>
+
         </div>
       </section>
 
