@@ -66,31 +66,36 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   // Calculate Post Strength
   const postStrength = useMemo(() => {
     let score = 0;
-    if (title.length > 5) score += 15;
+    if (title.length > 5) score += 20;
     if (location.length > 2) score += 10;
+    if (commitmentLevel) score += 5; // always selected, gives starter points
     if (type === 'mentor_offer') {
+      if (profession) score += 10;
+      if (learningFocus.length > 2) score += 20;
       if (aboutWork.length > 20) score += 20;
-      if (profession) score += 15;
-      if (learningFocus) score += 20;
+      if (durationDescription.length > 2) score += 5;
     } else {
+      if (profession) score += 10;
       if (whatIWantToLearn.length > 20) score += 30;
-      if (profession) score += 20;
+      if (durationDescription.length > 2) score += 5;
     }
     if (imageFile || imagePreview) score += 10;
     return Math.min(100, score);
-  }, [title, location, aboutWork, profession, learningFocus, whatIWantToLearn, imageFile, imagePreview, type]);
+  }, [title, location, aboutWork, profession, learningFocus, whatIWantToLearn, imageFile, imagePreview, type, commitmentLevel, durationDescription]);
 
   const strengthLabel = useMemo(() => {
-    if (postStrength < 30) return isRtl ? 'התחלה טובה' : 'Good start';
-    if (postStrength < 60) return isRtl ? 'כמעט שם' : 'Almost there';
-    if (postStrength < 90) return isRtl ? 'פוסט מצוין!' : 'Great post!';
-    return isRtl ? 'מושלם!' : 'Perfect!';
+    if (postStrength < 25) return isRtl ? 'בוא נתחיל' : 'Let\'s begin';
+    if (postStrength < 50) return isRtl ? 'טוב, המשך' : 'Good, keep going';
+    if (postStrength < 75) return isRtl ? 'נראה מצוין!' : 'Looking great!';
+    if (postStrength < 95) return isRtl ? 'פוסט חזק!' : 'Strong post!';
+    return isRtl ? 'מושלם! 🔥' : 'Perfect! 🔥';
   }, [postStrength, isRtl]);
 
   const strengthColor = useMemo(() => {
-    if (postStrength < 30) return 'bg-slate-200';
-    if (postStrength < 60) return 'bg-orange-500';
-    if (postStrength < 90) return 'bg-slate-900';
+    if (postStrength < 25) return 'bg-slate-300';
+    if (postStrength < 50) return 'bg-sky-400';
+    if (postStrength < 75) return 'bg-blue-500';
+    if (postStrength < 95) return 'bg-blue-600';
     return 'bg-emerald-500';
   }, [postStrength]);
 
