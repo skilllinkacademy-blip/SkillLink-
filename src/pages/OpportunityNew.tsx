@@ -27,6 +27,32 @@ interface OpportunityNewProps {
   isEditing?: boolean;
 }
 
+// Detects meaningless / keyboard-mashed text. Returns 0–1 quality multiplier.
+function qualityScore(text: string): number {
+  if (!text || text.trim().length < 2) return 0;
+  const t = text.trim();
+  const words = t.split(/\s+/).filter(w => w.length > 0);
+  const cleaned = t.replace(/\s/g, '').toLowerCase();
+
+  // Suspiciously low character variety → junk (e.g. "aaaaaaa", "asdasd")
+  const uniqueChars = new Set(cleaned).size;
+  if (cleaned.length > 4 && uniqueChars / Math.min(cleaned.length, 20) < 0.18) return 0.1;
+
+  // Mostly non-alphabetic (Hebrew + Latin + digits)
+  const hebrewLen = (t.match(/[א-ת]/g) || []).length;
+  const latinLen  = (t.match(/[a-zA-Z]/g) || []).length;
+  const digitLen  = (t.match(/[0-9]/g) || []).length;
+  const meaningful = hebrewLen + latinLen + digitLen;
+  if (meaningful < cleaned.length * 0.35) return 0.15;
+
+  // Very short single-word input
+  if (words.length === 1 && t.length < 6) return 0.4;
+
+  // Good enough
+  if (words.length >= 3 && t.length >= 12) return 1.0;
+  return 0.75;
+}
+
 export default function OpportunityNew({ isRtl, isEditing = false }: OpportunityNewProps) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -63,41 +89,55 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   const [whatIWantToLearn, setWhatIWantToLearn] = useState('');
   const [experienceNote, setExperienceNote] = useState('');
 
-  // Calculate Post Strength
+  // Quality scores for each text field (0–1 multiplier)
+  const titleQ    = useMemo(() => qualityScore(title),            [title]);
+  const workQ     = useMemo(() => qualityScore(type === 'mentor_offer' ? aboutWork : whatIWantToLearn), [type, aboutWork, whatIWantToLearn]);
+  const focusQ    = useMemo(() => qualityScore(learningFocus),    [learningFocus]);
+  const durQ      = useMemo(() => qualityScore(durationDescription), [durationDescription]);
+
+  // Flag: user typed something that looks like gibberish
+  const hasQualityIssue = useMemo(() =>
+    [title, aboutWork, whatIWantToLearn, learningFocus].some(
+      t => t.trim().length > 3 && qualityScore(t) < 0.5
+    ),
+  [title, aboutWork, whatIWantToLearn, learningFocus]);
+
+  // Calculate Post Strength — text fields only earn points proportional to their quality
   const postStrength = useMemo(() => {
     let score = 0;
-    if (title.length > 5) score += 20;
-    if (location.length > 2) score += 10;
-    if (commitmentLevel) score += 5; // always selected, gives starter points
+    if (title.length > 5)        score += 20 * titleQ;
+    if (location.length > 2)     score += 10; // city name — no quality check needed
+    if (commitmentLevel)         score += 5;  // always selected
+    if (profession)              score += 10;
     if (type === 'mentor_offer') {
-      if (profession) score += 10;
-      if (learningFocus.length > 2) score += 20;
-      if (aboutWork.length > 20) score += 20;
-      if (durationDescription.length > 2) score += 5;
+      if (learningFocus.length > 2)  score += 20 * focusQ;
+      if (aboutWork.length > 20)     score += 20 * workQ;
     } else {
-      if (profession) score += 10;
-      if (whatIWantToLearn.length > 20) score += 30;
-      if (durationDescription.length > 2) score += 5;
+      if (whatIWantToLearn.length > 20) score += 30 * workQ;
     }
-    if (imageFile || imagePreview) score += 10;
-    return Math.min(100, score);
-  }, [title, location, aboutWork, profession, learningFocus, whatIWantToLearn, imageFile, imagePreview, type, commitmentLevel, durationDescription]);
+    if (durationDescription.length > 2) score += 5 * durQ;
+    if (imageFile || imagePreview)       score += 10;
+    return Math.min(100, Math.round(score));
+  }, [title, titleQ, location, aboutWork, workQ, profession, learningFocus, focusQ,
+      whatIWantToLearn, durationDescription, durQ, imageFile, imagePreview, type, commitmentLevel]);
 
   const strengthLabel = useMemo(() => {
+    if (hasQualityIssue) return isRtl ? '⚠️ תוכן לא ברור — נסה לנסח מחדש' : '⚠️ Content unclear — try rephrasing';
     if (postStrength < 25) return isRtl ? 'בוא נתחיל' : 'Let\'s begin';
     if (postStrength < 50) return isRtl ? 'טוב, המשך' : 'Good, keep going';
     if (postStrength < 75) return isRtl ? 'נראה מצוין!' : 'Looking great!';
     if (postStrength < 95) return isRtl ? 'פוסט חזק!' : 'Strong post!';
     return isRtl ? 'מושלם! 🔥' : 'Perfect! 🔥';
-  }, [postStrength, isRtl]);
+  }, [postStrength, hasQualityIssue, isRtl]);
 
   const strengthColor = useMemo(() => {
+    if (hasQualityIssue)  return 'bg-amber-400';
     if (postStrength < 25) return 'bg-slate-300';
     if (postStrength < 50) return 'bg-sky-400';
     if (postStrength < 75) return 'bg-blue-500';
     if (postStrength < 95) return 'bg-blue-600';
     return 'bg-emerald-500';
-  }, [postStrength]);
+  }, [postStrength, hasQualityIssue]);
 
   useEffect(() => {
     if (profile && !isEditing && !initialized.current) {
@@ -345,8 +385,8 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   );
 
   const renderSubStep1 = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="lg:col-span-8 space-y-12">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-12">
         <div className="space-y-4">
           <h3 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
             {isRtl ? 'בוא נתחיל מהבסיס' : 'Lets start with the basics'}
@@ -436,29 +476,6 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
               ))}
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="lg:col-span-4 hidden lg:block">
-        <div className="sticky top-24 p-10 bg-slate-900 rounded-[3.5rem] text-white shadow-2xl space-y-10 border border-white/5 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl" />
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-emerald-400 relative z-10"><Lightbulb size={32} /></div>
-          <div className="space-y-6 relative z-10">
-            <h4 className="text-xl font-black">{isRtl ? 'טיפ מה-AI' : 'AI Tip'}</h4>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed italic">
-              {isRtl ? '"כותרת ברורה ומיקום מדויק מקפיצים את כמות הפניות ב-40%."' : '"Clear titles and accurate location boost leads by 40%."'}
-            </p>
-          </div>
-          <div className="space-y-4 pt-6 border-t border-white/10 relative z-10">
-             <div className="flex justify-between items-end">
-               <span className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em]">{isRtl ? 'חוזק הפוסט' : 'Strength'}</span>
-               <span className="text-2xl font-black text-emerald-400">{postStrength}%</span>
-             </div>
-             <div className="h-4 bg-white/10 rounded-full overflow-hidden">
-               <motion.div initial={{ width: 0 }} animate={{ width: `${postStrength}%` }} className={`h-full ${strengthColor}`} />
-             </div>
-             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">{strengthLabel}</p>
-          </div>
         </div>
       </div>
     </div>
@@ -582,6 +599,30 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
               ))}
             </div>
             <div className="hidden md:block w-32" />
+          </div>
+
+          {/* ── Persistent strength card ── */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-4">
+            <Lightbulb size={18} className="text-slate-400 shrink-0" />
+            <div className="flex-1 space-y-1.5 min-w-0">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  {isRtl ? 'חוזק הפוסט' : 'Post Strength'}
+                </span>
+                <span className={`text-[11px] font-semibold truncate ${hasQualityIssue ? 'text-amber-600' : 'text-slate-500'}`}>
+                  {strengthLabel}
+                </span>
+                <span className="text-sm font-black text-slate-700 shrink-0">{postStrength}%</span>
+              </div>
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${postStrength}%` }}
+                  transition={{ type: 'spring', stiffness: 80, damping: 18 }}
+                  className={`h-full rounded-full transition-colors duration-500 ${strengthColor}`}
+                />
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-12">
