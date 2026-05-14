@@ -82,15 +82,15 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
       
       User Profile:
       - Name: ${userProfile.name || userProfile.full_name}
-      - Trade: ${userProfile.trade || userProfile.occupation}
+      - Trade: ${userProfile.trade || userProfile.occupation || 'Not specified'}
       - Goals: ${userProfile.bio || 'Not specified'}
-      - Location: ${userProfile.location}
+      - Location: ${userProfile.city || userProfile.location || 'Not specified'}
       
       Opportunities:
       ${candidates.map((o: any) => `
         - ID: ${o.id}
           Title: ${o.title}
-          Trade: ${o.trade || o.ownerTrade || o.profession}
+          Trade: ${o.profession || o.trade || o.ownerTrade || o.profiles?.occupation || 'Not specified'}
           Location: ${o.location}
       `).join('\n')}
       
@@ -204,33 +204,47 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
 
 function basicOpportunityScoring(userProfile: any, opportunities: any[]) {
   if (!Array.isArray(opportunities)) return [];
-  const userLatLon = CITY_COORDS[userProfile.location] || [32.0853, 34.7818];
-  
+  // profiles table uses 'city', fallback to 'location' for compatibility
+  const userCity = userProfile.city || userProfile.location || '';
+  const userLatLon = CITY_COORDS[userCity] || [32.0853, 34.7818];
+
   return opportunities.map(opp => {
     let score = 10;
-    
-    // Trade match - strong signal
-    const userTrade = (userProfile.occupation || '').toLowerCase();
-    const oppTrade = (opp.trade || opp.ownerTrade || '').toLowerCase();
+
+    // Trade match — check all possible field names
+    const userTrade = (userProfile.occupation || userProfile.trade || '').toLowerCase();
+    const oppTrade = (
+      opp.profession ||
+      opp.trade ||
+      opp.ownerTrade ||
+      opp.profiles?.occupation ||
+      ''
+    ).toLowerCase();
     const oppTitle = (opp.title || '').toLowerCase();
-    
-    if (userTrade && (oppTrade.includes(userTrade) || oppTrade === userTrade || oppTitle.includes(userTrade))) {
-      score += 50;
+
+    if (userTrade && oppTrade && (
+      oppTrade.includes(userTrade) ||
+      userTrade.includes(oppTrade) ||
+      oppTrade === userTrade ||
+      oppTitle.includes(userTrade)
+    )) {
+      score += 55;
     }
-    
+
     // Location match
     const oppLatLon = CITY_COORDS[opp.location] || [32.0853, 34.7818];
     const distance = calculateDistance(userLatLon, oppLatLon);
-    
+
     if (distance < 10) score += 20;
     else if (distance < 30) score += 10;
-    
+    else if (distance < 60) score += 5;
+
     // Role complementarity
     if (userProfile.role === 'mentor' && opp.type === 'mentee_seeking') score += 15;
     if (userProfile.role === 'mentee' && opp.type === 'mentor_offer') score += 15;
-    
-    return { 
-      ...opp, 
+
+    return {
+      ...opp,
       matchScore: Math.min(100, score),
       distance: Math.round(distance)
     };
