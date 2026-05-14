@@ -2,16 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
-  ArrowRight, ShieldCheck, Zap, Users,
+  ArrowRight, ShieldCheck, Link2, Users,
   Briefcase, GraduationCap, Star, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import {
-  carpenterMentorImg,
-  barberMentorImg,
-  electricianMentorImg,
-  constructionMentorImg,
-} from '../lib/assets';
+import { carpenterMentorImg } from '../lib/assets';
 
 const AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80',
@@ -34,6 +29,34 @@ function Reveal({ children, className = '', delay = 0 }: { children: React.React
     <motion.div ref={ref} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.72, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
       {children}
+    </motion.div>
+  );
+}
+
+interface StepDef { n: string; numColor: string; t: { he: string; en: string }; d: { he: string; en: string } }
+function StepItem({ step, isRtl }: { step: StepDef; isRtl: boolean }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  return (
+    <motion.div ref={ref}
+      className="flex items-start gap-6 sm:gap-10 py-10 border-b border-gray-100 last:border-0"
+      initial={{ opacity: 0, x: isRtl ? 20 : -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}>
+      <motion.span
+        className="text-[5rem] sm:text-[7rem] font-black leading-none tabular-nums shrink-0 select-none"
+        initial={{ color: '#e2e8f0' }}
+        animate={inView ? { color: step.numColor } : { color: '#e2e8f0' }}
+        transition={{ duration: 0.9, delay: 0.25 }}>
+        {step.n}
+      </motion.span>
+      <div className="pt-4 sm:pt-6">
+        <h3 className="text-xl sm:text-2xl font-black text-gray-950 mb-2 leading-snug">
+          {isRtl ? step.t.he : step.t.en}
+        </h3>
+        <p className="text-gray-400 leading-relaxed text-sm sm:text-base">
+          {isRtl ? step.d.he : step.d.en}
+        </p>
+      </div>
     </motion.div>
   );
 }
@@ -208,46 +231,24 @@ export default function Landing({ isRtl }: LandingProps) {
           </p>
         </Reveal>
 
-        {/* figures */}
-        <div className="relative max-w-3xl mx-auto flex items-end justify-between px-4 sm:px-10">
+        {/* figures — always LTR so mentor(right-facing) stays left, apprentice(left-facing) stays right */}
+        <div dir="ltr" className="relative max-w-3xl mx-auto flex items-end justify-between px-4 sm:px-10">
           {/* Mentor — slides from left */}
-          <motion.div style={{ x: mentorX }} className="w-[46%] sm:w-[42%] relative">
-            <img src="/mentor_figure.jpg" alt={isRtl ? 'מנטור' : 'Mentor'} className="w-full object-contain select-none" draggable={false} />
+          <motion.div style={{ x: mentorX }} className="w-[46%] sm:w-[42%]">
+            <img src="/mentor_figure.jpg" alt="Mentor" className="w-full object-contain select-none" draggable={false} />
           </motion.div>
 
-          {/* Center badge */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[28%] flex flex-col items-center gap-1.5 z-10 pointer-events-none">
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
-              className="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-600/40"
-            >
-              <Zap size={18} className="text-white fill-white" />
-            </motion.div>
-            <motion.span
-              initial={{ opacity: 0, y: 4 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ delay: 0.65 }}
-              className="text-[9px] font-black text-blue-600 uppercase tracking-[.22em] whitespace-nowrap"
-            >
-              {isRtl ? 'חיבור!' : 'Connected!'}
-            </motion.span>
-          </div>
-
           {/* Apprentice — slides from right */}
-          <motion.div style={{ x: apprenticeX }} className="w-[46%] sm:w-[42%] relative">
-            <img src="/apprentice_figure.jpg" alt={isRtl ? 'חניך' : 'Apprentice'} className="w-full object-contain select-none" draggable={false} />
+          <motion.div style={{ x: apprenticeX }} className="w-[46%] sm:w-[42%]">
+            <img src="/apprentice_figure.jpg" alt="Apprentice" className="w-full object-contain select-none" draggable={false} />
           </motion.div>
         </div>
       </section>
 
       {/* ══════════════════ 3. HOW IT WORKS ══════════════════ */}
       <section className="py-20 sm:py-28 bg-white px-5 sm:px-8 lg:px-14">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center mb-14">
+        <div className="max-w-2xl mx-auto">
+          <Reveal className="mb-14">
             <p className="text-[11px] font-black text-blue-600 uppercase tracking-[.26em] mb-3">
               {isRtl ? 'איך זה עובד?' : 'How it works'}
             </p>
@@ -259,42 +260,23 @@ export default function Landing({ isRtl }: LandingProps) {
             </h2>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              {
-                n: '01', icon: GraduationCap, img: barberMentorImg,
-                t: { he: 'בנה פרופיל', en: 'Build Profile' },
-                d: { he: 'הגדר מקצוע, ניסיון ומיקום — תהליך של שתי דקות.', en: 'Set your trade, experience and location — two minutes.' },
-              },
-              {
-                n: '02', icon: Zap, img: electricianMentorImg,
-                t: { he: 'קבל התאמת AI', en: 'Get AI Matched' },
-                d: { he: 'האלגוריתם מוצא את ההתאמה הטובה ביותר לפי מיקום ומקצוע.', en: 'The algorithm finds your best match by location and trade.' },
-              },
-              {
-                n: '03', icon: Briefcase, img: constructionMentorImg,
-                t: { he: 'התחל בשטח', en: 'Start in the Field' },
-                d: { he: 'צבור ניסיון אמיתי תחת הנחיית מקצוען מנוסה.', en: 'Gain real experience under a seasoned pro.' },
-              },
-            ].map((step, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div className="group rounded-3xl overflow-hidden border border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all duration-500 bg-white">
-                  <div className="aspect-[3/2] relative overflow-hidden">
-                    <img src={step.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute top-3 left-4 text-5xl font-black text-white/15 leading-none select-none">{step.n}</span>
-                    <div className="absolute bottom-3 left-4 w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
-                      <step.icon size={16} className="text-white" />
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-black text-gray-950 mb-1.5">{isRtl ? step.t.he : step.t.en}</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">{isRtl ? step.d.he : step.d.en}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          {[
+            {
+              n: '01', numColor: '#3b82f6',
+              t: { he: 'בנה פרופיל', en: 'Build Your Profile' },
+              d: { he: 'הגדר מקצוע, ניסיון ומיקום — תהליך של שתי דקות.', en: 'Set your trade, experience and location — a two-minute process.' },
+            },
+            {
+              n: '02', numColor: '#6366f1',
+              t: { he: 'קבל התאמת AI', en: 'Get AI Matched' },
+              d: { he: 'האלגוריתם מוצא את ההתאמה הטובה ביותר לפי מיקום ומקצוע.', en: 'The algorithm finds your best match by location and trade.' },
+            },
+            {
+              n: '03', numColor: '#10b981',
+              t: { he: 'התחל בשטח', en: 'Start in the Field' },
+              d: { he: 'צבור ניסיון אמיתי תחת הנחיית מקצוען מנוסה.', en: 'Gain real experience under a seasoned professional.' },
+            },
+          ].map((step, i) => <StepItem key={i} step={step} isRtl={isRtl} />)}
         </div>
       </section>
 
@@ -313,7 +295,7 @@ export default function Landing({ isRtl }: LandingProps) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
-                icon: Zap, color: 'text-blue-400', bg: 'bg-blue-600/15',
+                icon: Link2, color: 'text-blue-400', bg: 'bg-blue-600/15',
                 t: { he: 'התאמת AI', en: 'AI Matching' },
                 d: { he: '92% דיוק — מנתח מיקום, מקצוע וניסיון.', en: '92% accuracy — analyzes location, trade & experience.' },
               },
