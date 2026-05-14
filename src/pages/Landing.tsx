@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
-  ArrowRight, ShieldCheck, Briefcase, GraduationCap, Star, CheckCircle2,
+  ArrowRight, ShieldCheck, Briefcase, GraduationCap, CheckCircle2, Star,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { carpenterMentorImg } from '../lib/assets';
+import NetworkAnimation from '../components/NetworkAnimation';
 
 const AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80',
@@ -162,35 +163,60 @@ export default function Landing({ isRtl }: LandingProps) {
             </motion.div>
           </div>
 
-          {/* Card — hidden on small mobile, shown sm+ */}
-          <motion.div initial={{ opacity: 0, scale: 0.94, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="relative order-1 lg:order-2 hidden sm:flex justify-center">
-            <div className="absolute inset-6 bg-blue-300/20 rounded-[3rem] blur-[60px]" />
-            <div className="float-anim relative w-full max-w-[340px] aspect-[4/5] rounded-[2.2rem] overflow-hidden shadow-2xl shadow-blue-900/14 border border-blue-100">
-              <img src={carpenterMentorImg} alt="Mentor" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
-              <div className="absolute top-4 left-4 px-3 py-1 bg-blue-600 rounded-full text-white text-[11px] font-black uppercase tracking-widest">
-                {isRtl ? 'מנטור מוסמך' : 'Certified Mentor'}
-              </div>
-              <div className="absolute top-4 right-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow">
-                <ShieldCheck size={16} className="text-blue-600" />
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="font-black text-white text-sm">{isRtl ? 'משה לוי — נגר' : 'Moshe Levi — Carpenter'}</div>
-                <div className="text-white/55 text-xs mt-0.5">{isRtl ? 'תל אביב · 15 שנות ניסיון' : 'Tel Aviv · 15 yrs exp.'}</div>
-                <div className="flex items-center gap-0.5 mt-1.5">
-                  {[...Array(5)].map((_, i) => <Star key={i} size={9} className="text-yellow-400 fill-yellow-400" />)}
-                  <span className="text-white/50 text-[10px] ms-1">4.9</span>
+          {/* Live Network — hero visual */}
+          <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="relative order-1 lg:order-2 hidden sm:block">
+
+            {/* glow */}
+            <div className="absolute inset-4 bg-blue-400/15 rounded-[2rem] blur-[60px] pointer-events-none" />
+
+            {/* app window frame */}
+            <div className="relative rounded-[1.6rem] overflow-hidden border border-gray-200 shadow-2xl shadow-blue-900/10 bg-[#0b1120]">
+              {/* window chrome */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/8 bg-white/4">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-white/15" />
+                  <div className="w-3 h-3 rounded-full bg-white/15" />
+                  <div className="w-3 h-3 rounded-full bg-white/15" />
                 </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="px-3 py-0.5 rounded-md bg-white/8 text-white/30 text-[10px] font-mono tracking-wide">
+                    skilllink.co · {isRtl ? 'רשת חיה' : 'live network'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {isRtl ? 'חי' : 'Live'}
+                </div>
+              </div>
+
+              {/* animation — taller here for hero */}
+              <div style={{ height: 280 }} className="relative">
+                <NetworkAnimation isRtl={isRtl} />
+              </div>
+
+              {/* bottom stats bar */}
+              <div className="flex items-center justify-around border-t border-white/8 px-4 py-3 bg-white/3">
+                {[
+                  { n: '500+', l: { he: 'מקצוענים', en: 'Professionals' } },
+                  { n: '15+',  l: { he: 'מקצועות',  en: 'Trades'        } },
+                  { n: '92%',  l: { he: 'דיוק AI',   en: 'AI Accuracy'   } },
+                ].map((s, i) => (
+                  <div key={i} className="text-center">
+                    <p className="text-white font-black text-sm leading-none">{s.n}</p>
+                    <p className="text-white/35 text-[9px] uppercase tracking-widest mt-0.5">{isRtl ? s.l.he : s.l.en}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0, duration: 0.5 }}
-              className="absolute -bottom-3 -left-3 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-                <CheckCircle2 size={16} className="text-green-500" />
+            {/* floating match badge */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1, duration: 0.5 }}
+              className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center">
+                <CheckCircle2 size={15} className="text-green-500" />
               </div>
               <div>
                 <div className="text-xs font-black text-gray-900">{isRtl ? 'התאמה נמצאה!' : 'Match Found!'}</div>
