@@ -31,7 +31,7 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
   const desktopNavItems = user ? [
     { label: isRtl ? 'הזדמנויות' : 'Opportunities', path: '/app/opportunities' },
     { label: isRtl ? 'חיפוש' : 'Explore', path: '/app/explore' },
-    { label: isRtl ? 'ההזדמנויות שלי' : 'My Posts', path: '/app/my-opportunities' },
+    { label: isRtl ? 'הפרסומים שלי' : 'My Listings', path: '/app/my-opportunities' },
     { label: isRtl ? 'הודעות' : 'Messages', path: '/app/messages', badge: (unreadMessagesCount || 0) + (unreadNotificationsCount || 0) },
     ...(profile?.role === 'admin' ? [{ label: isRtl ? 'ניהול' : 'Admin', path: '/app/admin' }] : []),
   ] : [];
