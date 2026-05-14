@@ -203,6 +203,15 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
               </div>
               <span className="text-[10px] font-medium text-slate-400 mt-0.5">{isRtl ? 'פרסם' : 'Post'}</span>
             </Link>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5"
+            >
+              <LogOut size={22} strokeWidth={1.8} className="text-slate-400" />
+              <span className="text-[10px] font-medium text-slate-400">{isRtl ? 'יציאה' : 'Logout'}</span>
+            </button>
           </div>
         </div>
       )}
