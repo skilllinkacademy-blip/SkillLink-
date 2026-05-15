@@ -531,6 +531,31 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
             )
           )}
         </div>
+
+        <div className="md:col-span-2">
+          {renderField(
+            isRtl
+              ? (type === 'mentor_offer' ? 'הניסיון שלי' : 'ניסיון קודם')
+              : (type === 'mentor_offer' ? 'My experience' : 'Previous experience'),
+            Briefcase,
+            <textarea
+              rows={4}
+              value={experienceNote}
+              onChange={(e) => setExperienceNote(e.target.value)}
+              placeholder={isRtl
+                ? (type === 'mentor_offer'
+                  ? 'למשל: 15 שנה בתחום החשמלאות, כולל פרויקטים מסחריים ותשתיות. קבלן מורשה מ-2010.'
+                  : 'למשל: עבדתי שנה באתר בנייה, יש לי רישיון נהיגה וניסיון בסיסי עם כלים.')
+                : (type === 'mentor_offer'
+                  ? 'e.g. 15 years in electrical work including commercial projects. Licensed contractor since 2010.'
+                  : 'e.g. Worked a year on a construction site, have a driving license and basic tool experience.')}
+              className="w-full px-5 py-4 bg-white border-2 border-slate-200 rounded-xl focus:border-slate-900 transition-all font-medium outline-none resize-none"
+            />,
+            isRtl
+              ? (type === 'mentor_offer' ? 'ספר בקצרה על הרקע שלך — זה בונה אמון עם חניכים פוטנציאליים' : 'ספר על ניסיון קודם רלוונטי — זה עוזר למנטור להבין את הרמה שלך')
+              : (type === 'mentor_offer' ? 'Brief background builds trust with potential apprentices' : 'Helps mentors understand where you\'re starting from')
+          )}
+        </div>
       </div>
     </div>
   );
