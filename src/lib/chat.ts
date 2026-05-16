@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
+import { checkAndUpdateConnectionStatus } from './connectionTracking';
 
 export async function getOrCreateConversation(supabase: SupabaseClient, otherUserId: string) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -70,6 +71,9 @@ export async function sendMessage(supabase: SupabaseClient, conversationId: stri
     .eq('id', conversationId);
 
   if (updateError) throw updateError;
+
+  // Fire-and-forget: promote conversation to 'active' once both sides hit the threshold
+  checkAndUpdateConnectionStatus(supabase, conversationId);
 
   return message;
 }

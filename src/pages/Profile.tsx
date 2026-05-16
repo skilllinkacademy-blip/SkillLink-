@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 
 import OpportunityCard from '../components/OpportunityCard';
 import { resolveAsset } from '../lib/assets';
+import { markConversationCompleted } from '../lib/connectionTracking';
 
 interface ProfileProps {
   isRtl: boolean;
@@ -254,8 +255,11 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       });
       if (insertError) throw insertError;
 
-      setNewReview({ 
-        rating: 5, 
+      // Mark the conversation between reviewer and reviewee as completed (fire-and-forget)
+      markConversationCompleted(supabase, user.id, profile.id);
+
+      setNewReview({
+        rating: 5,
         comment: '',
         professional: 5,
         teaching: 5,
