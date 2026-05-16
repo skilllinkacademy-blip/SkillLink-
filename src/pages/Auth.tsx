@@ -38,6 +38,8 @@ export default function Auth({ isRtl }: AuthProps) {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState('');
@@ -74,6 +76,26 @@ export default function Auth({ isRtl }: AuthProps) {
       navigate(returnTo || '/app/opportunities', { replace: true });
     }
   }, [user, navigate, searchParams]);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError(isRtl ? 'הזן את האימייל שלך קודם' : 'Enter your email first');
+      return;
+    }
+    setResetLoading(true);
+    setError(null);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=login`,
+      });
+      if (resetError) throw resetError;
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -522,6 +544,13 @@ export default function Auth({ isRtl }: AuthProps) {
         <p className="text-gray-500 font-medium">{isRtl ? 'הזן את פרטיך כדי להתחבר' : 'Enter your details to log in'}</p>
       </div>
 
+      {resetSent && (
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-3 text-emerald-700 text-sm font-medium">
+          <Check size={18} className="shrink-0 mt-0.5" />
+          <p>{isRtl ? 'שלחנו לך קישור לאיפוס סיסמה. בדוק את תיבת הדואר.' : 'Password reset link sent. Check your inbox.'}</p>
+        </div>
+      )}
+
       <div className="space-y-4">
         {/* Email */}
         <div className="space-y-1.5">
@@ -542,7 +571,7 @@ export default function Auth({ isRtl }: AuthProps) {
         <div className="space-y-1.5">
           <div className="flex justify-between items-center px-1">
             <label className="text-sm font-bold text-gray-700">{isRtl ? 'סיסמה' : 'Password'}</label>
-            <button type="button" className="text-xs font-bold text-blue-500 hover:underline">{isRtl ? 'שכחת סיסמה?' : 'Forgot password?'}</button>
+            <button type="button" onClick={handleForgotPassword} disabled={resetLoading} className="text-xs font-bold text-blue-500 hover:underline disabled:opacity-50">{resetLoading ? '...' : (isRtl ? 'שכחת סיסמה?' : 'Forgot password?')}</button>
           </div>
           <div className="relative group">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" size={20} />
