@@ -437,10 +437,9 @@ export default function Messaging({ isRtl }: MessagingProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors">{selectedConversation?.other_user?.full_name || (isRtl ? 'טוען...' : 'Loading...')}</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    <span className="text-[10px] text-emerald-600 font-medium">Online</span>
-                  </div>
+                  <p className="text-[10px] text-slate-400 truncate max-w-[140px]">
+                    {selectedConversation?.other_user?.occupation || (isRtl ? 'חבר קהילה' : 'Community member')}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">

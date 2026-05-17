@@ -629,9 +629,36 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
+
+      {/* Profile Completion Bar — own profile + incomplete */}
+      {isMyProfile && completionPercentage < 100 && (
+        <div className="bg-white border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-sm font-bold text-slate-900">
+                {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
+              </span>
+              <span className="text-sm font-black text-amber-600">{completionPercentage}%</span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              {isRtl
+                ? `חסרים: ${[!formData.full_name && 'שם', !formData.headline && 'כותרת', !formData.bio && 'ביו', !formData.location && 'מיקום', !formData.occupation && 'מקצוע', !profile.avatar_url && 'תמונה'].filter(Boolean).join(' · ')}`
+                : `Missing: ${[!formData.full_name && 'name', !formData.headline && 'headline', !formData.bio && 'bio', !formData.location && 'location', !formData.occupation && 'occupation', !profile.avatar_url && 'photo'].filter(Boolean).join(' · ')}`
+              }
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Mastery Journey Indicator */}
-      <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-white/10">
+      <div className="bg-slate-900 text-white p-5 sm:p-8 rounded-2xl shadow-xl relative overflow-hidden border border-white/10">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-2 text-center md:text-start">
@@ -639,8 +666,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               <ShieldCheck size={12} />
               {isRtl ? 'סטטוס מקצועי מאומת' : 'Verified Professional Status'}
             </div>
-            <h2 className="text-4xl font-black tracking-tight">{masteryLevel}</h2>
-            <p className="text-slate-400 font-medium text-lg">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{masteryLevel}</h2>
+            <p className="text-slate-400 font-medium text-sm sm:text-base">
               {isMentor 
                 ? (isRtl ? 'מכשיר את דור העתיד של בעלי המקצוע בישראל.' : 'Training the next generation of Israeli tradespeople.') 
                 : (isRtl ? 'בדרך להפוך לבעל מקצוע עצמאי ומיומן.' : 'On the path to becoming a skilled independent professional.')}
@@ -665,7 +692,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
       </div>
 
       {/* Header Card */}
-      <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-xl">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="h-48 bg-gray-50 relative group/cover">
           {formData.cover_url ? (
             <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
@@ -686,10 +713,10 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           )}
         </div>
         
-        <div className="px-8 pb-8 -mt-16 relative">
+        <div className="px-4 sm:px-8 pb-5 sm:pb-8 -mt-16 relative">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="relative">
-              <div className="w-32 h-32 rounded-3xl bg-black border-8 border-white flex items-center justify-center text-white font-black text-4xl shadow-2xl overflow-hidden relative">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-black border-4 sm:border-8 border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-xl overflow-hidden relative">
                 {profile.avatar_url ? (
                   <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
                 ) : (
@@ -794,7 +821,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             )}
           </div>
 
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          <div className="mt-5 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
               <div className="text-lg font-black text-black">
                 {isMentor ? (
@@ -921,7 +948,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
           {activeTab === 'about' && (
             <>
-              <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-black text-black">{isRtl ? 'קצת עלי' : 'Bio'}</h2>
                   {isMyProfile && (
@@ -1107,7 +1134,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </div>
 
               {/* Professional DNA / Quick Tags */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-8 relative overflow-hidden">
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 -z-10" />
                 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1192,7 +1219,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </div>
 
               {/* Gallery */}
-              <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl sm:text-2xl font-black text-black">{isRtl ? 'גלריית עבודות' : 'Gallery of Work'}</h2>
                   {isMyProfile && (
@@ -1233,7 +1260,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             <div className="space-y-10 animate-in fade-in duration-500">
               {/* Stats Summary */}
               {reviewsStats && reviewsStats.stats && reviewsStats.stats.total > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                    <div className="flex flex-col items-center justify-center text-center space-y-2 border-b md:border-b-0 md:border-e border-gray-100 pb-6 md:pb-0">
                       <div className="text-6xl font-black text-black">
                         {reviewsStats.stats.overallAvg ? reviewsStats.stats.overallAvg.toFixed(1) : '0.0'}
@@ -1286,7 +1313,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               )}
 
               {!isMyProfile && (
-                <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm space-y-6 relative overflow-hidden group">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform" />
                   
                   <div className="flex justify-between items-center relative z-10">
@@ -1366,14 +1393,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                              onChange={(e) => setNewReview({...newReview, comment: e.target.value.substring(0, 500)})}
                              placeholder={isRtl ? 'ספר על הליך הלמידה, המקצועיות והזמינות...' : 'Tell about the learning process, professionalism and availability...'}
                              rows={4}
-                             className="w-full p-6 bg-slate-50 border-2 border-transparent rounded-[2rem] focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
+                             className="w-full p-6 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
                            />
                         </div>
 
                         <button 
                           onClick={handleAddReview}
                           disabled={saving || !newReview.comment.trim()}
-                          className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest text-sm disabled:opacity-50 shadow-2xl shadow-slate-200 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                          className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-sm disabled:opacity-50 shadow-2xl shadow-slate-200 flex items-center justify-center gap-3 active:scale-95 transition-all"
                         >
                           {saving ? <Loader2 size={20} className="animate-spin" /> : <Zap size={20} className="fill-current" />}
                           {isRtl ? 'שלח ביקורת מאומתת' : 'Submit Verified Review'}
@@ -1394,7 +1421,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 {loadingReviews ? (
                   <div className="grid gap-4">
                     {[1, 2].map(i => (
-                      <div key={i} className="h-40 bg-gray-50 rounded-[2.5rem] animate-pulse border border-gray-100" />
+                      <div key={i} className="h-40 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />
                     ))}
                   </div>
                 ) : reviews.length > 0 ? (
@@ -1404,7 +1431,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         key={review.id} 
-                        className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm space-y-4 hover:shadow-md transition-all group"
+                        className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4 hover:shadow-md transition-all group"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
@@ -1442,8 +1469,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-[2.5rem] p-20 text-center space-y-6">
-                    <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto shadow-sm">
+                  <div className="bg-gray-50 rounded-2xl p-10 sm:p-16 text-center space-y-6">
+                    <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm">
                       <Star className="text-gray-200" size={40} />
                     </div>
                     <p className="text-gray-400 font-black uppercase tracking-widest">
@@ -1466,7 +1493,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               {loadingSaved ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {[1, 2].map(i => (
-                    <div key={i} className="h-96 bg-slate-50 rounded-[2.5rem] animate-pulse border border-slate-100" />
+                    <div key={i} className="h-96 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />
                   ))}
                 </div>
               ) : savedOpportunities.length > 0 ? (
@@ -1506,7 +1533,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
         {/* Right Column: Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-black text-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-8 shadow-xl space-y-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             <div className="relative z-10 space-y-4">
               <h3 className="text-xl sm:text-2xl font-black leading-tight">
@@ -1531,7 +1558,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             <div className="grid grid-cols-2 gap-4">
               <Link 
                 to={`/app/u/${profile.username}/reviews`}
-                className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
+                className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
               >
                 <Star className="text-yellow-500" size={24} fill="currentColor" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'ביקורות' : 'Reviews'}</span>
@@ -1544,7 +1571,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   const el = document.getElementById('profile-tabs');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
+                className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
               >
                 <Pencil className="text-blue-600" size={24} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'דרג' : 'Rate'}</span>
@@ -1552,7 +1579,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-50 rounded-full -z-10"></div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Info size={14} />
@@ -1647,6 +1674,19 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           </div>
         </div>
       </div>
+
+      {/* Logout — shown only on own profile */}
+      {isMyProfile && (
+        <div className="mt-10 flex justify-center">
+          <button
+            onClick={async () => { await signOut(); navigate('/'); }}
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-xl transition-all"
+          >
+            <LogOut size={15} />
+            {isRtl ? 'התנתקות מהחשבון' : 'Sign out'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -60,13 +60,13 @@ export default function Saved({ isRtl }: SavedProps) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-56 bg-slate-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-44 sm:h-56 bg-slate-100 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : savedOpportunities.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {savedOpportunities.map((opp) => (
             <OpportunityCard
               key={opp.id}

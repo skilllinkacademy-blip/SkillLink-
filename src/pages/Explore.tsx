@@ -138,7 +138,10 @@ export default function Explore({ isRtl }: ExploreProps) {
       </div>
 
       {/* Category chips */}
-      <div className="flex overflow-x-auto gap-2 pb-1 no-scrollbar">
+      <div className="relative">
+        <div className="flex overflow-x-auto gap-2 pb-1 no-scrollbar scroll-smooth snap-x"
+          style={{ WebkitOverflowScrolling: 'touch' }}>
+
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
@@ -152,6 +155,9 @@ export default function Explore({ isRtl }: ExploreProps) {
             {isRtl ? cat.he : cat.en}
           </button>
         ))}
+        </div>
+        {/* Fade indicator — more chips available */}
+        <div className="absolute top-0 right-0 rtl:right-auto rtl:left-0 h-full w-8 bg-gradient-to-l rtl:bg-gradient-to-r from-white to-transparent pointer-events-none" />
       </div>
 
       {/* Collapsible advanced filters */}
@@ -221,69 +227,73 @@ export default function Explore({ isRtl }: ExploreProps) {
 
       {/* Results */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="h-36 bg-slate-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 sm:h-36 bg-slate-100 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : results.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {results.map((p) => (
             <Link
               key={p.id}
               to={`/app/u/${p.username || p.id}`}
-              className="bg-white border border-slate-100 rounded-xl p-4 hover:border-slate-200 hover:shadow-md transition-all group flex gap-4 items-start"
+              className="bg-white border border-slate-100 rounded-xl p-3 sm:p-4 hover:border-slate-200 hover:shadow-md transition-all group flex flex-col sm:flex-row sm:gap-4 sm:items-start gap-2"
             >
-              <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-base overflow-hidden">
+              {/* Avatar + active dot */}
+              <div className="relative flex-shrink-0 self-start sm:self-auto">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm sm:text-base overflow-hidden">
                   {p.avatar_url
                     ? <img src={resolveAsset(p.avatar_url) || ''} alt={p.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     : p.full_name?.charAt(0) || 'U'}
                 </div>
                 {isRecentlyActive(p.updated_at) && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 rounded-full border-2 border-white" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-slate-900 text-sm truncate group-hover:text-blue-600 transition-colors">{p.full_name}</span>
-                      {p.is_verified && <ShieldCheck size={13} className="text-emerald-500 flex-shrink-0" />}
+                {/* Name + role pill */}
+                <div className="flex items-start justify-between gap-1">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold text-slate-900 text-xs sm:text-sm truncate group-hover:text-blue-600 transition-colors leading-tight">{p.full_name}</span>
+                      {p.is_verified && <ShieldCheck size={11} className="text-emerald-500 flex-shrink-0" />}
                     </div>
-                    <p className="text-xs text-slate-400 truncate">{p.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
+                    <p className="text-[10px] sm:text-xs text-slate-400 truncate leading-tight">{p.occupation || (isRtl ? 'בעל מקצוע' : 'Professional')}</p>
                   </div>
-                  <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  <span className={`flex-shrink-0 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
                     p.role === 'mentor'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   }`}>
-                    {isRtl ? (p.role === 'mentor' ? 'מנטור' : 'חניך') : (p.role === 'mentor' ? 'Master' : 'Apprentice')}
+                    {isRtl ? (p.role === 'mentor' ? 'מנטור' : 'חניך') : (p.role === 'mentor' ? 'Mentor' : 'Apprentice')}
                   </span>
                 </div>
 
+                {/* AI reason / bio — desktop only */}
                 {p.aiReason ? (
-                  <p className="text-xs text-emerald-700 mt-1.5 line-clamp-2 leading-relaxed">
+                  <p className="hidden sm:block text-xs text-emerald-700 mt-1.5 line-clamp-2 leading-relaxed">
                     <Zap size={10} className="inline mr-0.5 fill-emerald-500 text-emerald-500" />
                     {p.aiReason}
                   </p>
                 ) : p.bio ? (
-                  <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{p.bio}</p>
+                  <p className="hidden sm:block text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{p.bio}</p>
                 ) : null}
 
-                <div className="flex items-center gap-3 mt-2">
+                {/* Location + exp */}
+                <div className="flex items-center gap-2 mt-1.5">
                   {p.city && (
-                    <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                      <MapPin size={10} /> {p.city}
+                    <span className="flex items-center gap-0.5 text-[10px] text-slate-400">
+                      <MapPin size={9} /> <span className="truncate max-w-[50px] sm:max-w-none">{p.city}</span>
                     </span>
                   )}
                   {p.years_experience ? (
-                    <span className="text-[11px] text-slate-400">{p.years_experience}y exp</span>
+                    <span className="text-[10px] text-slate-400 hidden sm:inline">{p.years_experience}y</span>
                   ) : null}
                   {p.aiScore > 0 && (
-                    <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
-                      <Zap size={9} className={p.aiScore > 80 ? 'fill-emerald-500 text-emerald-500' : 'text-slate-400'} />
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-full ml-auto">
+                      <Zap size={8} className={p.aiScore > 80 ? 'fill-emerald-500 text-emerald-500' : 'text-slate-400'} />
                       {p.aiScore}%
                     </span>
                   )}
