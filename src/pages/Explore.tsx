@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, MapPin, Filter, ArrowRight, ShieldCheck, Zap, X, SlidersHorizontal } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Filter, ArrowRight, ShieldCheck, Zap, X, SlidersHorizontal, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,10 +31,12 @@ export default function Explore({ isRtl }: ExploreProps) {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const fetchResults = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       let query = supabase
         .from('profiles')
@@ -52,7 +54,8 @@ export default function Explore({ isRtl }: ExploreProps) {
         query = query.ilike('occupation', `%${categoryFilter}%`);
       }
 
-      const { data } = await query.order('updated_at', { ascending: false }).limit(50);
+      const { data, error: queryError } = await query.order('updated_at', { ascending: false }).limit(50);
+      if (queryError) throw queryError;
       const rawResults = data || [];
 
       if (profile && rawResults.length > 0) {
@@ -66,8 +69,9 @@ export default function Explore({ isRtl }: ExploreProps) {
       } else {
         setResults(rawResults);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error searching profiles:', err);
+      setFetchError(isRtl ? 'שגיאה בטעינת הפרופילים. נסה שוב.' : 'Failed to load profiles. Try again.');
     } finally {
       setLoading(false);
     }
@@ -218,12 +222,22 @@ export default function Explore({ isRtl }: ExploreProps) {
         </div>
       )}
 
+      {/* Error state */}
+      {fetchError && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+          <AlertCircle size={18} className="shrink-0" />
+          {fetchError}
+        </div>
+      )}
+
       {/* Results count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          <span className="font-bold text-slate-900">{results.length}</span> {isRtl ? 'תוצאות' : 'results'}
-        </p>
-      </div>
+      {!fetchError && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-slate-500">
+            <span className="font-bold text-slate-900">{results.length}</span> {isRtl ? 'תוצאות' : 'results'}
+          </p>
+        </div>
+      )}
 
       {/* Results */}
       {loading ? (
