@@ -89,6 +89,8 @@ CREATE TABLE public.conversations (
     participant_2 UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     last_message TEXT,
     last_message_at TIMESTAMPTZ DEFAULT NOW(),
+    connection_status TEXT DEFAULT 'new' CHECK (connection_status IN ('new', 'active', 'completed', 'stale')),
+    connection_status_updated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(participant_1, participant_2)
 );
@@ -116,7 +118,31 @@ CREATE TABLE public.notifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Saved Opportunities (Likes/Saves)
+-- 7. Opportunity Interests
+CREATE TABLE public.opportunity_interests (
+    opportunity_id UUID NOT NULL REFERENCES public.opportunities(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (opportunity_id, user_id)
+);
+
+-- 8. Reviews
+CREATE TABLE public.reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    conversation_id UUID REFERENCES public.conversations(id) ON DELETE SET NULL,
+    professional INTEGER CHECK (professional BETWEEN 1 AND 5),
+    teaching INTEGER CHECK (teaching BETWEEN 1 AND 5),
+    work_ethic INTEGER CHECK (work_ethic BETWEEN 1 AND 5),
+    reliability INTEGER CHECK (reliability BETWEEN 1 AND 5),
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(profile_id, reviewer_id)
+);
+
+-- 9. Saved Opportunities (Likes/Saves)
 CREATE TABLE public.saved_opportunities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -125,7 +151,7 @@ CREATE TABLE public.saved_opportunities (
     UNIQUE(user_id, opportunity_id)
 );
 
--- 8. RLS Policies
+-- 10. RLS Policies
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.opportunities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mentor_verifications ENABLE ROW LEVEL SECURITY;
@@ -133,6 +159,8 @@ ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saved_opportunities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.opportunity_interests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
@@ -155,6 +183,16 @@ CREATE POLICY "Anyone can insert notifications" ON public.notifications FOR INSE
 
 -- Saved Opportunities
 CREATE POLICY "Users can manage saved opportunities" ON public.saved_opportunities FOR ALL USING (auth.uid() = user_id);
+
+-- Opportunity Interests
+CREATE POLICY "Anyone can view opportunity interests" ON public.opportunity_interests FOR SELECT USING (true);
+CREATE POLICY "Users can insert own interest" ON public.opportunity_interests FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users or owners can delete interest" ON public.opportunity_interests FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.opportunities WHERE id = opportunity_id AND owner_id = auth.uid()));
+
+-- Reviews
+CREATE POLICY "Reviews are viewable by everyone" ON public.reviews FOR SELECT USING (true);
+CREATE POLICY "Users can insert own reviews" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = reviewer_id);
+CREATE POLICY "Users can delete own reviews" ON public.reviews FOR DELETE USING (auth.uid() = reviewer_id);
 
 -- 9. Functions & Triggers
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
