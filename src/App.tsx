@@ -70,13 +70,21 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
           <Route path="/about" element={<About isRtl={isRtl} />} />
           
           {/* Protected App Routes */}
-          <Route 
-            path="/app/opportunities" 
-            element={<Home isRtl={isRtl} />} 
+          <Route
+            path="/app/opportunities"
+            element={
+              <ProtectedRoute>
+                <Home isRtl={isRtl} />
+              </ProtectedRoute>
+            }
           />
-          <Route 
-            path="/app/opportunities/:id" 
-            element={<OpportunityDetails isRtl={isRtl} />} 
+          <Route
+            path="/app/opportunities/:id"
+            element={
+              <ProtectedRoute>
+                <OpportunityDetails isRtl={isRtl} />
+              </ProtectedRoute>
+            }
           />
           <Route 
             path="/app/explore"
@@ -94,13 +102,13 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/app/notifications" 
+          <Route
+            path="/app/notifications"
             element={
               <ProtectedRoute>
-                <Inbox isRtl={isRtl} />
+                <Notifications isRtl={isRtl} />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route 
             path="/app/profile" 
