@@ -217,10 +217,17 @@ export default function Messaging({ isRtl }: MessagingProps) {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user || !selectedConversationId) return;
-    
+    const file = e.target.files[0];
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert(isRtl ? 'סוג קובץ לא נתמך. השתמש ב-JPG, PNG או WebP בלבד.' : 'Unsupported file type. Use JPG, PNG or WebP only.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert(isRtl ? 'הקובץ גדול מדי. גודל מקסימלי: 5MB.' : 'File too large. Maximum size: 5MB.');
+      return;
+    }
     setSending(true);
     try {
-      const file = e.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${user.id}/messages/${fileName}`;

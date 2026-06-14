@@ -212,6 +212,14 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        alert(isRtl ? 'סוג קובץ לא נתמך. השתמש ב-JPG, PNG או WebP בלבד.' : 'Unsupported file type. Use JPG, PNG or WebP only.');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(isRtl ? 'הקובץ גדול מדי. גודל מקסימלי: 5MB.' : 'File too large. Maximum size: 5MB.');
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
