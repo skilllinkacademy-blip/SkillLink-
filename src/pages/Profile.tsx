@@ -216,10 +216,22 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     try {
       const { data } = await supabase
         .from('reviews')
-        .select('*, reviewer:profiles!reviewer_id(full_name, avatar_url, username)')
+        .select('*, reviewer:profiles!reviewer_id(full_name, avatar_url, username, is_verified)')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false });
-      const reviewList = data || [];
+      const reviewList = (data || []).map((r: any) => ({
+        id: r.id,
+        professional: r.professional ?? 0,
+        teaching: r.teaching ?? 0,
+        workEthic: r.work_ethic ?? 0,
+        reliability: r.reliability ?? 0,
+        rating: r.rating || 0,
+        comment: r.comment || '',
+        createdAt: r.created_at,
+        fromName: r.reviewer?.full_name || 'Anonymous',
+        fromAvatar: r.reviewer?.avatar_url || null,
+        fromVerified: r.reviewer?.is_verified ? 1 : 0,
+      }));
       setReviews(reviewList);
       if (reviewList.length > 0) {
         const avg = reviewList.reduce((s: number, r: any) => s + (r.rating || 0), 0) / reviewList.length;
