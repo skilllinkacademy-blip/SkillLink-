@@ -10,6 +10,7 @@ interface Profile {
   occupation?: string;
   years_experience?: number;
   workload?: string;
+  bio?: string;
   avatar_url?: string;
   verification_status?: 'pending' | 'approved' | 'rejected' | 'none';
   portfolio_urls?: string[];

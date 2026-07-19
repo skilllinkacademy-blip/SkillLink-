@@ -33,7 +33,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     username: '',
     headline: '',
     bio: '',
-    location: '',
+    city: '',
     phone: '',
     occupation: '',
     years_experience: 0,
@@ -140,7 +140,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   username: generatedUsername,
                   full_name: metadata.full_name || 'User',
                   role: metadata.role || 'mentee',
-                  location: metadata.location || 'Unknown',
+                  city: metadata.city || metadata.location || 'Unknown',
                   updated_at: new Date().toISOString(),
                 })
                 .select()
@@ -169,7 +169,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               username: data.username || '',
               headline: data.headline || '',
               bio: data.bio || '',
-              location: data.location || '',
+              city: data.city || '',
               phone: data.phone || '',
               occupation: data.occupation || '',
               years_experience: data.years_experience || 0,
@@ -633,7 +633,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     formData.full_name,
     formData.headline,
     formData.bio,
-    formData.location,
+    formData.city,
     formData.occupation,
     profile.avatar_url,
     formData.cover_url,
@@ -677,8 +677,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             </div>
             <p className="text-[11px] text-slate-400 mt-1.5">
               {isRtl
-                ? `חסרים: ${[!formData.full_name && 'שם', !formData.headline && 'כותרת', !formData.bio && 'ביו', !formData.location && 'מיקום', !formData.occupation && 'מקצוע', !profile.avatar_url && 'תמונה'].filter(Boolean).join(' · ')}`
-                : `Missing: ${[!formData.full_name && 'name', !formData.headline && 'headline', !formData.bio && 'bio', !formData.location && 'location', !formData.occupation && 'occupation', !profile.avatar_url && 'photo'].filter(Boolean).join(' · ')}`
+                ? `חסרים: ${[!formData.full_name && 'שם', !formData.headline && 'כותרת', !formData.bio && 'ביו', !formData.city && 'מיקום', !formData.occupation && 'מקצוע', !profile.avatar_url && 'תמונה'].filter(Boolean).join(' · ')}`
+                : `Missing: ${[!formData.full_name && 'name', !formData.headline && 'headline', !formData.bio && 'bio', !formData.city && 'location', !formData.occupation && 'occupation', !profile.avatar_url && 'photo'].filter(Boolean).join(' · ')}`
               }
             </p>
           </div>
@@ -877,15 +877,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   <div className="space-y-1">
                     <input 
                       type="text" 
-                      value={formData.location} 
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      onBlur={() => handleSave('location', formData.location)}
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      onBlur={() => handleSave('city', formData.city)}
                       placeholder={isRtl ? 'עיר' : 'City'}
                       className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
                     />
                     {renderProfileHelper(isRtl ? 'מיקום' : 'Location')}
                   </div>
-                ) : (profile.location || '---')}
+                ) : (profile.city || '---')}
               </div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'עיר' : 'City'}</div>
             </div>
@@ -1624,14 +1624,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   {isMyProfile ? (
                     <input 
                       type="text" 
-                      value={formData.location} 
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      onBlur={() => handleSave('location', formData.location)}
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      onBlur={() => handleSave('city', formData.city)}
                       className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-blue-200"
                       placeholder={isRtl ? 'הוסף מיקום...' : 'Add location...'}
                     />
                   ) : (
-                    <p className="text-sm font-bold text-black">{profile.location || (isRtl ? 'לא צוין' : 'Not specified')}</p>
+                    <p className="text-sm font-bold text-black">{profile.city || (isRtl ? 'לא צוין' : 'Not specified')}</p>
                   )}
                 </div>
               </div>

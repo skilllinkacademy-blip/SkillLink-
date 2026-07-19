@@ -123,8 +123,15 @@ export default function Auth({ isRtl }: AuthProps) {
         });
 
         if (signUpError) throw signUpError;
-        
+
         if (data.user) {
+          if (role === 'mentor' && businessType) {
+            const { error: occupationError } = await supabase
+              .from('profiles')
+              .update({ occupation: businessType })
+              .eq('id', data.user.id);
+            if (occupationError) console.warn('Failed to save occupation:', occupationError.message);
+          }
           setSignupSuccess(true);
         }
       }

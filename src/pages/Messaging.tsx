@@ -68,6 +68,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
         try {
           const conv = await getOrCreateConversation(supabase, selectedOtherUserId);
           setSelectedConversationId(conv.id);
+          await fetchConversations();
         } catch (err) {
           console.error('Error setting up chat:', err);
         }

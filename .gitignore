@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# SQLite legacy artifacts
+skilllink.db*

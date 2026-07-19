@@ -84,8 +84,7 @@ export default function Landing({ isRtl }: LandingProps) {
 
   useEffect(() => {
     supabase.from('profiles').select('*', { count: 'exact', head: true })
-      .then(({ count }) => { if (count && count > 0) setTotal(count); })
-      .catch(() => {});
+      .then(({ count }) => { if (count && count > 0) setTotal(count); }, () => {});
   }, []);
 
   return (
