@@ -61,9 +61,12 @@ npm run dev        # dev server on http://localhost:5173
 ```bash
 npm run lint       # TypeScript type check
 npm test           # 34 unit/component tests (Vitest + RTL)
+npm run test:e2e   # 23 end-to-end tests (Playwright, desktop + mobile)
 ```
 
 </div>
+
+**בדיקות E2E (Playwright):** רצות מול dev server אמיתי בשני profiles (Desktop Chrome + Pixel 7). המסלולים הציבוריים (נחיתה, ולידציית טפסים, אשף הרשמה, redirect לאורח) רצים ללא התחברות; המסלול המאומת (feed → פתיחת הזדמנות → Explore → Inbox → פרופיל) מתחבר פעם אחת דרך `E2E_EMAIL`/`E2E_PASSWORD` ומדלג בהיעדרם.
 
 **בדיקות אבטחה (RLS):** הסקריפט [supabase/tests/rls_tests.sql](supabase/tests/rls_tests.sql) מדמה שלושה משתמשים + אורח ומוכיח ב-16 בדיקות שמשתמש אחד לא יכול לקרוא או לכתוב נתונים פרטיים של אחר. מריצים אותו ב-SQL Editor של Supabase; הוא רץ בתוך טרנזקציה ומתגלגל לאחור בסופו. הבדיקות האלה מצאו (ותיקנו) שני חורי אבטחה אמיתיים — ראו [docs/SECURITY.md](docs/SECURITY.md).
 
