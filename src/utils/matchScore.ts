@@ -28,8 +28,8 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
   const details: string[] = [];
 
   // 1. Location Match (40 points)
-  const oppCity = (opportunity.location || opportunity.profiles?.location || '').trim().toLowerCase();
-  const myCity = (myProfile.location || '').trim().toLowerCase();
+  const oppCity = (opportunity.location || opportunity.profiles?.city || '').trim().toLowerCase();
+  const myCity = (myProfile.city || myProfile.location || '').trim().toLowerCase();
 
   if (oppCity && myCity) {
     if (oppCity === myCity) {
@@ -116,7 +116,7 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
   }
   
   // Profile completion bonus
-  const completionFields = [myProfile.full_name, myProfile.avatar_url, myProfile.occupation, myProfile.location];
+  const completionFields = [myProfile.full_name, myProfile.avatar_url, myProfile.occupation, myProfile.city || myProfile.location];
   const completed = completionFields.filter(Boolean).length;
   if (completed >= 3) {
     trustScore += 10;
