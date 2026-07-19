@@ -45,13 +45,18 @@
 
 | פער | סיכון | המלצה |
 |---|---|---|
-| **מפתח Gemini חשוף בלקוח** (`VITE_GEMINI_API_KEY`) | כל מבקר יכול לחלץ את המפתח ולשרוף quota | להעביר ל-Supabase Edge Function או להגביל את המפתח ב-Google Console לדומיין + rate limit |
 | **פרטי קשר בפרופיל ציבוריים** | `phone` ו-`desired_salary` נקראים ע"י כל מחובר | לשקול policy עמודתי (view) או חשיפה רק לצדדים בשיחה פעילה |
 | **Listing פתוח ב-buckets ציבוריים** | ניתן למנות את כל הקבצים (advisor warning) | לצמצם את policy ה-SELECT לנתיב ספציפי |
 | **הגנת סיסמאות דלופות כבויה** | סיסמאות מוכרות-כדלופות מתקבלות | להדליק ב-Auth settings (HaveIBeenPwned) |
 | **אימות אימייל כבוי** | הרשמה עם כל כתובת, בלי אימות בעלות | להדליק Confirm email לפני השקה רחבה |
 | **פונקציות SECURITY DEFINER חשופות ל-anon** (`increment_likes` וכו') | שינוי מוני לייקים ללא אימות | `REVOKE EXECUTE FROM anon` |
 | **אין rate limiting אפליקטיבי** | ספאם הודעות/התראות אפשרי בקצב גבוה | Supabase rate limits + כלל אפליקטיבי בהמשך |
+
+## מפתחות AI — מוגן בצד שרת
+
+קריאות ה-Gemini עוברות דרך Edge Function (`supabase/functions/gemini`) שמחזיקה את `GEMINI_API_KEY` ב-env של השרת בלבד. הלקוח קורא אליה עם ה-session שלו (`verify_jwt` מופעל — בקשה בלי token נדחית ב-401), ומפתח ה-AI לעולם לא נכלל ב-bundle. בנוסף הוסר `define: { 'process.env': env }` מ-Vite שקודם הזריק את *כל* קובץ ה-.env ל-bundle. אם ה-Function לא זמינה, הלקוח נופל בחזרה להיוריסטיקת ההתאמה המקומית — האפליקציה ממשיכה לעבוד בלי דירוג AI.
+
+> הפעלה: `supabase secrets set GEMINI_API_KEY=<key>` (ראו LAUNCH_CHECKLIST.md).
 
 ## דיווח על חולשה
 

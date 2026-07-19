@@ -22,6 +22,7 @@ flowchart LR
         PG[(PostgreSQL + RLS)]
         ST[Storage buckets]
         RT[Realtime]
+        EF[Edge Function: gemini]
     end
 
     GEM[Gemini API]
@@ -31,7 +32,8 @@ flowchart LR
     UI -->|"PostgREST + anon key"| PG
     UI -->|"upload/serve images"| ST
     UI <-->|"live chat subscriptions"| RT
-    GS --> GEM
+    GS -->|"invoke (JWT)"| EF
+    EF -->|"server-side key"| GEM
 ```
 
 </div>
@@ -111,10 +113,14 @@ erDiagram
 **חלופה שנדחתה:** דירוג AI בצד שרת לכל feed — יקר, איטי, ולא אפשרי בלי שרת.
 **המימוש:** היוריסטיקה שקופה ב-`src/utils/matchScore.ts` — מיקום (40), התאמת תפקיד ותחום (30), אמון והשלמת פרופיל (30), עם טבלת אזורים גיאוגרפיים לישראל. מכוסה ב-11 בדיקות יחידה.
 
-### 4. פרופיל נוצר ב-DB trigger, לא בקוד לקוח
+### 4. מפתח Gemini מאחורי Edge Function
+**חלופה שנדחתה:** מפתח בצד לקוח (`VITE_GEMINI_API_KEY`) — נוח אבל חושף את המפתח לכל מבקר.
+**המימוש:** קריאות ה-AI עוברות דרך `supabase/functions/gemini` שמחזיקה את המפתח ב-env של השרת; הלקוח קורא עם ה-JWT שלו. אם ה-Function לא זמינה, `src/services/*` נופלים להיוריסטיקת ההתאמה המקומית — האפליקציה עובדת גם בלי AI. (ראו SECURITY.md.)
+
+### 5. פרופיל נוצר ב-DB trigger, לא בקוד לקוח
 `handle_new_user` (SECURITY DEFINER) יוצר שורת `profiles` אטומית עם ההרשמה. כך אין מצב של משתמש בלי פרופיל גם אם הלקוח קרס באמצע. מטא-דאטה מההרשמה (שם, תפקיד, עיר) עוברת דרך `raw_user_meta_data`.
 
-### 5. עברית/RTL כברירת מחדל
+### 6. עברית/RTL כברירת מחדל
 `document.documentElement.dir` נקבע לפני טעינת React (סקריפט inline ב-index.html) כדי למנוע הבהוב LTR. כל הרכיבים משתמשים ב-Tailwind logical utilities (`rtl:`) ותומכים בשתי השפות.
 
 ## זרימות מרכזיות

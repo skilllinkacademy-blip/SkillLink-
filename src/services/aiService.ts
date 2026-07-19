@@ -1,25 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
-
-// Initialize Gemini Client lazily to avoid top-level crashes
-let aiInstance: any = null;
-
-function getAI() {
-  if (aiInstance) return aiInstance;
-  
-  const key = (process.env as any).GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-  if (!key) {
-    console.warn("GEMINI_API_KEY is not defined in the environment.");
-    return null;
-  }
-  
-  try {
-    aiInstance = new GoogleGenAI({ apiKey: key });
-    return aiInstance;
-  } catch (e) {
-    console.error("Failed to initialize GoogleGenAI:", e);
-    return null;
-  }
-}
+import { callGemini } from "../lib/ai";
 
 const MODEL_NAME = "gemini-flash-latest";
 
@@ -68,9 +47,6 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
   if (candidates.length === 0) return [];
 
   try {
-    const ai = getAI();
-    if (!ai) return candidates;
-
     const prompt = `
       You are a highly sophisticated recruitment AI for "SkillLink", an Israeli marketplace for professional mentorships and artisanal apprenticeships.
       Match the user with these opportunities.
@@ -97,19 +73,19 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
       Return a JSON array: [{"id": number, "score": number, "reason": string}].
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await callGemini({
       model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
+          type: "ARRAY",
           items: {
-            type: Type.OBJECT,
+            type: "OBJECT",
             properties: {
-              id: { type: Type.NUMBER },
-              score: { type: Type.NUMBER },
-              reason: { type: Type.STRING }
+              id: { type: "NUMBER" },
+              score: { type: "NUMBER" },
+              reason: { type: "STRING" }
             },
             required: ["id", "score", "reason"]
           }
@@ -118,7 +94,7 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
     });
 
     const aiOutput = JSON.parse(response.text || '[]');
-    
+
     // Merge AI results with candidate data
     return candidates.map(opp => {
       const aiRec = aiOutput.find((r: any) => r.id === opp.id);
@@ -141,9 +117,6 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
   if (candidates.length === 0) return [];
 
   try {
-    const ai = getAI();
-    if (!ai) return candidates;
-
     const prompt = `
       You are a professional Israeli mentorship AI for "SkillLink".
       Compare the current user's profile with a list of potential mentors/apprentices.
@@ -171,19 +144,19 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
       Return JSON array: [{"id": number, "score": number, "reason": string}]. Reason in Hebrew.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await callGemini({
       model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
+          type: "ARRAY",
           items: {
-            type: Type.OBJECT,
+            type: "OBJECT",
             properties: {
-              id: { type: Type.NUMBER },
-              score: { type: Type.NUMBER },
-              reason: { type: Type.STRING }
+              id: { type: "NUMBER" },
+              score: { type: "NUMBER" },
+              reason: { type: "STRING" }
             },
             required: ["id", "score", "reason"]
           }

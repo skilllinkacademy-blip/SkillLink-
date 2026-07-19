@@ -17,7 +17,12 @@
 ### אבטחה (קריטי)
 - [ ] **הדלק אימות אימייל** ב-Supabase → Authentication → Providers → Email → "Confirm email". כרגע כבוי, כל אחד נרשם עם כל כתובת.
 - [ ] **הדלק הגנת סיסמאות דלופות** — Authentication → Policies → "Leaked password protection" (HaveIBeenPwned).
-- [ ] **הגבל את מפתח Gemini** — כרגע `VITE_GEMINI_API_KEY` חשוף בצד לקוח. ב-Google Cloud Console: הגבל את המפתח ל-HTTP referrer של הדומיין שלך + rate limit. (פתרון עמוק יותר: להעביר ל-Edge Function — ראה SECURITY.md.)
+- [ ] **הגדר את מפתח Gemini כ-secret** — הקוד כבר עבר לקרוא ל-Edge Function `gemini` (המפתח לא נחשף יותר בלקוח). נשאר רק להגדיר את הערך בצד שרת:
+  ```bash
+  supabase secrets set GEMINI_API_KEY=<your-gemini-key> --project-ref cprfaimmxtqsmmutdbcb
+  ```
+  (או דרך Supabase Dashboard → Edge Functions → Secrets.) **עד שתעשה זאת ה-AI ranking לא פעיל** — האפליקציה עובדת עם התאמה היוריסטית מקומית כ-fallback.
+- [ ] **הסר את `VITE_GEMINI_API_KEY` מ-Vercel** (ומ-.env המקומי) — כבר לא בשימוש, אין טעם להשאירו חשוף.
 
 ### נתונים
 - [ ] **נקה נתוני זבל** ב-DB — יש ~10 פרופילי בדיקה עם שמות ג'יבריש (`dfd`, `כדכע`, `lkj;j;`, `קבק`...). מחק דרך Supabase SQL Editor:

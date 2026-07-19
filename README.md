@@ -27,8 +27,8 @@
 | שכבה | טכנולוגיה |
 |---|---|
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, framer-motion |
-| Backend | Supabase — Auth, PostgreSQL + RLS, Storage, Realtime |
-| AI | Gemini API (התאמה חכמה וצ'אטבוט עזרה) |
+| Backend | Supabase — Auth, PostgreSQL + RLS, Storage, Realtime, Edge Functions |
+| AI | Gemini API דרך Edge Function (המפתח לא נחשף בלקוח) |
 | Hosting | Vercel (static SPA) |
 | בדיקות | Vitest, React Testing Library, בדיקות RLS ב-SQL |
 | CI | GitHub Actions — type check, tests, build על כל push |
@@ -47,7 +47,8 @@ npm install
 # .env with:
 # VITE_SUPABASE_URL=...
 # VITE_SUPABASE_ANON_KEY=...
-# VITE_GEMINI_API_KEY=...
+# (Gemini key is a server-side Edge Function secret, not a client var —
+#  see docs/LAUNCH_CHECKLIST.md)
 
 npm run dev        # dev server on http://localhost:5173
 ```
