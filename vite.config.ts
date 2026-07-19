@@ -10,6 +10,17 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     build: {
       target: 'es2015',
+      rollupOptions: {
+        output: {
+          // Split rarely-changing vendor libraries into their own chunks so
+          // they stay cached across app deploys.
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'motion-vendor': ['framer-motion'],
+            'supabase-vendor': ['@supabase/supabase-js'],
+          },
+        },
+      },
     },
     define: {
       'process.env': env,

@@ -1,31 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 // App Version: 1.0.2 (Force Update)
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { isSupabaseConfigured } from './lib/supabase';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+// Entry screens stay eager so first paint has no loading flash.
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
-import Home from './pages/Home';
-import Explore from './pages/Explore';
-import Messaging from './pages/Messaging';
-import Notifications from './pages/Notifications';
-import Inbox from './pages/Inbox';
-import Profile from './pages/Profile';
-import ReviewsPage from './pages/Reviews';
-import MentorVerify from './pages/MentorVerify';
-import AdminDashboard from './pages/AdminDashboard';
-import MyOpportunities from './pages/MyOpportunities';
-import OpportunityNew from './pages/OpportunityNew';
-import OpportunityDetails from './pages/OpportunityDetails';
-import Saved from './pages/Saved';
-import Privacy from './pages/legal/Privacy';
-import Terms from './pages/legal/Terms';
-import Contact from './pages/legal/Contact';
-import About from './pages/legal/About';
+// Everything behind auth (and legal pages) is code-split per route.
+const Home = lazy(() => import('./pages/Home'));
+const Explore = lazy(() => import('./pages/Explore'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Inbox = lazy(() => import('./pages/Inbox'));
+const Profile = lazy(() => import('./pages/Profile'));
+const ReviewsPage = lazy(() => import('./pages/Reviews'));
+const MentorVerify = lazy(() => import('./pages/MentorVerify'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const MyOpportunities = lazy(() => import('./pages/MyOpportunities'));
+const OpportunityNew = lazy(() => import('./pages/OpportunityNew'));
+const OpportunityDetails = lazy(() => import('./pages/OpportunityDetails'));
+const Saved = lazy(() => import('./pages/Saved'));
+const Privacy = lazy(() => import('./pages/legal/Privacy'));
+const Terms = lazy(() => import('./pages/legal/Terms'));
+const Contact = lazy(() => import('./pages/legal/Contact'));
+const About = lazy(() => import('./pages/legal/About'));
 
 import ErrorBoundary from './components/ErrorBoundary';
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+}
 
 function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => void }) {
   const { user, loading, isSyncing } = useAuth();
@@ -45,6 +54,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
         <Navbar isRtl={isRtl} toggleLang={toggleLang} />
         
         <main className={user ? 'max-w-6xl mx-auto px-4 py-6 pb-20 md:pb-8' : ''}>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* ... rest of routes stay same ... */}
           {/* Public Routes */}
@@ -185,6 +195,7 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
 
           <Route path="*" element={<Navigate to={user ? "/app/opportunities" : "/"} replace />} />
         </Routes>
+          </Suspense>
       </main>
     </div>
     </ErrorBoundary>
