@@ -80,7 +80,7 @@ export default function Explore({ isRtl }: ExploreProps) {
   useEffect(() => {
     const timer = setTimeout(fetchResults, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery, locationQuery, roleFilter, experienceFilter, verifiedOnly, categoryFilter]);
+  }, [searchQuery, locationQuery, roleFilter, experienceFilter, verifiedOnly, categoryFilter, profile?.id]);
 
   const isRecentlyActive = (updatedAt: string) => {
     return (Date.now() - new Date(updatedAt).getTime()) < 86400000;
