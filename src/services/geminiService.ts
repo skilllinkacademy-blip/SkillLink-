@@ -1,6 +1,6 @@
 import { callGemini } from "../lib/ai";
 
-const MODEL_NAME = "gemini-2.5-flash";
+const MODEL_NAME = "gemini-flash-lite-latest";
 
 export interface SmartMatchAnalysis {
   score: number;

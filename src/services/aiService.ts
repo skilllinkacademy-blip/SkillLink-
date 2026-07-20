@@ -1,6 +1,6 @@
 import { callGemini } from "../lib/ai";
 
-const MODEL_NAME = "gemini-flash-latest";
+const MODEL_NAME = "gemini-flash-lite-latest";
 
 // Standard Israeli City Coordinates (Approximate)
 const CITY_COORDS: Record<string, [number, number]> = {
