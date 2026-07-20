@@ -46,11 +46,11 @@
 | פער | סיכון | המלצה |
 |---|---|---|
 | **פרטי קשר בפרופיל ציבוריים** | `phone` ו-`desired_salary` נקראים ע"י כל מחובר | לשקול policy עמודתי (view) או חשיפה רק לצדדים בשיחה פעילה |
-| **Listing פתוח ב-buckets ציבוריים** | ניתן למנות את כל הקבצים (advisor warning) | לצמצם את policy ה-SELECT לנתיב ספציפי |
-| **הגנת סיסמאות דלופות כבויה** | סיסמאות מוכרות-כדלופות מתקבלות | להדליק ב-Auth settings (HaveIBeenPwned) |
+| **הגנת סיסמאות דלופות כבויה** | סיסמאות מוכרות-כדלופות מתקבלות | להדליק ב-Auth settings (HaveIBeenPwned) — הגדרת dashboard |
 | **אימות אימייל כבוי** | הרשמה עם כל כתובת, בלי אימות בעלות | להדליק Confirm email לפני השקה רחבה |
-| **פונקציות SECURITY DEFINER חשופות ל-anon** (`increment_likes` וכו') | שינוי מוני לייקים ללא אימות | `REVOKE EXECUTE FROM anon` |
 | **אין rate limiting אפליקטיבי** | ספאם הודעות/התראות אפשרי בקצב גבוה | Supabase rate limits + כלל אפליקטיבי בהמשך |
+
+**נסגר** (`20260720_harden_functions_and_storage.sql`): פונקציות SECURITY DEFINER חשופות (`increment_likes` וכו') — `REVOKE EXECUTE`; ו-listing פתוח ב-buckets ציבוריים — הוסרו policies ה-SELECT הרחבות (קריאת אובייקט בודד דרך getPublicUrl לא נפגעת). כל התראות ה-advisor של ה-DB נסגרו; נשארה רק הגנת הסיסמאות שהיא הגדרת dashboard.
 
 ## מפתחות AI — מוגן בצד שרת
 
