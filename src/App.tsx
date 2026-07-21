@@ -40,6 +40,13 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
   const { user, loading, isSyncing } = useAuth();
   const location = useLocation();
 
+  // Reset scroll to the top of the page on every route change, so pages like
+  // About/Contact/Privacy/Terms always open at the top (not wherever the
+  // previous page — e.g. the landing footer — was scrolled to).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
