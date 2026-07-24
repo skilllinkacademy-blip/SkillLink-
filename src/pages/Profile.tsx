@@ -886,7 +886,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           <div className="px-4 pt-4 flex gap-2">
             {!isMyProfile ? (
               <>
-                <button onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })} className="flex-1 py-2.5 rounded-xl font-black text-sm text-white active:scale-95 transition-transform" style={{ backgroundColor: accent }}>
+                <button onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name, autoMessage: isMentor ? (isRtl ? 'היי! ראיתי את הפרופיל שלך ואשמח ללמוד אצלך — אפשר לשמוע פרטים? 🙏' : 'Hi! I saw your profile and would love to learn from you — could you share some details? 🙏') : (isRtl ? 'היי! ראיתי את הפרופיל שלך ואשמח לעזור לך ללמוד — בוא נדבר.' : 'Hi! I saw your profile and would love to help you learn — let\'s talk.') } })} className="flex-1 py-2.5 rounded-xl font-black text-sm text-white active:scale-95 transition-transform" style={{ backgroundColor: accent }}>
                   {isMentor ? (isRtl ? 'התחל ללמוד' : 'Start learning') : (isRtl ? 'צור קשר' : 'Get in touch')}
                 </button>
                 <button onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })} className="flex-1 py-2.5 rounded-xl font-black text-sm bg-slate-100 text-slate-800 active:scale-95 transition-transform">

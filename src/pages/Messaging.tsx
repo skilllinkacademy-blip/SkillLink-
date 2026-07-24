@@ -50,17 +50,40 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pendingAutoRef = useRef<string | null>(null);
+  const autoSentRef = useRef(false);
 
-  // Handle recipient from location state (e.g. from "Send Message" button)
+  // Handle recipient from location state (e.g. from "Send Message"/"Start learning")
   useEffect(() => {
-    const state = location.state as { recipientId?: string; recipientName?: string };
+    const state = location.state as { recipientId?: string; recipientName?: string; autoMessage?: string };
     if (state?.recipientId) {
       setSelectedOtherUserId(state.recipientId);
+      if (state.autoMessage) {
+        pendingAutoRef.current = state.autoMessage;
+        autoSentRef.current = false;
+      }
       fetchConversations();
     } else {
       fetchConversations();
     }
   }, [location.state]);
+
+  // Auto-send the opener (from "Start learning") once the conversation is ready.
+  useEffect(() => {
+    if (!selectedConversationId || !user || autoSentRef.current || !pendingAutoRef.current) return;
+    autoSentRef.current = true;
+    const text = pendingAutoRef.current;
+    pendingAutoRef.current = null;
+    (async () => {
+      try {
+        const data = await sendChatMessage(supabase, selectedConversationId, text);
+        setMessages((prev) => [...prev, data as Message]);
+        await fetchConversations();
+      } catch (err) {
+        console.error('Error auto-sending opener:', err);
+      }
+    })();
+  }, [selectedConversationId, user]);
 
   useEffect(() => {
     if (selectedOtherUserId) {
