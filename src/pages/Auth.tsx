@@ -136,7 +136,14 @@ export default function Auth({ isRtl }: AuthProps) {
               .eq('id', data.user.id);
             if (occupationError) console.warn('Failed to save occupation:', occupationError.message);
           }
-          setSignupSuccess(true);
+
+          // When email confirmation is disabled in Supabase, signUp returns a
+          // live session and the user is already logged in — let the `user`
+          // effect navigate them into the app. Only show the "check your
+          // email" screen when a confirmation is actually pending (no session).
+          if (!data.session) {
+            setSignupSuccess(true);
+          }
         }
       }
     } catch (err: any) {
