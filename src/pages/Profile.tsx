@@ -752,69 +752,43 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     return diffInHours < 24;
   };
 
-  return (
-    <div className={`max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${hasPageBg ? 'p-3 sm:p-5 rounded-3xl shadow-sm profile-glass' : ''}`} style={{ ['--pa' as any]: accent, background: pageBackground }}>
+  const verified = profile.role === 'mentor' && (profile.is_verified || profile.verification_status === 'approved');
+  const works = (formData.portfolio_urls && formData.portfolio_urls.length) || 0;
+  const ratingText = reviews.length > 0 ? averageRating.toFixed(1) : '—';
+  const category = profile.headline || profile.occupation || (isMentor ? (isRtl ? 'מנטור' : 'Mentor') : (isRtl ? 'מתלמד' : 'Apprentice'));
 
-      {/* ===== Design panel (own profile) ===== */}
+  return (
+    <div className="max-w-xl mx-auto" style={{ ['--pa' as any]: accent }}>
+
+      {/* ===== Design panel ===== */}
       {isMyProfile && showDesignPanel && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDesignPanel(false)} />
-          <div className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-6 max-h-[85vh] overflow-y-auto">
+          <div className="relative bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-black text-slate-900">{isRtl ? 'עיצוב הדף שלך' : 'Design your page'}</h3>
               <button onClick={() => setShowDesignPanel(false)} className="p-2 rounded-lg hover:bg-slate-100"><X size={20} /></button>
             </div>
-
             <div className="space-y-2">
-              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'תבנית' : 'Template'}</div>
-              <div className="grid grid-cols-3 gap-2">
-                {TEMPLATES.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => { const nd = { ...design, template: t.id }; setDesign(nd); handleSave('page_design', nd); }}
-                    className={`p-3 rounded-2xl border-2 text-center transition-all ${design.template === t.id ? 'border-slate-900' : 'border-slate-100 hover:border-slate-200'}`}
-                  >
-                    <div className="h-10 rounded-lg mb-2" style={{ background: t.id === 'dark' ? 'linear-gradient(135deg,#1e293b,#020617)' : t.id === 'warm' ? 'linear-gradient(135deg,#b45309,#431407)' : `linear-gradient(135deg, ${accent}, #0f172a)` }} />
-                    <div className="text-[11px] font-black text-slate-700">{isRtl ? t.labelHe : t.labelEn}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'צבע הבאנר' : 'Banner color'}</div>
-              <div className="flex flex-wrap gap-3 items-center">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'צבע ראשי' : 'Accent color'}</div>
+              <div className="flex flex-wrap gap-3">
                 {ACCENTS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => { const nd = { ...design, bannerColor: c }; setDesign(nd); handleSave('page_design', nd); }}
-                    className={`w-9 h-9 rounded-full transition-all ${design.bannerColor === c ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
-                    style={{ backgroundColor: c }}
-                    aria-label={c}
-                  />
+                  <button key={c} onClick={() => { const nd = { ...design, accent: c }; setDesign(nd); handleSave('page_design', nd); }} className={`w-9 h-9 rounded-full transition-all ${design.accent === c ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`} style={{ backgroundColor: c }} aria-label={c} />
                 ))}
-                <button onClick={() => { const nd = { ...design, bannerColor: '' }; setDesign(nd); handleSave('page_design', nd); }} className="text-[11px] font-bold text-slate-500 underline">{isRtl ? 'לפי תבנית' : 'By template'}</button>
               </div>
             </div>
-
             <div className="space-y-2">
               <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'רקע העמוד' : 'Page background'}</div>
               <div className="flex flex-wrap gap-3 items-center">
                 {PAGE_BG_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => { const nd = { ...design, pageBgColor: c, pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }}
-                    className={`w-9 h-9 rounded-full border border-slate-200 transition-all ${design.pageBgColor === c && !design.pageBgImage ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
-                    style={{ backgroundColor: c }}
-                    aria-label={c}
-                  />
+                  <button key={c} onClick={() => { const nd = { ...design, pageBgColor: c, pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }} className={`w-9 h-9 rounded-full border border-slate-200 transition-all ${design.pageBgColor === c && !design.pageBgImage ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`} style={{ backgroundColor: c }} aria-label={c} />
                 ))}
                 <button onClick={() => { const nd = { ...design, pageBgColor: '', pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }} className="text-[11px] font-bold text-slate-500 underline">{isRtl ? 'ללא' : 'None'}</button>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 cursor-pointer text-xs font-bold text-slate-700">
                   <Upload size={14} />
-                  {isRtl ? 'העלה תמונת רקע' : 'Upload background image'}
+                  {isRtl ? 'העלה תמונת רקע' : 'Upload background'}
                   <input type="file" className="hidden" accept="image/*" onChange={handlePageBgUpload} disabled={uploading} />
                 </label>
                 {design.pageBgImage && (
@@ -822,1145 +796,218 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 )}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'צבע ראשי' : 'Accent color'}</div>
-              <div className="flex flex-wrap gap-3">
-                {ACCENTS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => { const nd = { ...design, accent: c }; setDesign(nd); handleSave('page_design', nd); }}
-                    className={`w-9 h-9 rounded-full transition-all ${design.accent === c ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
-                    style={{ backgroundColor: c }}
-                    aria-label={c}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">{isRtl ? 'מה להציג בדף' : 'Sections'}</div>
-              {[
-                { key: 'tags', labelHe: 'תגיות מקצועיות', labelEn: 'Professional tags' },
-                { key: 'gallery', labelHe: isMentor ? 'גלריית עבודות' : 'תיק עבודות', labelEn: isMentor ? 'Work gallery' : 'Portfolio' },
-                { key: 'reviews', labelHe: 'ביקורות', labelEn: 'Reviews' },
-              ].map((s) => {
-                const on = (design.sections as any)[s.key];
-                return (
-                  <div key={s.key} className="flex items-center justify-between py-2">
-                    <span className="text-sm font-bold text-slate-700">{isRtl ? s.labelHe : s.labelEn}</span>
-                    <button
-                      onClick={() => { const nd = { ...design, sections: { ...design.sections, [s.key]: !on } }; setDesign(nd); handleSave('page_design', nd); }}
-                      className={`w-11 h-6 rounded-full transition-all relative ${on ? '' : 'bg-slate-200'}`}
-                      style={on ? { backgroundColor: accent } : undefined}
-                    >
-                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${on ? (isRtl ? 'left-0.5' : 'right-0.5') : (isRtl ? 'right-0.5' : 'left-0.5')}`} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button onClick={() => setShowDesignPanel(false)} className="w-full py-3 rounded-2xl font-black text-white" style={{ backgroundColor: accent }}>
-              {isRtl ? 'סיימתי' : 'Done'}
-            </button>
+            <button onClick={() => setShowDesignPanel(false)} className="w-full py-3 rounded-2xl font-black text-white" style={{ backgroundColor: accent }}>{isRtl ? 'סיימתי' : 'Done'}</button>
           </div>
         </div>
       )}
 
-      {/* Profile Completion Bar — own profile + incomplete */}
-      {isMyProfile && completionPercentage < 100 && (
-        <div className="bg-white border border-amber-200 rounded-2xl p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm font-bold text-slate-900">
-              {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
-            </span>
-            <span className="text-sm font-black text-amber-600">{completionPercentage}%</span>
-          </div>
-          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-slate-500 mt-2 font-semibold">
-            {isRtl
-              ? 'ככל שתמלא יותר — ההתאמות שלך יהיו מדויקות יותר.'
-              : 'The more you fill in, the more accurate your matches become.'}
-          </p>
-          {missingLabels.length > 0 && (
-            <p className="text-[11px] text-slate-400 mt-1">
-              {isRtl ? 'עוד חסר: ' : 'Still missing: '}
-              {missingLabels.join(' · ')}
-            </p>
-          )}
-        </div>
-      )}
-      {/* Header Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        {/* ===== Landing-page hero: identity overlaid on the cover ===== */}
-        <div className="relative h-64 sm:h-80 bg-slate-900 group/cover">
-          {formData.cover_url ? (
-            <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
-          ) : (
-            <div className="absolute inset-0" style={{ background: heroBg }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 pointer-events-none" />
+      <div className={hasPageBg ? 'p-2 sm:p-4 rounded-3xl' : ''} style={{ background: pageBackground }}>
+        <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
 
-          {isMyProfile && (
-            <label className="absolute top-4 right-4 p-2.5 bg-black/40 text-white rounded-xl hover:bg-black/70 transition-all backdrop-blur-md cursor-pointer z-30 border border-white/20 flex items-center gap-2 text-[11px] font-bold">
-              <Camera size={16} />
-              <span className="hidden sm:inline">{isRtl ? 'החלף תמונת רקע' : 'Change cover'}</span>
-              <input type="file" className="hidden" accept="image/*" onChange={handleCoverUpload} disabled={uploading} />
-            </label>
-          )}
-          {uploading && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-40">
-              <Loader2 className="animate-spin text-white" size={32} />
-            </div>
-          )}
-
-          {profile.role === 'mentor' && (
-            <div className="absolute top-4 left-4 z-20">
-              {(profile.is_verified || profile.verification_status === 'approved') ? (
-                <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-lg">
-                  <ShieldCheck size={14} fill="currentColor" />
-                  {isRtl ? 'מנטור מאומת' : 'Verified Mentor'}
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-black/40 text-white/90 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 border border-white/20 backdrop-blur-md">
-                  {isRtl ? 'מנטור בבדיקה' : 'Pending Mentor'}
-                </span>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center gap-1.5 font-black text-slate-900 min-w-0">
+              <span className="truncate">@{profile.username || 'user'}</span>
+              {verified && (
+                <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] shrink-0" style={{ backgroundColor: accent }} title={isRtl ? 'מאומת' : 'Verified'}>✓</span>
               )}
             </div>
-          )}
+            {isMyProfile && (
+              <button onClick={() => setShowDesignPanel(true)} className="flex items-center gap-1.5 text-xs font-black text-white px-3 py-1.5 rounded-lg active:scale-95 transition-transform" style={{ backgroundColor: accent }}>
+                <Pencil size={13} /> {isRtl ? 'עצב' : 'Design'}
+              </button>
+            )}
+          </div>
 
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 z-20">
-            <div className="flex items-end gap-4">
+          {/* Header: avatar + stats */}
+          <div className="px-4 pt-5">
+            <div className="flex items-center gap-5">
               <div className="relative shrink-0">
-                <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-slate-600 to-slate-800 border-4 border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-2xl overflow-hidden">
-                  {profile.avatar_url ? (
-                    <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
-                  ) : (
-                    profile.full_name?.charAt(0) || 'U'
-                  )}
+                <div className="p-[3px] rounded-full" style={{ background: accent }}>
+                  <div className="w-[74px] h-[74px] rounded-full overflow-hidden bg-slate-800 border-2 border-white flex items-center justify-center text-white font-black text-2xl">
+                    {profile.avatar_url ? (
+                      <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
+                    ) : (profile.full_name?.charAt(0) || 'U')}
+                  </div>
                 </div>
                 {isMyProfile && (
-                  <div className="absolute -bottom-2 -right-2 flex gap-1 z-10">
-                    <label className="p-2 bg-white text-black rounded-lg shadow-lg border border-white hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center">
-                      <Camera size={14} />
-                      <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                    </label>
-                    {profile.avatar_url && (
-                      <button
-                        onClick={handleRemoveAvatar}
-                        disabled={uploading}
-                        className="p-2 bg-white text-red-600 rounded-lg shadow-lg border border-white hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center"
-                        title={isRtl ? 'הסר תמונה' : 'Remove Image'}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
+                  <label className="absolute -bottom-1 -left-1 p-1.5 bg-white rounded-full shadow border border-gray-100 cursor-pointer" title={isRtl ? 'החלף תמונה' : 'Change photo'}>
+                    <Camera size={13} className="text-slate-700" />
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                  </label>
                 )}
               </div>
-
-              <div className="flex-1 min-w-0 pb-1">
-                {isMyProfile ? (
-                  <input
-                    type="text"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    onBlur={() => handleSave('full_name', formData.full_name)}
-                    placeholder={isRtl ? 'השם שלך' : 'Your name'}
-                    className="text-2xl sm:text-3xl font-black text-white bg-white/10 focus:bg-white/20 border border-white/25 outline-none px-3 py-1 rounded-xl w-full max-w-sm transition-all placeholder:text-white/50"
-                  />
-                ) : (
-                  <h1 className="text-2xl sm:text-4xl font-black text-white drop-shadow-md">{profile.full_name}</h1>
-                )}
-
-                {isMyProfile ? (
-                  <input
-                    type="text"
-                    value={formData.headline}
-                    onChange={(e) => setFormData({...formData, headline: e.target.value})}
-                    onBlur={() => handleSave('headline', formData.headline)}
-                    placeholder={placeholders.headline}
-                    className="mt-1.5 text-sm font-semibold text-white bg-white/10 focus:bg-white/20 border border-white/25 outline-none px-3 py-1 rounded-lg w-full max-w-md transition-all placeholder:text-white/50"
-                  />
-                ) : (
-                  <p className="mt-1 text-sm sm:text-lg font-semibold text-white/90 drop-shadow">{profile.headline || profile.occupation || (isRtl ? 'משתמש SkillLink' : 'SkillLink User')}</p>
-                )}
-
-                <div className="mt-2 flex items-center gap-1.5 text-white/75 text-xs sm:text-sm font-medium">
-                  <MapPin size={14} />
-                  <span>{profile.city || (isRtl ? 'מיקום לא צוין' : 'Location not set')}</span>
-                </div>
+              <div className="flex-1 grid grid-cols-3 text-center">
+                <div><div className="text-lg font-black text-slate-900">{works}</div><div className="text-xs text-slate-400 font-semibold">{isMentor ? (isRtl ? 'עבודות' : 'Works') : (isRtl ? 'דוגמאות' : 'Samples')}</div></div>
+                <div><div className="text-lg font-black text-slate-900">{ratingText}</div><div className="text-xs text-slate-400 font-semibold">{isRtl ? 'דירוג' : 'Rating'}</div></div>
+                <div><div className="text-lg font-black text-slate-900">{reviews.length}</div><div className="text-xs text-slate-400 font-semibold">{isRtl ? 'ביקורות' : 'Reviews'}</div></div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="px-4 sm:px-8 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold text-slate-400 min-w-0 truncate">
-            {isMyProfile
-              ? (saving ? (isRtl ? 'שומר...' : 'Saving...') : (isRtl ? 'זה הפרופיל הציבורי שלך — ככה אחרים רואים אותך' : 'This is your public page — how others see you'))
-              : (isMentor ? (isRtl ? 'מנטור · פתוח לחניכים' : 'Mentor · open to apprentices') : (isRtl ? 'מתלמד · מחפש ללמוד' : 'Apprentice · looking to learn'))}
-          </span>
-          <div className="flex items-center gap-2 shrink-0">
-            {!isMyProfile && (
-              <button
-                onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
-                className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
-              >
-                <MessageSquare size={16} />
-                {isRtl ? 'שלח הודעה' : 'Message'}
-              </button>
-            )}
-            {isMyProfile && (
-              <button
-                onClick={() => setShowDesignPanel(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white rounded-lg transition-all active:scale-95 shadow-sm"
-                style={{ backgroundColor: accent }}
-              >
-                <Pencil size={13} />
-                {isRtl ? 'עצב את הדף' : 'Design'}
-              </button>
-            )}
-            {isMyProfile && (
-              <button
-                onClick={async () => { await signOut(); navigate('/'); }}
-                className="md:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg transition-colors"
-              >
-                <LogOut size={13} />
-                {isRtl ? 'יציאה' : 'Logout'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="px-4 sm:px-8 pb-5 sm:pb-8 pt-6 relative">
-
-          <div className="mt-5 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black">
-                {isMentor ? (
-                  isMyProfile ? (
-                    <div className="space-y-1 flex flex-col items-center">
-                      <input 
-                        type="number" 
-                        value={formData.years_experience} 
-                        onChange={(e) => setFormData({...formData, years_experience: parseInt(e.target.value) || 0})}
-                        onBlur={() => handleSave('years_experience', formData.years_experience)}
-                        className="w-16 bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all"
-                      />
-                      {renderProfileHelper(isRtl ? 'ניסיון' : 'Experience')}
-                    </div>
-                  ) : (profile.years_experience || 0)
-                ) : (isRtl ? 'מתחיל' : 'Beginner')}
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                {isMentor ? (isRtl ? 'שנות ניסיון' : 'Years Exp') : (isRtl ? 'רמה' : 'Level')}
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black">
-                {isMyProfile ? (
-                  <div className="space-y-1">
-                    <input 
-                      type="text" 
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      onBlur={() => handleSave('city', formData.city)}
-                      placeholder={isRtl ? 'עיר' : 'City'}
-                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
-                    />
-                    {renderProfileHelper(isRtl ? 'מיקום' : 'Location')}
-                  </div>
-                ) : (profile.city || '---')}
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'עיר' : 'City'}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black">
-                {isMyProfile ? (
-                  <div className="space-y-1">
-                    <input 
-                      type="tel" 
-                      value={formData.phone} 
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      onBlur={() => handleSave('phone', formData.phone)}
-                      placeholder="05x-xxxxxxx"
-                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
-                    />
-                    {renderProfileHelper(isRtl ? 'טלפון' : 'Phone')}
-                  </div>
-                ) : (profile.phone || '---')}
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'טלפון' : 'Phone'}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center">
-              <div className="text-lg font-black text-black">
-                {isMyProfile ? (
-                  <div className="space-y-1">
-                    <input 
-                      type="text" 
-                      value={formData.availability} 
-                      onChange={(e) => setFormData({...formData, availability: e.target.value})}
-                      onBlur={() => handleSave('availability', formData.availability)}
-                      placeholder={placeholders.availability}
-                      className="w-full bg-transparent text-center outline-none focus:bg-white rounded-lg transition-all px-2"
-                    />
-                    {renderProfileHelper(isRtl ? 'זמינות' : 'Availability')}
-                  </div>
-                ) : (profile.availability || profile.workload || '---')}
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'זמינות' : 'Availability'}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
-              <div className="text-lg font-black text-black">
-                {trustScore}%
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'מדד אמינות' : 'Trust Score'}</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-2xl text-center relative overflow-hidden group">
-              <div className="text-lg font-black text-black flex items-center justify-center gap-1.5">
-                {isRecentlyActive(profile.updated_at) ? (
-                  <>
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-emerald-600">{isRtl ? 'פעיל' : 'Active'}</span>
-                  </>
-                ) : (
-                  <span className="text-gray-400">{isRtl ? 'לאחרונה' : 'Recent'}</span>
-                )}
-              </div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{isRtl ? 'סטטוס' : 'Status'}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className={`${hasPageBg ? '' : 'profile-editorial '}grid grid-cols-1 lg:grid-cols-12 gap-8`}>
-        {/* Left Column: Bio & Info */}
-        <div className="lg:col-span-8 space-y-8">
-          <div id="profile-tabs" className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
-            <button 
-              onClick={() => setActiveTab('about')}
-              className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'about' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              {isRtl ? 'אודות' : 'About'}
-            </button>
-            {isMyProfile && (
-              <button 
-                onClick={() => setActiveTab('saved')}
-                className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'saved' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                {isRtl ? 'מועדפים' : 'Saved'} ({savedOpportunities.length})
-              </button>
-            )}
-            <button 
-              onClick={() => setActiveTab('reviews')}
-              className={`text-base sm:text-lg font-black transition-colors whitespace-nowrap ${activeTab === 'reviews' ? 'text-black border-b-2 border-black pb-1' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              {isRtl ? 'ביקורות' : 'Reviews'} ({reviews.length})
-            </button>
-          </div>
-
-          {activeTab === 'about' && (
-            <>
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-black">{isRtl ? 'קצת עלי' : 'Bio'}</h2>
-                  {isMyProfile && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {isRtl ? 'פרופיל עסקי' : 'Business Mode'}
-                      </span>
-                      <button 
-                        onClick={() => {
-                          const newVal = !formData.isBusiness;
-                          setFormData({...formData, isBusiness: newVal});
-                          handleSave('isBusiness', newVal);
-                        }}
-                        className={`w-10 h-5 rounded-full transition-all relative ${formData.isBusiness ? 'bg-blue-600' : 'bg-slate-200'}`}
-                      >
-                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${isRtl ? (formData.isBusiness ? 'left-0.5' : 'right-0.5') : (formData.isBusiness ? 'right-0.5' : 'left-0.5')}`} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {isMyProfile ? (
-                  <div className="space-y-2">
-                    <textarea 
-                      value={formData.bio}
-                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                      onBlur={() => handleSave('bio', formData.bio)}
-                      rows={4}
-                      placeholder={placeholders.bio}
-                      className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
-                    />
-                    {renderProfileHelper(isRtl ? 'ספר על עצמך, הערכים שלך ומה הביא אותך לתחום.' : 'Tell about yourself, your values and what brought you to the field.')}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 font-medium leading-relaxed text-lg">
-                    {profile.bio || (isRtl ? 'עדיין לא נוסף תיאור אישי.' : 'No bio added yet.')}
-                  </p>
-                )}
-
-                {/* Business Information Section */}
-                {(formData.isBusiness || profile.isBusiness) && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="pt-6 border-t border-gray-50 space-y-6"
-                  >
-                    <div className="flex items-center gap-3">
-                       <Briefcase size={24} className="text-blue-600" />
-                       <h3 className="text-xl font-black text-black">{isRtl ? 'פרטי העסק' : 'Business Details'}</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4 md:col-span-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'תיאור העסק' : 'Business Description'}</label>
-                        {isMyProfile ? (
-                          <div className="space-y-2">
-                            <textarea 
-                              value={formData.businessDescription}
-                              onChange={(e) => setFormData({...formData, businessDescription: e.target.value})}
-                              onBlur={() => handleSave('businessDescription', formData.businessDescription)}
-                              rows={3}
-                              placeholder={isMentor ? placeholders.bio : (isRtl ? 'ספר על השירותים שאתה מציע כחלק מהעסק שלך...' : 'Tell about the services you offer as part of your business...')}
-                              className="w-full p-4 bg-blue-50/30 border border-blue-100 rounded-2xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
-                            />
-                            {renderProfileHelper(isRtl ? 'תיאור המקצועיות של העסק שלך.' : 'Professional description of your business.')}
-                          </div>
-                        ) : (
-                          <p className="text-gray-600 font-medium">{profile.businessDescription || (isRtl ? 'אין תיאור עסק עדיין.' : 'No business description.')}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'לוגו העסק' : 'Business Logo'}</label>
-                        <div className="flex items-center gap-4">
-                           <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
-                              {formData.businessLogo ? (
-                                <img src={formData.businessLogo} alt="Logo" className="w-full h-full object-cover" />
-                              ) : (
-                                <Briefcase className="text-slate-300" size={24} />
-                              )}
-                           </div>
-                           {isMyProfile && (
-                             <label className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition-all">
-                                {isRtl ? 'העלה לוגו' : 'Upload Logo'}
-                                <input 
-                                  type="file" 
-                                  className="hidden" 
-                                  accept="image/*" 
-                                  onChange={async (e) => {
-                                    if (e.target.files?.[0]) {
-                                      const file = e.target.files[0];
-                                      const reader = new FileReader();
-                                      reader.onload = async () => {
-                                        const base64 = reader.result as string;
-                                        setFormData({...formData, businessLogo: base64});
-                                        handleSave('businessLogo', base64);
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }} 
-                                />
-                             </label>
-                           )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'אתר אינטרנט' : 'Website'}</label>
-                        {isMyProfile ? (
-                          <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl focus-within:border-blue-600 transition-all">
-                            <Globe size={16} className="text-slate-400" />
-                            <input 
-                              type="url" 
-                              value={formData.businessWebsite}
-                              onChange={(e) => setFormData({...formData, businessWebsite: e.target.value})}
-                              onBlur={() => handleSave('businessWebsite', formData.businessWebsite)}
-                              placeholder={isRtl ? 'כתובת האתר...' : 'Enter website URL...'}
-                              className="bg-transparent border-none outline-none text-sm font-bold w-full"
-                            />
-                          </div>
-                        ) : profile.businessWebsite && (
-                          <a href={profile.businessWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 font-bold hover:underline">
-                            <Globe size={16} />
-                            {profile.businessWebsite.replace(/^https?:\/\//, '')}
-                            <ExternalLink size={14} />
-                          </a>
-                        )}
-                      </div>
-
-                      {/* Social Links */}
-                      <div className="space-y-4">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'קישורים חברתיים' : 'Social Links'}</label>
-                         <div className="flex gap-4">
-                            {['facebook', 'instagram', 'linkedin'].map((platform) => {
-                              const typedPlatform = platform as 'facebook' | 'instagram' | 'linkedin';
-                              return isMyProfile ? (
-                                <div key={platform} className="relative group">
-                                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-600 group-focus-within:border-blue-600 cursor-pointer">
-                                    <Globe size={18} className="text-slate-400 group-hover:text-blue-600" />
-                                  </div>
-                                  {/* Minimal popup for input */}
-                                  <input 
-                                    className="hidden group-focus-within:block absolute top-full left-0 mt-2 p-2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 text-xs font-bold outline-none min-w-[150px]"
-                                    placeholder={`${platform} link`}
-                                    value={formData.businessSocialLinks[typedPlatform]}
-                                    onChange={(e) => {
-                                      const newLinks = { ...formData.businessSocialLinks, [typedPlatform]: e.target.value };
-                                      setFormData({ ...formData, businessSocialLinks: newLinks });
-                                    }}
-                                    onBlur={() => handleSave('businessSocialLinks', formData.businessSocialLinks)}
-                                  />
-                                </div>
-                              ) : profile.businessSocialLinks && JSON.parse(profile.businessSocialLinks)[typedPlatform] && (
-                                <a key={platform} href={JSON.parse(profile.businessSocialLinks)[typedPlatform]} target="_blank" rel="noopener noreferrer" className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-600">
-                                  <Globe size={18} />
-                                </a>
-                              );
-                            })}
-                         </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div className="pt-6 mt-2 border-t border-gray-50">
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100 p-5 sm:p-6">
-                    <div className="flex items-start gap-3 mb-1">
-                      <div className="w-11 h-11 rounded-xl text-white flex items-center justify-center shrink-0 shadow-lg" style={{ backgroundColor: accent }}>
-                        {isMentor ? <Users size={22} /> : <Hammer size={22} />}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                            {isMentor ? (isRtl ? 'את מי אני רוצה ללמד?' : 'Who I want to teach?') : (isRtl ? 'מה אני רוצה ללמוד?' : 'What I want to learn?')}
-                          </h3>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-white px-2 py-0.5 rounded-full border border-blue-100">
-                            {isRtl ? 'משפיע על ההתאמה' : 'Powers matching'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-0.5">
-                          {isMentor
-                            ? (isRtl ? 'תאר את החניך האידיאלי ואת התחום שתלמד — לפי זה נחליט למי להציג אותך.' : 'Describe your ideal apprentice and the field you teach — this decides who sees you.')
-                            : (isRtl ? 'תאר בדיוק מה אתה רוצה ללמוד ומאיזה תחום — לפי זה נמצא לך את ההתאמות הטובות ביותר.' : 'Describe exactly what you want to learn and in which field — we find your best matches by this.')}
-                        </p>
-                      </div>
-                    </div>
-                    {isMyProfile ? (
-                      <textarea
-                        value={isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn}
-                        onChange={(e) => setFormData({...formData, [isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn']: e.target.value})}
-                        onBlur={() => handleSave(isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn', isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn)}
-                        rows={3}
-                        placeholder={isMentor
-                          ? (isRtl ? 'למשל: מחפש מתלמד רציני לתחום החשמל, בלי ניסיון קודם, שרוצה ללמוד עבודה בשטח.' : 'e.g. Looking for a serious apprentice in electrical work, no experience needed, wants hands-on field work.')
-                          : (isRtl ? 'למשל: רוצה ללמוד ספרות גברים — תספורות, פייד ועיצוב זקן — אצל ספר מנוסה בפתח תקווה.' : 'e.g. I want to learn men\'s barbering — cuts, fades and beard styling — with an experienced barber in my area.')}
-                        className="mt-3 w-full p-4 bg-white border border-blue-100 rounded-xl focus:border-blue-500 transition-all font-medium outline-none resize-none"
-                      />
-                    ) : (
-                      <p className="mt-3 text-slate-700 font-semibold leading-relaxed text-base sm:text-lg">
-                        {(isMentor ? profile.who_i_want_to_teach : profile.what_i_want_to_learn) || (isRtl ? 'עדיין לא נוסף מידע.' : 'No information added yet.')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Professional DNA / Quick Tags */}
-              {design.sections.tags && (
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6">
-
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="space-y-2">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
-                      Professional DNA
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3">
-                      <Zap size={32} className="text-blue-600" />
-                      {isRtl ? 'תגיות מקצועיות' : 'Professional Tags'}
-                    </h2>
-                    <p className="text-slate-500 font-medium max-w-md text-sm sm:text-base">
-                      {isRtl ? 'תגיות מהירות המעידות על היכולות והזמינות שלך בשטח.' : 'Quick tags representing your field capabilities and availability.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3 sm:gap-4">
-                  {quickTags.map((tag) => {
-                    const isSelected = formData.skills?.some((s: any) => s.name === tag.id);
-                    return (
-                      <button
-                        key={tag.id}
-                        disabled={!isMyProfile}
-                        onClick={() => {
-                          let newSkills = [...(formData.skills || [])];
-                          if (isSelected) {
-                            newSkills = newSkills.filter((s: any) => s.name !== tag.id);
-                          } else {
-                            newSkills.push({ name: tag.id, level: tag.label, verified: false });
-                          }
-                          setFormData({ ...formData, skills: newSkills });
-                          handleSave('skills', newSkills);
-                        }}
-                        style={isSelected ? { backgroundColor: accent, borderColor: accent } : undefined}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all border ${
-                          isSelected
-                            ? 'text-white shadow-sm'
-                            : 'bg-white/70 border-slate-200 text-slate-500 hover:border-slate-300'
-                        } ${!isMyProfile && 'cursor-default'}`}
-                      >
-                        <tag.icon size={16} />
-                        {tag.label}
-                      </button>
-                    );
-                  })}
-                  
-                  {isMyProfile && (
-                    <div className="flex items-center gap-2">
-                      {showTagForm ? (
-                        <div className="flex items-center gap-2 animate-in slide-in-from-left-4">
-                          <input
-                            type="text"
-                            autoFocus
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            placeholder={isRtl ? 'תגית מותאמת...' : 'Custom tag...'}
-                            className="px-4 py-3 bg-white border border-slate-200 rounded-full text-xs font-bold outline-none focus:border-slate-400"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
-                            }}
-                          />
-                          <button onClick={addCustomTag} disabled={!newTag.trim()} className="p-3 rounded-full text-white disabled:opacity-40" style={{ backgroundColor: accent }} title={isRtl ? 'הוסף' : 'Add'}>
-                            <CheckCircle2 size={16} />
-                          </button>
-                          <button onClick={() => { setShowTagForm(false); setNewTag(''); }} className="p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200">
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={() => setShowTagForm(true)}
-                          className="p-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all border-2 border-dashed border-slate-200"
-                        >
-                          <Plus size={20} />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              )}
-
-              {/* Gallery */}
-              {design.sections.gallery && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl sm:text-2xl font-black text-black">
-                    {isMentor
-                      ? (isRtl ? 'גלריית עבודות' : 'Gallery of Work')
-                      : (isRtl ? 'תיק עבודות / דוגמאות' : 'Portfolio / Samples')}
-                  </h2>
-                  {isMyProfile && (
-                    <label className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-1">
-                      <Upload size={16} />
-                      {isRtl ? 'הוסף תמונה' : 'Add Image'}
-                      <input type="file" className="hidden" accept="image/*" onChange={handlePortfolioUpload} disabled={uploading} />
-                    </label>
-                  )}
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                  {formData.portfolio_urls && formData.portfolio_urls.length > 0 ? (
-                    formData.portfolio_urls.map((url, i) => (
-                      <div key={i} className="min-w-[200px] sm:min-w-[240px] h-32 sm:h-40 rounded-2xl border border-gray-100 relative group overflow-hidden shrink-0">
-                        <img src={url} alt={`Portfolio ${i}`} className="w-full h-full object-cover" />
-                        {isMyProfile && (
-                          <button 
-                            onClick={() => handleRemovePortfolioImage(url)}
-                            className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                            title={isRtl ? 'הסר תמונה' : 'Remove Image'}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="w-full py-8 text-center text-gray-400 font-medium bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
-                      {isMentor
-                        ? (isRtl ? 'אין תמונות בגלריה עדיין.' : 'No images in gallery yet.')
-                        : (isRtl ? 'הוסף דוגמאות עבודה או תיק עבודות שיראו מנטורים.' : 'Add work samples or a portfolio for mentors to see.')}
-                    </div>
-                  )}
-                </div>
-              </div>
-              )}
-
-              {/* Social proof — reviews preview */}
-              {design.sections.reviews && reviews.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-xl sm:text-2xl font-black text-black flex items-center gap-2">
-                      <Star size={22} className="text-yellow-500 fill-yellow-500" />
-                      {isRtl ? 'מה אומרים עליי' : 'What people say'}
-                    </h2>
-                    <button onClick={() => setActiveTab('reviews')} className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap">
-                      {isRtl ? `כל הביקורות (${reviews.length})` : `All reviews (${reviews.length})`}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {reviews.slice(0, 2).map((review: any) => (
-                      <div key={review.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-5 space-y-2">
-                        <div className="flex gap-0.5 text-yellow-500">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star key={s} size={14} fill={s <= (review.rating || 0) ? 'currentColor' : 'none'} />
-                          ))}
-                        </div>
-                        <p className="text-sm text-slate-700 font-medium leading-relaxed">"{review.comment}"</p>
-                        <div className="text-xs font-black text-slate-400">— {review.fromName || (isRtl ? 'משתמש' : 'User')}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {activeTab === 'reviews' && (
-            <div className="space-y-10 animate-in fade-in duration-500">
-              {/* Stats Summary */}
-              {reviewsStats && reviewsStats.stats && reviewsStats.stats.total > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-                   <div className="flex flex-col items-center justify-center text-center space-y-2 border-b md:border-b-0 md:border-e border-gray-100 pb-6 md:pb-0">
-                      <div className="text-6xl font-black text-black">
-                        {reviewsStats.stats.overallAvg ? reviewsStats.stats.overallAvg.toFixed(1) : '0.0'}
-                      </div>
-                      <div className="flex gap-1 text-yellow-500">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} size={20} fill={s <= Math.round(reviewsStats.stats.overallAvg || 0) ? "currentColor" : "none"} />
-                        ))}
-                      </div>
-                      <div className="text-xs font-black text-gray-400 uppercase tracking-widest italic">
-                        {isRtl ? `${reviewsStats.stats.total} ביקורות` : `${reviewsStats.stats.total} Reviews`}
-                      </div>
-                   </div>
-
-                   <div className="space-y-4 px-4 border-b md:border-b-0 md:border-e border-gray-100 pb-6 md:pb-0">
-                      {[
-                        { label: isRtl ? 'מקצועיות' : 'Professionalism', val: reviewsStats.stats.avgProfessional },
-                        { label: isRtl ? 'איכות הוראה' : 'Teaching Quality', val: reviewsStats.stats.avgTeaching },
-                        { label: isRtl ? 'מוסר עבודה' : 'Work Ethic', val: reviewsStats.stats.avgWorkEthic }
-                      ].map(cat => (
-                        <div key={cat.label} className="space-y-1">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                             <span>{cat.label}</span>
-                             <span>{cat.val ? cat.val.toFixed(1) : '---'}</span>
-                          </div>
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                             <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(cat.val || 0) * 20}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                   </div>
-
-                   <div className="space-y-2 pt-4 md:pt-0">
-                      {[5,4,3,2,1].map(stars => {
-                         const dist = reviewsStats.distribution?.find((d: any) => d.stars === stars);
-                         const percentage = reviewsStats.stats.total ? Math.round(((dist?.count || 0) / reviewsStats.stats.total) * 100) : 0;
-                         return (
-                           <div key={stars} className="flex items-center gap-3 text-xs font-bold text-gray-400">
-                              <span className="w-3">{stars}</span>
-                              <Star size={12} fill="currentColor" className="text-yellow-400" />
-                              <div className="flex-1 h-2 bg-gray-50 rounded-full overflow-hidden">
-                                 <div className="h-full bg-yellow-400" style={{ width: `${percentage}%` }} />
-                              </div>
-                              <span className="w-6 text-[10px]">{dist?.count || 0}</span>
-                           </div>
-                         );
-                      })}
-                   </div>
-                </div>
-              )}
-
-              {!isMyProfile && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden group">
-                  
-                  <div className="flex justify-between items-center relative z-10">
-                    <h2 className="text-2xl font-black text-black">{isRtl ? 'דרג את החוויה שלך' : 'Review Experience'}</h2>
-                    <button 
-                      onClick={() => setShowReviewForm(!showReviewForm)}
-                      className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                        showReviewForm ? 'bg-red-50 text-red-600' : 'bg-blue-600 text-white shadow-lg'
-                      }`}
-                    >
-                      {showReviewForm ? (isRtl ? 'ביטול' : 'Cancel') : (isRtl ? 'כתוב ביקורת' : 'Write Review')}
-                    </button>
-                  </div>
-                  
-                  {showReviewForm && (
-                     <motion.div 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-8 relative z-10"
-                     >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                           {/* Main Rating */}
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'דירוג כללי' : 'Overall Rating'}</label>
-                              <div className="flex gap-2">
-                                {[1,2,3,4,5].map(star => (
-                                  <button 
-                                    key={star}
-                                    onClick={() => setNewReview({...newReview, rating: star})}
-                                    className="transition-transform active:scale-90 hover:scale-110"
-                                  >
-                                    <Star 
-                                      size={32} 
-                                      className={star <= newReview.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-200"} 
-                                    />
-                                  </button>
-                                ))}
-                              </div>
-                           </div>
-
-                           {/* Categories */}
-                           <div className="space-y-4">
-                              {[
-                                { id: 'professional', label: isRtl ? 'מקצועיות' : 'Professionalism' },
-                                { id: 'teaching', label: isRtl ? 'איכות הוראה' : 'Teaching Quality' },
-                                { id: 'workEthic', label: isRtl ? 'מוסר עבודה' : 'Work Ethic' },
-                                { id: 'reliability', label: isRtl ? 'אמינות' : 'Reliability' }
-                              ].map(cat => (
-                                <div key={cat.id} className="flex items-center justify-between gap-4">
-                                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{cat.label}</span>
-                                   <div className="flex gap-1">
-                                      {[1,2,3,4,5].map(star => (
-                                        <button 
-                                          key={star}
-                                          onClick={() => setNewReview({...newReview, [cat.id]: star})}
-                                          className="transition-all"
-                                        >
-                                          <Star 
-                                            size={14} 
-                                            className={star <= (newReview as any)[cat.id] ? "text-yellow-400 fill-yellow-400" : "text-gray-200"} 
-                                          />
-                                        </button>
-                                      ))}
-                                   </div>
-                                </div>
-                              ))}
-                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                           <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                              <span>{isRtl ? 'פירוט הביקורת' : 'Detailed Review'}</span>
-                              <span>{newReview.comment.length} / 500</span>
-                           </div>
-                           <textarea 
-                             value={newReview.comment}
-                             onChange={(e) => setNewReview({...newReview, comment: e.target.value.substring(0, 500)})}
-                             placeholder={isRtl ? 'ספר על הליך הלמידה, המקצועיות והזמינות...' : 'Tell about the learning process, professionalism and availability...'}
-                             rows={4}
-                             className="w-full p-6 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 transition-all font-medium outline-none resize-none"
-                           />
-                        </div>
-
-                        <button 
-                          onClick={handleAddReview}
-                          disabled={saving || !newReview.comment.trim()}
-                          className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-sm disabled:opacity-50 shadow-2xl shadow-slate-200 flex items-center justify-center gap-3 active:scale-95 transition-all"
-                        >
-                          {saving ? <Loader2 size={20} className="animate-spin" /> : <Zap size={20} className="fill-current" />}
-                          {isRtl ? 'שלח ביקורת מאומתת' : 'Submit Verified Review'}
-                        </button>
-                     </motion.div>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                   <h3 className="text-xl font-black">{isRtl ? 'ביקורות אחרונות' : 'Recent Reviews'}</h3>
-                   <Link to={`/app/u/${profile.username}/reviews`} className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline">
-                      {isRtl ? 'הצג את כל הביקורות' : 'View All Reviews'}
-                   </Link>
-                </div>
-
-                {loadingReviews ? (
-                  <div className="grid gap-4">
-                    {[1, 2].map(i => (
-                      <div key={i} className="h-40 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />
-                    ))}
-                  </div>
-                ) : reviews.length > 0 ? (
-                  <div className="grid gap-6">
-                    {reviews.slice(0, 3).map((review) => (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        key={review.id} 
-                        className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4 hover:shadow-md transition-all group"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-lg overflow-hidden border border-slate-100">
-                              {review.fromAvatar ? (
-                                <img src={review.fromAvatar} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                review.fromName?.charAt(0) || 'U'
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-black text-slate-900 flex items-center gap-2">
-                                {review.fromName}
-                                {review.fromVerified === 1 && <ShieldCheck size={14} className="text-blue-500" />}
-                              </p>
-                              <div className="flex gap-0.5 text-yellow-500">
-                                {[1,2,3,4,5].map(star => (
-                                  <Star 
-                                    key={star} 
-                                    size={12} 
-                                    fill={star <= ((review.professional + review.teaching + review.workEthic + review.reliability) / 4) ? "currentColor" : "none"} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                            {new Date(review.createdAt).toLocaleDateString(isRtl ? 'he-IL' : 'en-US')}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 font-medium leading-relaxed italic">
-                          "{review.comment}"
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 rounded-2xl p-10 sm:p-16 text-center space-y-6">
-                    <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                      <Star className="text-gray-200" size={40} />
-                    </div>
-                    <p className="text-gray-400 font-black uppercase tracking-widest">
-                      {isRtl ? 'אין ביקורות עדיין.' : 'No reviews yet.'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {activeTab === 'saved' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <div className="flex justify-between items-end">
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-black text-slate-900">{isRtl ? 'הזדמנויות שמורות' : 'Saved Opportunities'}</h2>
-                  <p className="text-slate-500 text-sm font-medium">{isRtl ? 'הצעות ששמרת לעיון מאוחר' : 'Opportunities you saved for later'}</p>
-                </div>
-              </div>
-              
-              {loadingSaved ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-96 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />
-                  ))}
-                </div>
-              ) : savedOpportunities.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {savedOpportunities.map(opp => (
-                    <div key={opp.id}>
-                      <OpportunityCard 
-                        opportunity={opp} 
-                        isRtl={isRtl} 
-                        currentUserId={user?.id}
-                      />
-                    </div>
-                  ))}
-                </div>
+          {/* Meta */}
+          <div className="px-4 pt-4 space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              {isMyProfile ? (
+                <input value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} onBlur={() => handleSave('full_name', formData.full_name)} placeholder={isRtl ? 'השם שלך' : 'Your name'} className="font-black text-slate-900 text-base bg-transparent outline-none focus:bg-gray-50 rounded px-1 -mx-1 w-full max-w-[240px]" />
               ) : (
-                <div className="industrial-card p-24 text-center space-y-8">
-                  <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
-                    <Heart className="text-slate-200" size={48} />
-                  </div>
-                  <div className="space-y-3">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">{isRtl ? 'אין הזדמנויות שמורות' : 'No saved opportunities'}</h2>
-                    <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
-                      {isRtl ? 'הזדמנויות שתשמור בפיד יופיעו כאן לצפייה מהירה.' : 'Opportunities you save in the feed will appear here for quick access.'}
-                    </p>
-                  </div>
-                  <Link 
-                    to="/app/opportunities"
-                    className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-slate-800 transition-all inline-flex"
-                  >
-                    {isRtl ? 'חפש הזדמנויות' : 'Browse Opportunities'}
-                  </Link>
-                </div>
+                <span className="font-black text-slate-900 text-base">{profile.full_name}</span>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Right Column: Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-8 shadow-xl space-y-5 relative overflow-hidden">
-            <div className="relative z-10 space-y-4">
-              <h3 className="text-xl sm:text-2xl font-black leading-tight">
-                {isMentor ? (isRtl ? 'מוכן לחלוק את הידע שלך?' : 'Ready to share your skills?') : (isRtl ? 'מוכן להתחיל ללמוד?' : 'Ready to start learning?')}
-              </h3>
-              <p className="text-gray-400 font-medium text-sm sm:text-base">
-                {isMentor 
-                  ? (isRtl ? 'התחבר למתלמדים רציניים ועצב את דור העתיד.' : 'Connect with eager apprentices and shape the next generation.') 
-                  : (isRtl ? 'מצא מנטור מומחה והתחל את הקריירה שלך.' : 'Find a master mentor and jumpstart your career in the trades.')}
-              </p>
-              <button 
-                onClick={() => navigate(isMentor ? '/app/opportunities/new' : '/app/opportunities')}
-                className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                {isMentor ? (isRtl ? 'פרסם התלמדות' : 'Post a Mentorship') : (isRtl ? 'מצא מנטור' : 'Find a Mentor')}
-                <ArrowRight size={18} />
-              </button>
+            {isMyProfile ? (
+              <input value={formData.headline} onChange={(e) => setFormData({ ...formData, headline: e.target.value })} onBlur={() => handleSave('headline', formData.headline)} placeholder={isRtl ? 'מקצוע / כותרת' : 'Profession / headline'} className="text-sm text-slate-500 font-medium bg-transparent outline-none focus:bg-gray-50 rounded px-1 -mx-1 w-full" />
+            ) : (
+              <div className="text-sm text-slate-500 font-medium">{category}</div>
+            )}
+            {isMyProfile ? (
+              <textarea value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} onBlur={() => handleSave('bio', formData.bio)} rows={2} placeholder={isRtl ? 'ספר על עצמך בכמה מילים...' : 'A few words about you...'} className="text-sm text-slate-700 leading-relaxed bg-transparent outline-none focus:bg-gray-50 rounded px-1 -mx-1 w-full resize-none" />
+            ) : (profile.bio && <p className="text-sm text-slate-700 leading-relaxed">{profile.bio}</p>)}
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium pt-0.5">
+              <MapPin size={13} />
+              {isMyProfile ? (
+                <input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} onBlur={() => handleSave('city', formData.city)} placeholder={isRtl ? 'מיקום' : 'Location'} className="bg-transparent outline-none focus:bg-gray-50 rounded px-1 w-full max-w-[200px]" />
+              ) : (<span>{profile.city || (isRtl ? 'לא צוין' : 'Not set')}</span>)}
             </div>
           </div>
 
-          {!isMyProfile && (
-            <div className="grid grid-cols-2 gap-4">
-              <Link 
-                to={`/app/u/${profile.username}/reviews`}
-                className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
-              >
-                <Star className="text-yellow-500" size={24} fill="currentColor" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'ביקורות' : 'Reviews'}</span>
-              </Link>
-              <button 
-                onClick={() => {
-                  setActiveTab('reviews');
-                  setShowReviewForm(true);
-                  // Scroll to reviews section
-                  const el = document.getElementById('profile-tabs');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all gap-2"
-              >
-                <Pencil className="text-blue-600" size={24} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{isRtl ? 'דרג' : 'Rate'}</span>
+          {/* Actions */}
+          <div className="px-4 pt-4 flex gap-2">
+            {!isMyProfile ? (
+              <>
+                <button onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })} className="flex-1 py-2.5 rounded-xl font-black text-sm text-white active:scale-95 transition-transform" style={{ backgroundColor: accent }}>
+                  {isMentor ? (isRtl ? 'התחל ללמוד' : 'Start learning') : (isRtl ? 'צור קשר' : 'Get in touch')}
+                </button>
+                <button onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })} className="flex-1 py-2.5 rounded-xl font-black text-sm bg-slate-100 text-slate-800 active:scale-95 transition-transform">
+                  {isRtl ? 'הודעה' : 'Message'}
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setShowDesignPanel(true)} className="flex-1 py-2.5 rounded-xl font-black text-sm bg-slate-100 text-slate-800 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <Pencil size={15} /> {isRtl ? 'ערוך ועצב את הפרופיל' : 'Edit & design profile'}
+              </button>
+            )}
+          </div>
+
+          {/* What I teach / want to learn */}
+          <div className="px-4 pt-4">
+            <div className="text-[11px] font-black uppercase tracking-widest mb-1.5" style={{ color: accent }}>
+              {isMentor ? (isRtl ? 'מה אני מלמד' : 'What I teach') : (isRtl ? 'מה אני רוצה ללמוד' : 'What I want to learn')}
+            </div>
+            {isMyProfile ? (
+              <textarea value={isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn} onChange={(e) => setFormData({ ...formData, [isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn']: e.target.value })} onBlur={() => handleSave(isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn', isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn)} rows={2} placeholder={isMentor ? (isRtl ? 'למשל: מלמד ספרות גברים מהיסוד — פייד, מספריים, זקן.' : 'e.g. I teach men\'s barbering from scratch.') : (isRtl ? 'למשל: רוצה ללמוד ספרות גברים אצל ספר מנוסה.' : 'e.g. I want to learn barbering from a pro.')} className="w-full text-sm text-slate-700 bg-slate-50 rounded-xl p-3 outline-none focus:bg-white focus:ring-1 resize-none" style={{ ['--tw-ring-color' as any]: accent }} />
+            ) : (
+              <p className="text-sm text-slate-700 leading-relaxed">{(isMentor ? profile.who_i_want_to_teach : profile.what_i_want_to_learn) || (isRtl ? 'עדיין לא נוסף מידע.' : 'No information yet.')}</p>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div className="px-4 pt-4">
+            <div className="flex flex-wrap gap-2">
+              {quickTags.map((tag) => {
+                const isSelected = formData.skills?.some((s: any) => s.name === tag.id);
+                return (
+                  <button key={tag.id} disabled={!isMyProfile} onClick={() => { let ns = [...(formData.skills || [])]; ns = isSelected ? ns.filter((s: any) => s.name !== tag.id) : [...ns, { name: tag.id, level: tag.label, verified: false }]; setFormData({ ...formData, skills: ns }); handleSave('skills', ns); }} style={isSelected ? { backgroundColor: accent, borderColor: accent } : undefined} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${isSelected ? 'text-white' : 'bg-white border-slate-200 text-slate-500'} ${!isMyProfile && 'cursor-default'}`}>
+                    <tag.icon size={13} /> {tag.label}
+                  </button>
+                );
+              })}
+              {formData.skills?.filter((s: any) => !quickTags.some(q => q.id === s.name)).map((s: any, i: number) => (
+                <button key={'c' + i} disabled={!isMyProfile} onClick={() => { const ns = formData.skills.filter((x: any) => x.name !== s.name); setFormData({ ...formData, skills: ns }); handleSave('skills', ns); }} style={{ backgroundColor: accent, borderColor: accent }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white border">
+                  {s.name}{isMyProfile && <X size={12} />}
+                </button>
+              ))}
+              {isMyProfile && (showTagForm ? (
+                <span className="flex items-center gap-1.5">
+                  <input autoFocus value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); } }} placeholder={isRtl ? 'תגית...' : 'Tag...'} className="px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-bold outline-none w-28" />
+                  <button onClick={addCustomTag} disabled={!newTag.trim()} className="p-1.5 rounded-full text-white disabled:opacity-40" style={{ backgroundColor: accent }}><CheckCircle2 size={14} /></button>
+                  <button onClick={() => { setShowTagForm(false); setNewTag(''); }} className="p-1.5 rounded-full bg-slate-100 text-slate-500"><X size={14} /></button>
+                </span>
+              ) : (
+                <button onClick={() => setShowTagForm(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border border-dashed border-slate-300 text-slate-400"><Plus size={13} /> {isRtl ? 'תגית' : 'Tag'}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid tab label */}
+          <div className="mt-5 border-t border-gray-100 flex items-center justify-center gap-2 py-2.5 text-slate-800 font-black text-xs uppercase tracking-widest">
+            <Hammer size={15} /> {isMentor ? (isRtl ? 'עבודות' : 'Work') : (isRtl ? 'תיק עבודות' : 'Portfolio')}
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-3 gap-0.5">
+            {(formData.portfolio_urls || []).map((url: string, i: number) => (
+              <div key={i} className="relative aspect-square group overflow-hidden bg-slate-100">
+                <img src={url} alt={`work ${i}`} className="w-full h-full object-cover" />
+                {isMyProfile && (
+                  <button onClick={() => handleRemovePortfolioImage(url)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={13} /></button>
+                )}
+              </div>
+            ))}
+            {isMyProfile && (
+              <label className="aspect-square bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center gap-1 text-slate-400 cursor-pointer hover:bg-slate-100">
+                {uploading ? <Loader2 size={20} className="animate-spin" /> : <><Upload size={20} /><span className="text-[10px] font-bold">{isRtl ? 'הוסף' : 'Add'}</span></>}
+                <input type="file" className="hidden" accept="image/*" onChange={handlePortfolioUpload} disabled={uploading} />
+              </label>
+            )}
+            {!isMyProfile && (!formData.portfolio_urls || formData.portfolio_urls.length === 0) && (
+              <div className="col-span-3 py-12 text-center text-slate-400 text-sm font-medium">{isRtl ? 'אין עבודות עדיין.' : 'No work yet.'}</div>
+            )}
+          </div>
+
+          {/* Reviews */}
+          <div className="px-4 py-5 border-t border-gray-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-black text-slate-900 flex items-center gap-1.5"><Star size={17} className="text-yellow-500 fill-yellow-500" /> {isRtl ? 'ביקורות' : 'Reviews'} ({reviews.length})</h2>
+              {!isMyProfile && (
+                <button onClick={() => setShowReviewForm(!showReviewForm)} className="text-xs font-black" style={{ color: accent }}>{isRtl ? 'כתוב ביקורת' : 'Write a review'}</button>
+              )}
+            </div>
+
+            {showReviewForm && !isMyProfile && (
+              <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} onClick={() => setNewReview({ ...newReview, rating: s, professional: s, teaching: s, workEthic: s, reliability: s })}>
+                      <Star size={22} className={s <= newReview.rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'} />
+                    </button>
+                  ))}
+                </div>
+                <textarea value={newReview.comment} onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })} rows={2} placeholder={isRtl ? 'איך הייתה החוויה?' : 'How was it?'} className="w-full text-sm bg-white rounded-lg p-2.5 outline-none border border-slate-200 resize-none" />
+                <button onClick={handleAddReview} disabled={saving} className="px-4 py-2 rounded-lg text-white text-sm font-black disabled:opacity-50" style={{ backgroundColor: accent }}>{saving ? '...' : (isRtl ? 'שלח ביקורת' : 'Submit')}</button>
+              </div>
+            )}
+
+            {reviews.length === 0 ? (
+              <p className="text-sm text-slate-400 font-medium">{isRtl ? 'אין ביקורות עדיין.' : 'No reviews yet.'}</p>
+            ) : (
+              reviews.slice(0, 6).map((review: any) => (
+                <div key={review.id} className="flex gap-3 py-2">
+                  <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-black overflow-hidden shrink-0">
+                    {review.fromAvatar ? <img src={review.fromAvatar} alt="" className="w-full h-full object-cover" /> : (review.fromName?.charAt(0) || 'U')}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-black text-slate-900">{review.fromName}</span>
+                      <span className="flex gap-0.5">{[1, 2, 3, 4, 5].map((s) => (<Star key={s} size={11} className={s <= (review.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-slate-200'} />))}</span>
+                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed">{review.comment}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Own-profile footer */}
+          {isMyProfile && (
+            <div className="px-4 py-4 border-t border-gray-100 flex justify-center">
+              <button onClick={async () => { await signOut(); navigate('/'); }} className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-red-500">
+                <LogOut size={15} /> {isRtl ? 'התנתקות' : 'Sign out'}
               </button>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Info size={14} />
-              {isRtl ? 'פרטי פרופיל' : 'Profile Details'}
-            </h3>
-            
-            <div className="space-y-6">
-              <div className="flex items-start gap-4 group">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                  <MapPin size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מיקום' : 'Location'}</p>
-                  {isMyProfile ? (
-                    <input 
-                      type="text" 
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      onBlur={() => handleSave('city', formData.city)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-blue-200"
-                      placeholder={isRtl ? 'הוסף מיקום...' : 'Add location...'}
-                    />
-                  ) : (
-                    <p className="text-sm font-bold text-black">{profile.city || (isRtl ? 'לא צוין' : 'Not specified')}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
-                  <Briefcase size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'מקצוע' : 'Occupation'}</p>
-                  {isMyProfile ? (
-                    <input 
-                      type="text" 
-                      value={formData.occupation} 
-                      onChange={(e) => setFormData({...formData, occupation: e.target.value})}
-                      onBlur={() => handleSave('occupation', formData.occupation)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-emerald-200"
-                      placeholder={isRtl ? 'מה המקצוע שלך?' : 'What is your trade?'}
-                    />
-                  ) : (
-                    <p className="text-sm font-bold text-black">{profile.occupation || (isRtl ? 'לא צוין' : 'Not specified')}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
-                  <Phone size={22} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'טלפון' : 'Phone'}</p>
-                  {isMyProfile ? (
-                    <input 
-                      type="tel" 
-                      value={formData.phone} 
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      onBlur={() => handleSave('phone', formData.phone)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-purple-200"
-                      placeholder={isRtl ? 'הוסף טלפון...' : 'Add phone...'}
-                    />
-                  ) : (
-                    <p className="text-sm font-bold text-black">{profile.phone || (isRtl ? 'לא צוין' : 'Not specified')}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 group">
-                <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
-                  <Clock size={22} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{isRtl ? 'זמינות' : 'Availability'}</p>
-                  {isMyProfile ? (
-                    <input 
-                      type="text" 
-                      value={formData.availability} 
-                      onChange={(e) => setFormData({...formData, availability: e.target.value})}
-                      onBlur={() => handleSave('availability', formData.availability)}
-                      className="text-sm font-bold text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg transition-all w-full border-b border-transparent focus:border-orange-200"
-                      placeholder={isRtl ? 'למשל: בקרים בלבד, גמיש, או זמין למשרה מלאה' : 'e.g. Mornings only, flexible, or available full-time'}
-                    />
-                  ) : (
-                    <p className="text-sm font-bold text-black">{profile.availability || profile.workload || (isRtl ? 'לא צוין' : 'Not specified')}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Logout — shown only on own profile */}
-      {isMyProfile && (
-        <div className="mt-10 flex justify-center">
-          <button
-            onClick={async () => { await signOut(); navigate('/'); }}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-xl transition-all"
-          >
-            <LogOut size={15} />
-            {isRtl ? 'התנתקות מהחשבון' : 'Sign out'}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
