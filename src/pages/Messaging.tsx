@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, MessageSquare, Send, Image, MoreHorizontal, User, Info, AlertCircle, ArrowLeft, Check, CheckCheck } from 'lucide-react';
+import { Search, MessageSquare, Send, Image, MoreHorizontal, User, Info, AlertCircle, ArrowLeft, Check, CheckCheck, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getOrCreateConversation, sendMessage as sendChatMessage, fetchMessages as fetchChatMessages } from '../lib/chat';
@@ -48,6 +48,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pendingAutoRef = useRef<string | null>(null);
@@ -293,7 +294,7 @@ export default function Messaging({ isRtl }: MessagingProps) {
   const renderMessageContent = (content: string) => {
     if (content.startsWith('[IMAGE:') && content.endsWith(']')) {
       const url = content.substring(7, content.length - 1);
-      return <img src={url} alt="Attachment" className="max-w-full rounded-lg mt-1 mb-1" style={{ maxHeight: '200px' }} />;
+      return <img src={url} alt="Attachment" onClick={() => setLightbox(url)} className="max-w-full rounded-lg mt-1 mb-1 cursor-zoom-in" style={{ maxHeight: '200px' }} />;
     }
     return content;
   };
@@ -338,6 +339,14 @@ export default function Messaging({ isRtl }: MessagingProps) {
 
   return (
     <div className="h-full bg-white overflow-hidden flex animate-in fade-in duration-500">
+      {lightbox && (
+        <div className="fixed inset-0 z-[80] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="" className="max-w-full max-h-full rounded-xl object-contain" />
+          <button onClick={() => setLightbox(null)} className="absolute top-5 right-5 p-2.5 bg-white/15 text-white rounded-full backdrop-blur hover:bg-white/25 transition-colors" aria-label="Close">
+            <X size={22} />
+          </button>
+        </div>
+      )}
       {/* Sidebar: Chat List */}
       <div className={`w-full md:w-72 lg:w-80 border-r border-slate-100 flex flex-col ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-slate-100 space-y-3">
