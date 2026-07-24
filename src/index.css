@@ -26,6 +26,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Prevent stray wide/off-screen elements (e.g. hidden hover tooltips) from
+     creating horizontal scroll, which makes mobile browsers zoom out and open
+     pages with an empty side gutter. `clip` (not `hidden`) is used so it does
+     not break `position: sticky` on the navbar. */
+  html, body {
+    overflow-x: clip;
+  }
   
   /* Use Inter for English and Rubik for Hebrew automatically */
   * {

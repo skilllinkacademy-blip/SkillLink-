@@ -312,7 +312,7 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         {tip && (
           <div className="relative group/tip">
             <Info size={14} className="text-slate-300 cursor-help hover:text-slate-900 transition-colors" />
-            <div className="absolute bottom-full mb-2 right-0 w-48 p-4 bg-slate-900 text-white text-[10px] font-bold rounded-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-50 shadow-2xl border border-white/10 leading-relaxed">
+            <div className="absolute bottom-full mb-2 left-0 w-48 max-w-[calc(100vw-2rem)] p-4 bg-slate-900 text-white text-[10px] font-bold rounded-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-50 shadow-2xl border border-white/10 leading-relaxed">
               {tip}
             </div>
           </div>
