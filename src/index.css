@@ -106,3 +106,19 @@
   -webkit-backdrop-filter: blur(10px);
   border-color: rgba(255, 255, 255, 0.45);
 }
+
+/* Editorial sections — turn the boxed white content cards into borderless,
+   hairline-separated sections (a real single-page/landing feel instead of
+   floating cards). Scoped to `.shadow-sm` section cards so tag chips, buttons
+   and the hero are untouched. Outside @layer to beat Tailwind utilities. */
+.profile-editorial .bg-white.rounded-2xl.shadow-sm {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(20, 22, 26, 0.09) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 30px 2px !important;
+}
+.profile-glass.profile-editorial .bg-white.rounded-2xl.shadow-sm {
+  border-top-color: rgba(255, 255, 255, 0.18) !important;
+}

@@ -1129,7 +1129,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="profile-editorial grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
           <div id="profile-tabs" className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
