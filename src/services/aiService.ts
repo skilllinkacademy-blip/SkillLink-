@@ -59,6 +59,8 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
          Judge by the underlying field of the user's goal vs the opportunity, not exact wording.
       2. If the field does not match the user's occupation or learning goal, score BELOW 30%.
          High scores (80%+) are for same-field matches in the same or nearby city.
+         Do NOT penalize sub-specialties/wording within a field ("ספר גברים" vs "ספר נשים"
+         are the same field) — a broad same-field match still deserves a high score.
       3. Provide a "reason" in Hebrew (1 professional sentence) that justifies the match.
       
       User Profile:
@@ -144,6 +146,9 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
       - The mentee's target is in "Wants to learn"; compare its FIELD to each
         candidate's profession/occupation FIELD.
       - Same field (mentee's goal ↔ mentor's occupation) = 90%+.
+      - Do NOT penalize sub-specialties or wording differences within the same field.
+        "ספר גברים" and "ספר נשים" are both the barbering/hairdressing field — a broad
+        same-field match still deserves a high score (85%+). Field match is enough.
       - If user is "mentee", find a "mentor" in the field the mentee wants to learn.
       - If user is "mentor", find a "mentee" who wants to learn the mentor's field.
       - If there is no professional connection, score below 20%.

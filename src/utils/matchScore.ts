@@ -83,31 +83,21 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
   // field match, not a non-existent `learningIntent` field.
   const myIntent = (myProfile.what_i_want_to_learn || myProfile.who_i_want_to_teach || myProfile.learningIntent || '').toLowerCase();
   
-  // Semantic keyword matching for learning intent
-  if (myIntent) {
-    const intentKeywords = myIntent.split(/[\s,]+/).filter(k => k.length > 2);
-    const matchesIntent = intentKeywords.some(k => 
-      oppTitle.includes(k) || 
-      oppAbout.includes(k) || 
-      oppTrade.includes(k) ||
-      oppLearningFocus.includes(k)
-    );
-    if (matchesIntent) {
-      roleScore += 15;
-      details.push(isRtl ? 'מתאים בדיוק למה שאתה רוצה ללמוד' : 'Matches exactly what you want to learn');
-    }
-  }
-
-  if (myOcc && (
-    oppTitle.includes(myOcc) || 
-    myOcc.includes(oppTitle) || 
-    oppAbout.includes(myOcc) || 
-    oppTrade.includes(myOcc) || 
-    oppLearningFocus.includes(myOcc)
-  )) {
-    roleScore += 15;
-    details.push(isRtl ? 'התאמה מקצועית גבוהה' : 'High professional alignment');
-  } else if (roleScore > 0 && !details.some(d => d.includes('ללמוד') || d.includes('learn'))) {
+  // Field match — the learner's goal OR the user's occupation overlapping the
+  // opportunity's field counts fully. We don't require both (a mentee has a
+  // goal but no occupation), and we don't penalise sub-specialty wording:
+  // "ספר גברים" vs "ספר נשים" both share "ספר" and count as the same field.
+  const intentKeywords = myIntent.split(/[\s,./\-]+/).filter(k => k.length > 2);
+  const intentMatched = !!myIntent && intentKeywords.some(k =>
+    oppTitle.includes(k) || oppAbout.includes(k) || oppTrade.includes(k) || oppLearningFocus.includes(k)
+  );
+  const occMatched = !!myOcc && (
+    oppTitle.includes(myOcc) || myOcc.includes(oppTitle) || oppAbout.includes(myOcc) || oppTrade.includes(myOcc) || oppLearningFocus.includes(myOcc)
+  );
+  if (intentMatched || occMatched) {
+    roleScore += 20;
+    details.push(isRtl ? 'התאמה מקצועית — אותו תחום' : 'Same professional field');
+  } else if (roleScore > 0) {
     details.push(isRtl ? 'סוג תפקיד מתאים' : 'Matching role type');
   }
 
