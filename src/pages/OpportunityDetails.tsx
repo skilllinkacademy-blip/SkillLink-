@@ -30,6 +30,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
   const [interestedUsers, setInterestedUsers] = useState<any[]>([]);
   const [loadingInterests, setLoadingInterests] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -241,19 +242,22 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
         <div className="lg:col-span-8 space-y-8 sm:space-y-10">
           <div className="industrial-card overflow-hidden">
             {/* Image Header */}
-            <div className="h-64 sm:h-96 bg-slate-50 relative overflow-hidden">
-              {opportunity.image_url ? (
+            <div className="h-56 sm:h-80 bg-slate-900 relative overflow-hidden">
+              {opportunity.image_url && !imgError ? (
                 <img
                   src={resolveAsset(opportunity.image_url) || ''}
                   alt={opportunity.title}
+                  onError={() => setImgError(true)}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-                  {isMentorOffer ? <Briefcase size={100} strokeWidth={1} /> : <GraduationCap size={100} strokeWidth={1} />}
+                <div className="w-full h-full flex items-center justify-center text-white/15 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-950">
+                  {isMentorOffer ? <Briefcase size={88} strokeWidth={1} /> : <GraduationCap size={88} strokeWidth={1} />}
                 </div>
               )}
+              {/* Scrim so the badges stay legible on any image/placeholder */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />
               <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} flex flex-col gap-3`}>
                 <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
                   isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
