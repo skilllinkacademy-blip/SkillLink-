@@ -58,10 +58,13 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
       
       User Profile:
       - Name: ${userProfile.name || userProfile.full_name}
-      - Trade: ${userProfile.trade || userProfile.occupation || 'Not specified'}
-      - Goals: ${userProfile.bio || 'Not specified'}
+      - Role: ${userProfile.role || 'Not specified'}
+      - Trade / Occupation: ${userProfile.trade || userProfile.occupation || 'Not specified'}
+      - Wants to learn: ${userProfile.what_i_want_to_learn || 'Not specified'}
+      - Wants to teach: ${userProfile.who_i_want_to_teach || 'Not specified'}
+      - Goals / Bio: ${userProfile.bio || 'Not specified'}
       - Location: ${userProfile.city || userProfile.location || 'Not specified'}
-      
+
       Opportunities:
       ${candidates.map((o: any) => `
         - ID: ${o.id}
@@ -69,8 +72,9 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
           Trade: ${o.profession || o.trade || o.ownerTrade || o.profiles?.occupation || 'Not specified'}
           Location: ${o.location}
       `).join('\n')}
-      
-      Return a JSON array: [{"id": number, "score": number, "reason": string}].
+
+      Return a JSON array: [{"id": string, "score": number, "reason": string}].
+      The "id" MUST be copied verbatim as the exact string from the ID field above.
     `;
 
     const response = await callGemini({
@@ -83,7 +87,7 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
           items: {
             type: "OBJECT",
             properties: {
-              id: { type: "NUMBER" },
+              id: { type: "STRING" },
               score: { type: "NUMBER" },
               reason: { type: "STRING" }
             },
@@ -95,12 +99,13 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
 
     const aiOutput = JSON.parse(response.text || '[]');
 
-    // Merge AI results with candidate data
+    // Merge AI results with candidate data. IDs are UUID strings, so compare as
+    // strings (the AI schema returns them as strings too).
     return candidates.map(opp => {
-      const aiRec = aiOutput.find((r: any) => r.id === opp.id);
+      const aiRec = aiOutput.find((r: any) => String(r.id) === String(opp.id));
       return {
         ...opp,
-        matchScore: aiRec?.score || 10,
+        matchScore: aiRec?.score ?? opp.matchScore ?? 10,
         aiReason: aiRec?.reason || (userProfile.isRtl ? 'התאמה נמוכה על סמך הפרטים.' : 'Low match based on details.')
       };
     }).sort((a, b) => b.matchScore - a.matchScore);
@@ -141,7 +146,8 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
           Role: ${p.role}
       `).join('\n')}
 
-      Return JSON array: [{"id": number, "score": number, "reason": string}]. Reason in Hebrew.
+      Return JSON array: [{"id": string, "score": number, "reason": string}]. Reason in Hebrew.
+      The "id" MUST be copied verbatim as the exact string from the ID field above.
     `;
 
     const response = await callGemini({
@@ -154,7 +160,7 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
           items: {
             type: "OBJECT",
             properties: {
-              id: { type: "NUMBER" },
+              id: { type: "STRING" },
               score: { type: "NUMBER" },
               reason: { type: "STRING" }
             },
@@ -166,8 +172,8 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
 
     const aiOutput = JSON.parse(response.text || '[]');
     return candidates.map(p => {
-      const rec = aiOutput.find((r: any) => r.id === p.id);
-      return { ...p, aiScore: rec?.score || 10, aiReason: rec?.reason };
+      const rec = aiOutput.find((r: any) => String(r.id) === String(p.id));
+      return { ...p, aiScore: rec?.score ?? p.basicScore ?? 10, aiReason: rec?.reason };
     }).sort((a, b) => b.aiScore - a.aiScore);
   } catch (error) {
     console.error('Profile AI Error:', error);
