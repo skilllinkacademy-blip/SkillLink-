@@ -124,26 +124,36 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
   try {
     const prompt = `
       You are a professional Israeli mentorship AI for "SkillLink".
-      Compare the current user's profile with a list of potential mentors/apprentices.
-      
-      CRITICAL: 
-      - Same trade (occupation) matches are GOLD (90%+).
-      - If user is "mentee", find "mentor" in same trade.
-      - If user is "mentor", find "mentee" in same trade.
-      - Be strict. If no professional connection, score below 20%.
+      Compare the current user with a list of potential mentors/apprentices.
+
+      CRITICAL — match by PROFESSION, not by specific technique keywords:
+      - A mentee who wants to learn a profession (e.g. "ספר גברים") MUST match a
+        MENTOR whose profession/occupation is that same profession — even if the
+        mentor only described specific techniques (e.g. "פייד, גזירות, עיצוב זקן").
+        The profession is what matters, not the technique wording.
+      - The mentee's target profession is in "Wants to learn". Compare it to the
+        candidate's Profession/occupation.
+      - Same profession (mentee's goal ↔ mentor's occupation) = 90%+.
+      - If user is "mentee", find a "mentor" in the profession the mentee wants to learn.
+      - If user is "mentor", find a "mentee" who wants to learn the mentor's profession.
+      - If there is no professional connection, score below 20%.
 
       User Profile:
       - Name: ${userProfile.name || userProfile.full_name}
-      - Trade: ${userProfile.trade || userProfile.occupation}
       - Role: ${userProfile.role}
-      - Bio: ${userProfile.bio}
+      - Profession / occupation: ${userProfile.trade || userProfile.occupation || 'Not specified'}
+      - Wants to learn (target profession): ${userProfile.what_i_want_to_learn || 'Not specified'}
+      - Wants to teach: ${userProfile.who_i_want_to_teach || 'Not specified'}
+      - Bio: ${userProfile.bio || ''}
 
       Candidates:
       ${candidates.map((p: any) => `
         - ID: ${p.id}
           Name: ${p.name || p.full_name}
-          Trade: ${p.trade || p.occupation}
           Role: ${p.role}
+          Profession / occupation: ${p.trade || p.occupation || 'Not specified'}
+          Wants to teach: ${p.who_i_want_to_teach || 'Not specified'}
+          Wants to learn: ${p.what_i_want_to_learn || 'Not specified'}
       `).join('\n')}
 
       Return JSON array: [{"id": string, "score": number, "reason": string}]. Reason in Hebrew.
@@ -232,22 +242,28 @@ function basicOpportunityScoring(userProfile: any, opportunities: any[]) {
 
 function basicProfileScoring(userProfile: any, profiles: any[]) {
   if (!Array.isArray(profiles)) return [];
-  const userLatLon = CITY_COORDS[userProfile.location] || [32.0853, 34.7818];
-  
+  const userLatLon = CITY_COORDS[userProfile.city || userProfile.location] || [32.0853, 34.7818];
+
+  // What the user is about (their profession + the profession they want to
+  // learn / teach), so a mentee's goal ("ספר גברים") can match a mentor's
+  // occupation even when the mentor only listed techniques.
+  const userInterest = `${userProfile.occupation || ''} ${userProfile.what_i_want_to_learn || ''} ${userProfile.who_i_want_to_teach || ''}`.toLowerCase();
+  const userKw = userInterest.split(/[\s,.\-–—/]+/).filter((w: string) => w.length > 2);
+
   return profiles.map(p => {
     let score = 10;
-    const userTrade = (userProfile.occupation || '').toLowerCase();
-    const pTrade = (p.occupation || '').toLowerCase();
-    
-    if (userTrade && pTrade && (pTrade.includes(userTrade) || userTrade.includes(pTrade))) {
+    const pProfession = `${p.occupation || ''} ${p.who_i_want_to_teach || ''} ${p.what_i_want_to_learn || ''}`.toLowerCase();
+
+    // Profession / goal keyword overlap (matches by trade, not technique wording).
+    if (userKw.length > 0 && userKw.some((w: string) => pProfession.includes(w))) {
       score += 50;
     }
-    
-    const pLatLon = CITY_COORDS[p.location] || [32.0853, 34.7818];
+
+    const pLatLon = CITY_COORDS[p.city || p.location] || [32.0853, 34.7818];
     const distance = calculateDistance(userLatLon, pLatLon);
     if (distance < 20) score += 20;
 
-    // Role match
+    // Role complementarity
     if (userProfile.role === 'mentee' && p.role === 'mentor') score += 15;
     if (userProfile.role === 'mentor' && p.role === 'mentee') score += 15;
 

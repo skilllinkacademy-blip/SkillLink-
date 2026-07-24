@@ -55,7 +55,7 @@ export default function Explore({ isRtl }: ExploreProps) {
     try {
       let query = supabase
         .from('profiles')
-        .select('id, full_name, username, occupation, city, bio, avatar_url, role, is_verified, years_experience, updated_at')
+        .select('id, full_name, username, occupation, city, bio, avatar_url, role, is_verified, years_experience, updated_at, what_i_want_to_learn, who_i_want_to_teach')
         .neq('role', 'admin');
 
       if (roleFilter !== 'all') query = query.eq('role', roleFilter);
