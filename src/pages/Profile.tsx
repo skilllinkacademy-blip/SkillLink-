@@ -1390,6 +1390,34 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   )}
                 </div>
               </div>
+
+              {/* Social proof — reviews preview */}
+              {reviews.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-xl sm:text-2xl font-black text-black flex items-center gap-2">
+                      <Star size={22} className="text-yellow-500 fill-yellow-500" />
+                      {isRtl ? 'מה אומרים עליי' : 'What people say'}
+                    </h2>
+                    <button onClick={() => setActiveTab('reviews')} className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap">
+                      {isRtl ? `כל הביקורות (${reviews.length})` : `All reviews (${reviews.length})`}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {reviews.slice(0, 2).map((review: any) => (
+                      <div key={review.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-5 space-y-2">
+                        <div className="flex gap-0.5 text-yellow-500">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star key={s} size={14} fill={s <= (review.rating || 0) ? 'currentColor' : 'none'} />
+                          ))}
+                        </div>
+                        <p className="text-sm text-slate-700 font-medium leading-relaxed">"{review.comment}"</p>
+                        <div className="text-xs font-black text-slate-400">— {review.fromName || (isRtl ? 'משתמש' : 'User')}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
