@@ -101,10 +101,10 @@
    it wins over Tailwind's `.bg-white` utility. Scoped to `.rounded-2xl` cards
    so small chips/buttons and the design panel stay solid. */
 .profile-glass .bg-white.rounded-2xl {
-  background-color: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-color: rgba(255, 255, 255, 0.45);
+  background-color: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Editorial sections — turn the boxed white content cards into borderless,

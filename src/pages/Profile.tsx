@@ -90,6 +90,16 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   });
   const [showDesignPanel, setShowDesignPanel] = useState(false);
 
+  const addCustomTag = () => {
+    const t = newTag.trim();
+    if (!t) return;
+    const newSkills = [...(formData.skills || []), { name: t, level: t, verified: false }];
+    setFormData({ ...formData, skills: newSkills });
+    handleSave('skills', newSkills);
+    setNewTag('');
+    setShowTagForm(false);
+  };
+
   const handlePageBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) return;
     const file = e.target.files[0];
@@ -1129,7 +1139,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           </div>
         </div>
       </div>
-      <div className="profile-editorial grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className={`${hasPageBg ? '' : 'profile-editorial '}grid grid-cols-1 lg:grid-cols-12 gap-8`}>
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
           <div id="profile-tabs" className="flex gap-4 border-b border-gray-200 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
@@ -1366,9 +1376,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
               {/* Professional DNA / Quick Tags */}
               {design.sections.tags && (
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 -z-10" />
-                
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6">
+
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-md text-[10px] font-black uppercase tracking-[0.2em]">
@@ -1401,13 +1410,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                           setFormData({ ...formData, skills: newSkills });
                           handleSave('skills', newSkills);
                         }}
-                        className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all border-2 ${
-                          isSelected 
-                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100' 
-                            : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                        style={isSelected ? { backgroundColor: accent, borderColor: accent } : undefined}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all border ${
+                          isSelected
+                            ? 'text-white shadow-sm'
+                            : 'bg-white/70 border-slate-200 text-slate-500 hover:border-slate-300'
                         } ${!isMyProfile && 'cursor-default'}`}
                       >
-                        <tag.icon size={18} />
+                        <tag.icon size={16} />
                         {tag.label}
                       </button>
                     );
@@ -1417,23 +1427,21 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     <div className="flex items-center gap-2">
                       {showTagForm ? (
                         <div className="flex items-center gap-2 animate-in slide-in-from-left-4">
-                          <input 
+                          <input
                             type="text"
+                            autoFocus
                             value={newTag}
                             onChange={(e) => setNewTag(e.target.value)}
                             placeholder={isRtl ? 'תגית מותאמת...' : 'Custom tag...'}
-                            className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-blue-600"
+                            className="px-4 py-3 bg-white border border-slate-200 rounded-full text-xs font-bold outline-none focus:border-slate-400"
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' && newTag) {
-                                const newSkills = [...(formData.skills || []), { name: newTag, level: newTag, verified: false }];
-                                setFormData({ ...formData, skills: newSkills });
-                                handleSave('skills', newSkills);
-                                setNewTag('');
-                                setShowTagForm(false);
-                              }
+                              if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
                             }}
                           />
-                          <button onClick={() => setShowTagForm(false)} className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200">
+                          <button onClick={addCustomTag} disabled={!newTag.trim()} className="p-3 rounded-full text-white disabled:opacity-40" style={{ backgroundColor: accent }} title={isRtl ? 'הוסף' : 'Add'}>
+                            <CheckCircle2 size={16} />
+                          </button>
+                          <button onClick={() => { setShowTagForm(false); setNewTag(''); }} className="p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200">
                             <X size={16} />
                           </button>
                         </div>
