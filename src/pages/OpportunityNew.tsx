@@ -249,11 +249,16 @@ export default function OpportunityNew({ isRtl, isEditing = false }: Opportunity
         const { error: uploadErr } = await supabase.storage
           .from('opportunities_images')
           .upload(path, imageFile, { upsert: true });
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('opportunities_images').getPublicUrl(path);
-          imageUrl = urlData.publicUrl;
+        if (uploadErr) {
+          setError(isRtl ? 'העלאת התמונה נכשלה. נסה שוב או המשך בלי תמונה.' : 'Image upload failed. Try again or continue without an image.');
+          setIsSubmitting(false);
+          return;
         }
+        const { data: urlData } = supabase.storage.from('opportunities_images').getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
       }
+      // Never persist a local preview URL — it breaks after reload.
+      if (imageUrl && imageUrl.startsWith('blob:')) imageUrl = null;
 
       const payload = {
         type,
