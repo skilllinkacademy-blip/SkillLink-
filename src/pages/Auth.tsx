@@ -680,7 +680,7 @@ export default function Auth({ isRtl }: AuthProps) {
             {/* Logo */}
             <div className="text-center">
               <Link to="/" className="text-3xl font-black tracking-tighter text-black !font-sans flex items-center justify-center" dir="ltr">
-                SkillLink<span className="text-blue-500">.</span>
+                Skill<span className="text-blue-600">Link.</span>
               </Link>
             </div>
 

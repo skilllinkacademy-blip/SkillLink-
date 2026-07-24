@@ -78,7 +78,7 @@ function AppMockup({ isRtl }: { isRtl: boolean }) {
 
       <div className="bg-slate-950 rounded-b-xl border border-t-0 border-slate-700 p-3 space-y-2.5 min-h-[220px]">
         <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-          <span className="text-white font-black text-xs">SkillLink<span className="text-emerald-400">.</span></span>
+          <span className="text-white font-black text-xs">Skill<span className="text-blue-400">Link.</span></span>
           <div className="flex gap-2">
             {['חיפוש', 'מנטורים'].map(t => (
               <span key={t} className="text-[8px] text-slate-500 font-black">{t}</span>

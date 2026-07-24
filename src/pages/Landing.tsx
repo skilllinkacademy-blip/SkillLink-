@@ -98,7 +98,7 @@ export default function Landing({ isRtl }: LandingProps) {
       {/* ══ NAVBAR ══════════════════════════════════════════════════════════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 sm:px-10 h-14 bg-[#07070e]/90 backdrop-blur-md border-b border-white/6">
         <div className="text-base font-black tracking-tight text-white" dir="ltr">
-          Skill<span className="text-blue-500">Link</span>
+          Skill<span className="text-blue-600">Link.</span>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/auth?mode=login"
@@ -564,7 +564,7 @@ export default function Landing({ isRtl }: LandingProps) {
       <footer className="bg-[#07070e] border-t border-white/6 py-8 sm:py-10 px-5 sm:px-10">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
           <div className="text-base font-black tracking-tight text-white" dir="ltr">
-            Skill<span className="text-blue-500">Link</span>
+            Skill<span className="text-blue-600">Link.</span>
             <span className="text-white/20 font-normal text-sm ms-3">© 2026</span>
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/30">

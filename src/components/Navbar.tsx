@@ -47,7 +47,7 @@ export default function Navbar({ isRtl, toggleLang }: NavbarProps) {
             className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-0.5 flex-shrink-0"
             dir="ltr"
           >
-            SkillLink<span className="text-blue-600">.</span>
+            Skill<span className="text-blue-600">Link.</span>
           </Link>
 
           {/* Desktop links */}
