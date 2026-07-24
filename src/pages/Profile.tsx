@@ -744,135 +744,138 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       {/* Header Card */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        <div className="h-56 sm:h-72 bg-slate-900 relative group/cover">
+        {/* ===== Landing-page hero: identity overlaid on the cover ===== */}
+        <div className="relative h-64 sm:h-80 bg-slate-900 group/cover">
           {formData.cover_url ? (
             <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-900 to-slate-950" />
           )}
-          {/* Legibility scrim so the hero reads like a landing-page banner */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 pointer-events-none" />
 
           {isMyProfile && (
-            <label className="absolute top-4 right-4 p-3 bg-black/40 text-white rounded-2xl hover:bg-black/70 transition-all backdrop-blur-md cursor-pointer z-20 border border-white/20">
-              <Camera size={20} />
+            <label className="absolute top-4 right-4 p-2.5 bg-black/40 text-white rounded-xl hover:bg-black/70 transition-all backdrop-blur-md cursor-pointer z-30 border border-white/20 flex items-center gap-2 text-[11px] font-bold">
+              <Camera size={16} />
+              <span className="hidden sm:inline">{isRtl ? 'החלף תמונת רקע' : 'Change cover'}</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleCoverUpload} disabled={uploading} />
             </label>
           )}
           {uploading && (
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-30">
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-40">
               <Loader2 className="animate-spin text-white" size={32} />
             </div>
           )}
-        </div>
-        
-        <div className="px-4 sm:px-8 pb-5 sm:pb-8 -mt-16 relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="relative">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-900 border-4 sm:border-[6px] border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-2xl overflow-hidden relative">
-                {profile.avatar_url ? (
-                  <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
-                ) : (
-                  profile.full_name?.charAt(0) || 'U'
-                )}
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Loader2 className="animate-spin text-white" size={24} />
-                  </div>
-                )}
-              </div>
-              {isMyProfile && (
-                <div className="absolute -bottom-2 -right-2 flex gap-1 z-10">
-                  <label className="p-2.5 bg-white text-black rounded-xl shadow-xl border-2 border-white hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center">
-                    <Camera size={16} />
-                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                  </label>
-                  {profile.avatar_url && (
-                    <button 
-                      onClick={handleRemoveAvatar} 
-                      disabled={uploading} 
-                      className="p-2.5 bg-white text-red-600 rounded-xl shadow-xl border-2 border-white hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center"
-                      title={isRtl ? 'הסר תמונה' : 'Remove Image'}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
+
+          {profile.role === 'mentor' && (
+            <div className="absolute top-4 left-4 z-20">
+              {(profile.is_verified || profile.verification_status === 'approved') ? (
+                <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-lg">
+                  <ShieldCheck size={14} fill="currentColor" />
+                  {isRtl ? 'מנטור מאומת' : 'Verified Mentor'}
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-black/40 text-white/90 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 border border-white/20 backdrop-blur-md">
+                  {isRtl ? 'מנטור בבדיקה' : 'Pending Mentor'}
+                </span>
               )}
             </div>
+          )}
 
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 z-20">
+            <div className="flex items-end gap-4">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-slate-600 to-slate-800 border-4 border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-2xl overflow-hidden">
+                  {profile.avatar_url ? (
+                    <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    profile.full_name?.charAt(0) || 'U'
+                  )}
+                </div>
+                {isMyProfile && (
+                  <div className="absolute -bottom-2 -right-2 flex gap-1 z-10">
+                    <label className="p-2 bg-white text-black rounded-lg shadow-lg border border-white hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-center">
+                      <Camera size={14} />
+                      <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    </label>
+                    {profile.avatar_url && (
+                      <button
+                        onClick={handleRemoveAvatar}
+                        disabled={uploading}
+                        className="p-2 bg-white text-red-600 rounded-lg shadow-lg border border-white hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center"
+                        title={isRtl ? 'הסר תמונה' : 'Remove Image'}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0 pb-1">
                 {isMyProfile ? (
-                  <input 
-                    type="text" 
-                    value={formData.full_name} 
+                  <input
+                    type="text"
+                    value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     onBlur={() => handleSave('full_name', formData.full_name)}
-                    className="text-3xl font-black text-black bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg w-full max-w-md transition-all"
+                    placeholder={isRtl ? 'השם שלך' : 'Your name'}
+                    className="text-2xl sm:text-3xl font-black text-white bg-white/10 focus:bg-white/20 border border-white/25 outline-none px-3 py-1 rounded-xl w-full max-w-sm transition-all placeholder:text-white/50"
                   />
                 ) : (
-                  <h1 className="text-3xl font-black text-black">{profile.full_name}</h1>
+                  <h1 className="text-2xl sm:text-4xl font-black text-white drop-shadow-md">{profile.full_name}</h1>
                 )}
-                {profile.role === 'mentor' && (profile.is_verified || profile.verification_status === 'approved') && (
-                  <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-100">
-                    <ShieldCheck size={14} fill="currentColor" />
-                    {isRtl ? 'מנטור מאומת' : 'Verified Mentor'}
-                  </span>
-                )}
-                {profile.role === 'mentor' && !(profile.is_verified || profile.verification_status === 'approved') && (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 border border-gray-200">
-                    {isRtl ? 'מנטור בבדיקה' : 'Pending Mentor'}
-                  </span>
-                )}
-              </div>
-              
-              <div className="text-lg font-bold text-gray-500 flex items-center gap-2">
+
                 {isMyProfile ? (
-                  <div className="flex-1 space-y-1">
-                    <input 
-                      type="text" 
-                      value={formData.headline} 
-                      onChange={(e) => setFormData({...formData, headline: e.target.value})}
-                      onBlur={() => handleSave('headline', formData.headline)}
-                      placeholder={placeholders.headline}
-                      className="bg-transparent border-none outline-none focus:bg-gray-50 px-2 py-1 rounded-lg w-full transition-all"
-                    />
-                    {renderProfileHelper(isRtl ? 'כותרת מקצועית קצרה שמופיעה בראש הכרטיס שלך.' : 'A short professional headline at the top of your card.')}
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.headline}
+                    onChange={(e) => setFormData({...formData, headline: e.target.value})}
+                    onBlur={() => handleSave('headline', formData.headline)}
+                    placeholder={placeholders.headline}
+                    className="mt-1.5 text-sm font-semibold text-white bg-white/10 focus:bg-white/20 border border-white/25 outline-none px-3 py-1 rounded-lg w-full max-w-md transition-all placeholder:text-white/50"
+                  />
                 ) : (
-                  <span>{profile.headline || profile.occupation || (isRtl ? 'משתמש SkillLink' : 'SkillLink User')}</span>
+                  <p className="mt-1 text-sm sm:text-lg font-semibold text-white/90 drop-shadow">{profile.headline || profile.occupation || (isRtl ? 'משתמש SkillLink' : 'SkillLink User')}</p>
                 )}
+
+                <div className="mt-2 flex items-center gap-1.5 text-white/75 text-xs sm:text-sm font-medium">
+                  <MapPin size={14} />
+                  <span>{profile.city || (isRtl ? 'מיקום לא צוין' : 'Location not set')}</span>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {isMyProfile && saving && (
-              <div className="flex items-center gap-2 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                <Loader2 size={14} className="animate-spin" />
-                {isRtl ? 'שומר...' : 'Saving...'}
-              </div>
+        <div className="px-4 sm:px-8 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-slate-400 min-w-0 truncate">
+            {isMyProfile
+              ? (saving ? (isRtl ? 'שומר...' : 'Saving...') : (isRtl ? 'זה הפרופיל הציבורי שלך — ככה אחרים רואים אותך' : 'This is your public page — how others see you'))
+              : (isMentor ? (isRtl ? 'מנטור · פתוח לחניכים' : 'Mentor · open to apprentices') : (isRtl ? 'מתלמד · מחפש ללמוד' : 'Apprentice · looking to learn'))}
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {!isMyProfile && (
+              <button
+                onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
+                className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
+              >
+                <MessageSquare size={16} />
+                {isRtl ? 'שלח הודעה' : 'Message'}
+              </button>
             )}
-
-            {isMyProfile && !saving && (
+            {isMyProfile && (
               <button
                 onClick={async () => { await signOut(); navigate('/'); }}
-                className="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg transition-colors"
+                className="md:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg transition-colors"
               >
                 <LogOut size={13} />
                 {isRtl ? 'יציאה' : 'Logout'}
               </button>
             )}
-
-            {!isMyProfile && (
-              <button 
-                onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
-                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
-              >
-                <MessageSquare size={18} />
-                {isRtl ? 'שלח הודעה' : 'Message'}
-              </button>
-            )}
           </div>
+        </div>
+
+        <div className="px-4 sm:px-8 pb-5 sm:pb-8 pt-6 relative">
 
           <div className="mt-5 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="p-4 bg-gray-50 rounded-2xl text-center">
