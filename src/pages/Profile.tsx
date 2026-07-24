@@ -1591,7 +1591,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
               {!isMyProfile && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform" />
                   
                   <div className="flex justify-between items-center relative z-10">
                     <h2 className="text-2xl font-black text-black">{isRtl ? 'דרג את החוויה שלך' : 'Review Experience'}</h2>
@@ -1811,7 +1810,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         {/* Right Column: Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-8 shadow-xl space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             <div className="relative z-10 space-y-4">
               <h3 className="text-xl sm:text-2xl font-black leading-tight">
                 {isMentor ? (isRtl ? 'מוכן לחלוק את הידע שלך?' : 'Ready to share your skills?') : (isRtl ? 'מוכן להתחיל ללמוד?' : 'Ready to start learning?')}
@@ -1857,7 +1855,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           )}
 
           <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-50 rounded-full -z-10"></div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Info size={14} />
               {isRtl ? 'פרטי פרופיל' : 'Profile Details'}
