@@ -643,19 +643,24 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     </p>
   );
 
-  // Calculate profile completion
-  const completionFields = [
-    formData.full_name,
-    formData.headline,
-    formData.bio,
-    formData.city,
-    formData.occupation,
-    profile.avatar_url,
-    formData.cover_url,
-    formData.phone
+  // Calculate profile completion — role-aware, and including the field that
+  // most drives matching (what I want to learn / who I want to teach).
+  const learnTeachValue = isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn;
+  const completionItems = [
+    { label: isRtl ? 'שם' : 'name', done: !!formData.full_name },
+    { label: isRtl ? 'כותרת' : 'headline', done: !!formData.headline },
+    { label: isRtl ? 'מקצוע' : 'occupation', done: !!formData.occupation },
+    { label: isRtl ? 'מיקום' : 'location', done: !!formData.city },
+    { label: isRtl ? 'תמונה' : 'photo', done: !!profile.avatar_url },
+    { label: isRtl ? 'קצת עליי' : 'bio', done: !!formData.bio },
+    {
+      label: isMentor ? (isRtl ? 'את מי ללמד' : 'who to teach') : (isRtl ? 'מה ללמוד' : 'what to learn'),
+      done: !!learnTeachValue,
+    },
   ];
-  const completedCount = completionFields.filter(Boolean).length;
-  const completionPercentage = Math.round((completedCount / completionFields.length) * 100);
+  const completedCount = completionItems.filter((i) => i.done).length;
+  const completionPercentage = Math.round((completedCount / completionItems.length) * 100);
+  const missingLabels = completionItems.filter((i) => !i.done).map((i) => i.label);
 
   const averageRating = reviews.length > 0 
     ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
@@ -676,27 +681,30 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       {/* Profile Completion Bar — own profile + incomplete */}
       {isMyProfile && completionPercentage < 100 && (
-        <div className="bg-white border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm font-bold text-slate-900">
-                {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
-              </span>
-              <span className="text-sm font-black text-amber-600">{completionPercentage}%</span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
-                style={{ width: `${completionPercentage}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">
-              {isRtl
-                ? `חסרים: ${[!formData.full_name && 'שם', !formData.headline && 'כותרת', !formData.bio && 'ביו', !formData.city && 'מיקום', !formData.occupation && 'מקצוע', !profile.avatar_url && 'תמונה'].filter(Boolean).join(' · ')}`
-                : `Missing: ${[!formData.full_name && 'name', !formData.headline && 'headline', !formData.bio && 'bio', !formData.city && 'location', !formData.occupation && 'occupation', !profile.avatar_url && 'photo'].filter(Boolean).join(' · ')}`
-              }
-            </p>
+        <div className="bg-white border border-amber-200 rounded-2xl p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-sm font-bold text-slate-900">
+              {isRtl ? 'השלם את הפרופיל שלך' : 'Complete your profile'}
+            </span>
+            <span className="text-sm font-black text-amber-600">{completionPercentage}%</span>
           </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-slate-500 mt-2 font-semibold">
+            {isRtl
+              ? 'ככל שתמלא יותר — ההתאמות שלך יהיו מדויקות יותר.'
+              : 'The more you fill in, the more accurate your matches become.'}
+          </p>
+          {missingLabels.length > 0 && (
+            <p className="text-[11px] text-slate-400 mt-1">
+              {isRtl ? 'עוד חסר: ' : 'Still missing: '}
+              {missingLabels.join(' · ')}
+            </p>
+          )}
         </div>
       )}
 
@@ -1157,15 +1165,28 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 )}
                 
                 <div className="pt-8 border-t border-gray-50">
-                  <h3 className="text-xl font-black text-black mb-4">
-                    {isMentor ? (isRtl ? 'את מי אני רוצה ללמד?' : 'Who I want to teach?') : (isRtl ? 'למה אני רוצה ללמוד' : 'Why I want to learn')}
-                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <h3 className="text-xl font-black text-black">
+                      {isMentor ? (isRtl ? 'את מי אני רוצה ללמד?' : 'Who I want to teach?') : (isRtl ? 'מה אני רוצה ללמוד?' : 'What I want to learn?')}
+                    </h3>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                      {isRtl ? 'משפיע על ההתאמה' : 'Powers matching'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-semibold mb-3 leading-relaxed">
+                    {isMentor
+                      ? (isRtl ? 'תאר את החניך האידיאלי ואת התחום שתלמד — לפי זה נחליט למי להציג אותך.' : 'Describe your ideal apprentice and the field you teach — this decides who sees you.')
+                      : (isRtl ? 'תאר בדיוק מה אתה רוצה ללמוד ומאיזה תחום — לפי זה נמצא לך את ההתאמות הטובות ביותר.' : 'Describe exactly what you want to learn and in which field — we find your best matches by this.')}
+                  </p>
                   {isMyProfile ? (
-                    <textarea 
+                    <textarea
                       value={isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn}
                       onChange={(e) => setFormData({...formData, [isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn']: e.target.value})}
                       onBlur={() => handleSave(isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn', isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn)}
                       rows={3}
+                      placeholder={isMentor
+                        ? (isRtl ? 'למשל: מחפש מתלמד רציני לתחום החשמל, בלי ניסיון קודם, שרוצה ללמוד עבודה בשטח.' : 'e.g. Looking for a serious apprentice in electrical work, no experience needed, wants hands-on field work.')
+                        : (isRtl ? 'למשל: רוצה ללמוד ספרות גברים — תספורות, פייד ועיצוב זקן — אצל ספר מנוסה בפתח תקווה.' : 'e.g. I want to learn men\'s barbering — cuts, fades and beard styling — with an experienced barber in my area.')}
                       className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
                     />
                   ) : (
