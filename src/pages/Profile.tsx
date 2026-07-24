@@ -89,6 +89,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     sections: { gallery: true, reviews: true, tags: true },
   });
   const [showDesignPanel, setShowDesignPanel] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const addCustomTag = () => {
     const t = newTag.trim();
@@ -801,6 +802,13 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         </div>
       )}
 
+      {lightbox && (
+        <div className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="" className="max-w-full max-h-full rounded-xl object-contain" />
+          <button onClick={() => setLightbox(null)} className="absolute top-5 right-5 p-2 bg-white/15 text-white rounded-full backdrop-blur"><X size={22} /></button>
+        </div>
+      )}
+
       <div className={hasPageBg ? 'p-2 sm:p-4 rounded-3xl' : ''} style={{ background: pageBackground }}>
         <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
 
@@ -900,6 +908,41 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
             )}
           </div>
 
+          {/* Key details (from signup / profile) */}
+          {(isMyProfile || (isMentor && profile.years_experience) || profile.availability || profile.workload || profile.occupation) && (
+            <div className="px-4 pt-4 grid grid-cols-2 gap-3">
+              {isMentor && (
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{isRtl ? 'ניסיון' : 'Experience'}</div>
+                  {isMyProfile ? (
+                    <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                      <input type="number" value={formData.years_experience} onChange={(e) => setFormData({ ...formData, years_experience: parseInt(e.target.value) || 0 })} onBlur={() => handleSave('years_experience', formData.years_experience)} className="w-14 bg-slate-50 rounded px-2 py-1 outline-none" />
+                      <span className="text-slate-400 text-xs">{isRtl ? 'שנים' : 'yrs'}</span>
+                    </div>
+                  ) : (
+                    <div className="text-sm font-bold text-slate-800">{profile.years_experience ? `${profile.years_experience} ${isRtl ? 'שנים' : 'yrs'}` : '—'}</div>
+                  )}
+                </div>
+              )}
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{isMentor ? (isRtl ? 'תחום' : 'Field') : (isRtl ? 'תחום עניין' : 'Interest')}</div>
+                {isMyProfile ? (
+                  <input value={formData.occupation} onChange={(e) => setFormData({ ...formData, occupation: e.target.value })} onBlur={() => handleSave('occupation', formData.occupation)} placeholder={isRtl ? 'למשל: ספרות' : 'e.g. barbering'} className="w-full text-sm font-bold text-slate-800 bg-slate-50 rounded px-2 py-1 outline-none" />
+                ) : (
+                  <div className="text-sm font-bold text-slate-800">{profile.occupation || '—'}</div>
+                )}
+              </div>
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{isRtl ? 'זמינות' : 'Availability'}</div>
+                {isMyProfile ? (
+                  <input value={formData.availability} onChange={(e) => setFormData({ ...formData, availability: e.target.value })} onBlur={() => handleSave('availability', formData.availability)} placeholder={isRtl ? 'למשל: ערבים, גמיש' : 'e.g. evenings'} className="w-full text-sm font-bold text-slate-800 bg-slate-50 rounded px-2 py-1 outline-none" />
+                ) : (
+                  (profile.availability || profile.workload) ? <div className="text-sm font-bold text-slate-800">{profile.availability || profile.workload}</div> : <div className="text-sm text-slate-300">—</div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tags */}
           <div className="px-4 pt-4">
             <div className="flex flex-wrap gap-2">
@@ -936,12 +979,12 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           {/* Grid */}
           <div className="grid grid-cols-3 gap-0.5">
             {(formData.portfolio_urls || []).map((url: string, i: number) => (
-              <div key={i} className="relative aspect-square group overflow-hidden bg-slate-100">
+              <button key={i} onClick={() => setLightbox(url)} className="relative aspect-square group overflow-hidden bg-slate-100 cursor-zoom-in">
                 <img src={url} alt={`work ${i}`} className="w-full h-full object-cover" />
                 {isMyProfile && (
-                  <button onClick={() => handleRemovePortfolioImage(url)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={13} /></button>
+                  <span role="button" onClick={(e) => { e.stopPropagation(); handleRemovePortfolioImage(url); }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={13} /></span>
                 )}
-              </div>
+              </button>
             ))}
             {isMyProfile && (
               <label className="aspect-square bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center gap-1 text-slate-400 cursor-pointer hover:bg-slate-100">
