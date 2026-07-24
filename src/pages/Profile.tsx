@@ -832,7 +832,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">{isRtl ? 'מה להציג בדף' : 'Sections'}</div>
               {[
                 { key: 'tags', labelHe: 'תגיות מקצועיות', labelEn: 'Professional tags' },
-                { key: 'gallery', labelHe: 'גלריית עבודות', labelEn: 'Work gallery' },
+                { key: 'gallery', labelHe: isMentor ? 'גלריית עבודות' : 'תיק עבודות', labelEn: isMentor ? 'Work gallery' : 'Portfolio' },
                 { key: 'reviews', labelHe: 'ביקורות', labelEn: 'Reviews' },
               ].map((s) => {
                 const on = (design.sections as any)[s.key];
@@ -886,41 +886,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           )}
         </div>
       )}
-
-      {/* Mastery Journey Indicator */}
-      <div className="bg-slate-900 text-white p-5 sm:p-8 rounded-2xl shadow-xl relative overflow-hidden border border-white/10">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-2 text-center md:text-start">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-              <ShieldCheck size={12} />
-              {isRtl ? 'סטטוס מקצועי מאומת' : 'Verified Professional Status'}
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{masteryLevel}</h2>
-            <p className="text-slate-400 font-medium text-sm sm:text-base">
-              {isMentor 
-                ? (isRtl ? 'מכשיר את דור העתיד של בעלי המקצוע בישראל.' : 'Training the next generation of Israeli tradespeople.') 
-                : (isRtl ? 'בדרך להפוך לבעל מקצוע עצמאי ומיומן.' : 'On the path to becoming a skilled independent professional.')}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-8 w-full md:w-auto">
-            <div className="flex-1 md:w-64 space-y-3">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <span>{isRtl ? 'התקדמות למאסטרי' : 'Mastery Progress'}</span>
-                <span>{isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%`}</span>
-              </div>
-              <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-white/5 p-1">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
-                  style={{ width: isMentor ? '100%' : `${Math.min(100, (formData.skills || []).filter(s => s.verified).length * 20)}%` }} 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Header Card */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         {/* ===== Landing-page hero: identity overlaid on the cover ===== */}
@@ -1164,67 +1129,6 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           </div>
         </div>
       </div>
-
-      {/* ===== Landing-page value band ===== */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 space-y-6">
-        <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
-            {isMentor ? <Hammer size={12} className="text-emerald-400" /> : <Zap size={12} className="text-emerald-400" />}
-            {isMentor ? (isRtl ? 'מנטור מקצועי' : 'Professional Mentor') : (isRtl ? 'מחפש/ת ללמוד' : 'Looking to learn')}
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 leading-tight tracking-tight">
-            {isMentor
-              ? (profile.occupation
-                  ? (isRtl ? `לומדים ${profile.occupation} מהשטח — לא מספר לימוד.` : `Learn ${profile.occupation} in the field — not from a book.`)
-                  : (isRtl ? 'לומדים את המקצוע מהשטח — לא מספר לימוד.' : 'Learn the craft in the field — not from a book.'))
-              : (isRtl ? 'מוכן/ה ללמוד, לעבוד, ולהפוך למקצוען/ית.' : 'Ready to learn, work, and become a pro.')}
-          </h2>
-          <p className="text-base text-slate-500 font-medium leading-relaxed">
-            {isMentor
-              ? (isRtl ? 'ליווי אישי, עבודה אמיתית, ומקצוע שנשאר לך לכל החיים.' : 'Personal guidance, real work, and a craft that stays with you.')
-              : (isRtl ? 'מחפש/ת מנטור שילמד אותי מהשטח — ואני אשקיע כדי להצליח.' : 'Looking for a mentor to learn from in the field — and I will put in the work.')}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {(isMentor
-            ? [
-                { icon: <Users size={18} />, title: isRtl ? 'ליווי אישי' : '1-on-1 guidance', sub: isRtl ? 'אחד על אחד, לא כיתה' : 'not a classroom' },
-                { icon: <Hammer size={18} />, title: isRtl ? 'עבודה אמיתית' : 'Real work', sub: isRtl ? 'תרגול על פרויקטים בשטח' : 'hands-on projects' },
-                (profile.years_experience || 0) > 0
-                  ? { icon: <Briefcase size={18} />, title: `${profile.years_experience}+ ${isRtl ? 'שנות ניסיון' : 'yrs experience'}`, sub: isRtl ? 'ידע מוכח בתחום' : 'proven expertise' }
-                  : { icon: <ShieldCheck size={18} />, title: isRtl ? 'מקצוען מנוסה' : 'Experienced pro', sub: isRtl ? 'ידע מהשטח' : 'field knowledge' },
-              ]
-            : [
-                { icon: <Zap size={18} />, title: isRtl ? 'למידה מהירה' : 'Fast learner', sub: isRtl ? 'קולט/ת מהר בשטח' : 'picks it up fast' },
-                { icon: <CheckCircle2 size={18} />, title: isRtl ? 'מחויבות מלאה' : 'Fully committed', sub: isRtl ? 'רציני/ת ללמוד' : 'serious about learning' },
-                profile.city
-                  ? { icon: <MapPin size={18} />, title: profile.city, sub: isRtl ? 'זמין/ה באזור' : 'available nearby' }
-                  : { icon: <Star size={18} />, title: isRtl ? 'מוטיבציה גבוהה' : 'Highly motivated', sub: '' },
-              ]
-          ).map((v, i) => (
-            <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0" style={{ color: accent }}>{v.icon}</div>
-              <div className="min-w-0">
-                <div className="font-black text-slate-900 text-sm leading-tight">{v.title}</div>
-                {v.sub && <div className="text-xs text-slate-500 font-medium mt-0.5">{v.sub}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {!isMyProfile && (
-          <button
-            onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
-            style={{ backgroundColor: accent }}
-            className="w-full sm:w-auto px-8 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            <MessageSquare size={18} />
-            {isMentor ? (isRtl ? 'התחל ללמוד אצלי' : 'Start learning with me') : (isRtl ? 'צור קשר' : 'Get in touch')}
-          </button>
-        )}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
@@ -1551,7 +1455,11 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               {design.sections.gallery && (
               <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl sm:text-2xl font-black text-black">{isRtl ? 'גלריית עבודות' : 'Gallery of Work'}</h2>
+                  <h2 className="text-xl sm:text-2xl font-black text-black">
+                    {isMentor
+                      ? (isRtl ? 'גלריית עבודות' : 'Gallery of Work')
+                      : (isRtl ? 'תיק עבודות / דוגמאות' : 'Portfolio / Samples')}
+                  </h2>
                   {isMyProfile && (
                     <label className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-1">
                       <Upload size={16} />
@@ -1578,7 +1486,9 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     ))
                   ) : (
                     <div className="w-full py-8 text-center text-gray-400 font-medium bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
-                      {isRtl ? 'אין תמונות בגלריה עדיין.' : 'No images in gallery yet.'}
+                      {isMentor
+                        ? (isRtl ? 'אין תמונות בגלריה עדיין.' : 'No images in gallery yet.')
+                        : (isRtl ? 'הוסף דוגמאות עבודה או תיק עבודות שיראו מנטורים.' : 'Add work samples or a portfolio for mentors to see.')}
                     </div>
                   )}
                 </div>
