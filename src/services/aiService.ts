@@ -52,8 +52,13 @@ export async function getAIOpportunityRecommendations(userProfile: any, opportun
       Match the user with these opportunities.
       
       CRITICAL INSTRUCTIONS:
-      1. BE EXTREMELY STRICT. If an opportunity does not match the user's trade (occupation) or professional goals, give it a score BELOW 30%.
-      2. High scores (80%+) are reserved ONLY for exact trade matches in the same or nearby city.
+      1. Match by the professional FIELD, inferred semantically — people rarely
+         write the exact job title, so related terms/techniques count. E.g.
+         "עיצוב שיער / גזירות / פייד / תספורות / ספרות" all map to ספר/ספרות;
+         "צנרת / ביוב" → אינסטלטור; "לוחות חשמל" → חשמלאי; "רהיטים / עץ" → נגר.
+         Judge by the underlying field of the user's goal vs the opportunity, not exact wording.
+      2. If the field does not match the user's occupation or learning goal, score BELOW 30%.
+         High scores (80%+) are for same-field matches in the same or nearby city.
       3. Provide a "reason" in Hebrew (1 professional sentence) that justifies the match.
       
       User Profile:
@@ -126,16 +131,21 @@ export async function getAIProfileRecommendations(userProfile: any, profiles: an
       You are a professional Israeli mentorship AI for "SkillLink".
       Compare the current user with a list of potential mentors/apprentices.
 
-      CRITICAL — match by PROFESSION, not by specific technique keywords:
-      - A mentee who wants to learn a profession (e.g. "ספר גברים") MUST match a
-        MENTOR whose profession/occupation is that same profession — even if the
-        mentor only described specific techniques (e.g. "פייד, גזירות, עיצוב זקן").
-        The profession is what matters, not the technique wording.
-      - The mentee's target profession is in "Wants to learn". Compare it to the
-        candidate's Profession/occupation.
-      - Same profession (mentee's goal ↔ mentor's occupation) = 90%+.
-      - If user is "mentee", find a "mentor" in the profession the mentee wants to learn.
-      - If user is "mentor", find a "mentee" who wants to learn the mentor's profession.
+      CRITICAL — match by the professional FIELD, inferred semantically:
+      - People rarely write the exact job title. Infer the underlying professional
+        FIELD from whatever words they used — related terms and techniques count.
+        Examples of the SAME field:
+          • "עיצוב שיער", "גזירות", "תספורות", "פייד", "עיצוב זקן", "ספרות" → ספר/ספרות (barber/hairdressing)
+          • "חשמל", "לוחות חשמל", "התקנות" → חשמלאי (electrician)
+          • "צנרת", "ביוב", "דודים" → אינסטלטור (plumber)
+          • "רהיטים", "עץ", "נגרייה" → נגר (carpenter)
+        A mentee whose goal maps to a field MUST match a mentor whose profession maps
+        to that same field — even if they used different words. Match by field, not wording.
+      - The mentee's target is in "Wants to learn"; compare its FIELD to each
+        candidate's profession/occupation FIELD.
+      - Same field (mentee's goal ↔ mentor's occupation) = 90%+.
+      - If user is "mentee", find a "mentor" in the field the mentee wants to learn.
+      - If user is "mentor", find a "mentee" who wants to learn the mentor's field.
       - If there is no professional connection, score below 20%.
 
       User Profile:
