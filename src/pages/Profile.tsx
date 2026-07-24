@@ -79,12 +79,37 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
     { id: 'dark', labelHe: 'מקצועי כהה', labelEn: 'Bold Dark' },
     { id: 'warm', labelHe: 'חם ואומנותי', labelEn: 'Warm Craft' },
   ];
-  const [design, setDesign] = useState<{ template: string; accent: string; sections: { gallery: boolean; reviews: boolean; tags: boolean } }>({
+  const PAGE_BG_COLORS = ['#ffffff', '#f8fafc', '#0f172a', '#faf5ff', '#ecfeff', '#fef2f2'];
+  const [design, setDesign] = useState<{ template: string; accent: string; bannerColor?: string; pageBgColor?: string; pageBgImage?: string; sections: { gallery: boolean; reviews: boolean; tags: boolean } }>({
     template: 'classic',
     accent: '#2563eb',
+    bannerColor: '',
+    pageBgColor: '',
+    pageBgImage: '',
     sections: { gallery: true, reviews: true, tags: true },
   });
   const [showDesignPanel, setShowDesignPanel] = useState(false);
+
+  const handlePageBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) return;
+    const file = e.target.files[0];
+    if (file.size > 5 * 1024 * 1024) { alert(isRtl ? 'הקובץ גדול מדי (עד 5MB)' : 'File too large (max 5MB)'); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/pagebg.${ext}`;
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      const nd = { ...design, pageBgImage: `${publicUrl}?t=${Date.now()}`, pageBgColor: '' };
+      setDesign(nd);
+      await handleSave('page_design', nd);
+    } catch (err: any) {
+      alert(isRtl ? 'שגיאה בהעלאת רקע: ' + err.message : 'Error uploading background: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const quickTags = [
     { id: 'tools', label: isRtl ? 'בעל כלי עבודה' : 'Owns Tools', icon: Hammer },
@@ -178,6 +203,9 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           setDesign({
             template: data.page_design?.template || 'classic',
             accent: data.page_design?.accent || '#2563eb',
+            bannerColor: data.page_design?.bannerColor || '',
+            pageBgColor: data.page_design?.pageBgColor || '',
+            pageBgImage: data.page_design?.pageBgImage || '',
             sections: {
               gallery: data.page_design?.sections?.gallery !== false,
               reviews: data.page_design?.sections?.reviews !== false,
@@ -663,11 +691,17 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   // Design-derived styles (accent + template)
   const accent = design.accent || '#2563eb';
   const heroBg =
-    design.template === 'dark'
+    design.bannerColor
+      ? `linear-gradient(135deg, ${design.bannerColor} 0%, #0f172a 90%)`
+      : design.template === 'dark'
       ? 'linear-gradient(135deg,#1e293b,#020617)'
       : design.template === 'warm'
       ? 'linear-gradient(135deg,#b45309 0%,#7c2d12 45%,#431407 100%)'
       : `linear-gradient(135deg, ${accent} 0%, #0f172a 85%)`;
+  const hasPageBg = !!(design.pageBgImage || design.pageBgColor);
+  const pageBackground = design.pageBgImage
+    ? `url("${design.pageBgImage}") center / cover no-repeat`
+    : (design.pageBgColor || undefined);
 
   const renderProfileHelper = (text: string) => (
     <p className="mt-1 text-[10px] font-bold text-slate-400 px-1 animate-in fade-in">
@@ -709,7 +743,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500" style={{ ['--pa' as any]: accent }}>
+    <div className={`max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${hasPageBg ? 'p-3 sm:p-5 rounded-3xl shadow-sm' : ''}`} style={{ ['--pa' as any]: accent, background: pageBackground }}>
 
       {/* ===== Design panel (own profile) ===== */}
       {isMyProfile && showDesignPanel && (
@@ -734,6 +768,48 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                     <div className="text-[11px] font-black text-slate-700">{isRtl ? t.labelHe : t.labelEn}</div>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'צבע הבאנר' : 'Banner color'}</div>
+              <div className="flex flex-wrap gap-3 items-center">
+                {ACCENTS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { const nd = { ...design, bannerColor: c }; setDesign(nd); handleSave('page_design', nd); }}
+                    className={`w-9 h-9 rounded-full transition-all ${design.bannerColor === c ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                    aria-label={c}
+                  />
+                ))}
+                <button onClick={() => { const nd = { ...design, bannerColor: '' }; setDesign(nd); handleSave('page_design', nd); }} className="text-[11px] font-bold text-slate-500 underline">{isRtl ? 'לפי תבנית' : 'By template'}</button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'רקע העמוד' : 'Page background'}</div>
+              <div className="flex flex-wrap gap-3 items-center">
+                {PAGE_BG_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { const nd = { ...design, pageBgColor: c, pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }}
+                    className={`w-9 h-9 rounded-full border border-slate-200 transition-all ${design.pageBgColor === c && !design.pageBgImage ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                    aria-label={c}
+                  />
+                ))}
+                <button onClick={() => { const nd = { ...design, pageBgColor: '', pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }} className="text-[11px] font-bold text-slate-500 underline">{isRtl ? 'ללא' : 'None'}</button>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 cursor-pointer text-xs font-bold text-slate-700">
+                  <Upload size={14} />
+                  {isRtl ? 'העלה תמונת רקע' : 'Upload background image'}
+                  <input type="file" className="hidden" accept="image/*" onChange={handlePageBgUpload} disabled={uploading} />
+                </label>
+                {design.pageBgImage && (
+                  <button onClick={() => { const nd = { ...design, pageBgImage: '' }; setDesign(nd); handleSave('page_design', nd); }} className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"><Trash2 size={14} /></button>
+                )}
               </div>
             </div>
 
