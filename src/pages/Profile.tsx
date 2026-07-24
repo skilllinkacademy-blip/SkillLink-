@@ -90,6 +90,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   });
   const [showDesignPanel, setShowDesignPanel] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [userOpps, setUserOpps] = useState<any[]>([]);
 
   const addCustomTag = () => {
     const t = newTag.trim();
@@ -266,6 +267,22 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
     fetchProfile();
   }, [isPublicView, username, myProfile, user]);
+
+  // Opportunities this user has posted (shown on their profile)
+  useEffect(() => {
+    if (!profile?.id) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from('opportunities')
+        .select('id, title, location, type, image_url, created_at')
+        .eq('owner_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (active) setUserOpps(data || []);
+    })();
+    return () => { active = false; };
+  }, [profile?.id]);
 
   useEffect(() => {
     if (activeTab === 'reviews' && profile?.id) {
@@ -1000,6 +1017,29 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               <div className="col-span-3 py-12 text-center text-slate-400 text-sm font-medium">{isRtl ? 'אין עבודות עדיין.' : 'No work yet.'}</div>
             )}
           </div>
+
+          {/* Posted opportunities */}
+          {userOpps.length > 0 && (
+            <div className="px-4 py-5 border-t border-gray-100 space-y-3">
+              <h2 className="font-black text-slate-900 flex items-center gap-1.5"><Briefcase size={16} /> {isRtl ? 'הזדמנויות שפורסמו' : 'Posted opportunities'} ({userOpps.length})</h2>
+              <div className="space-y-2">
+                {userOpps.map((o: any) => (
+                  <button key={o.id} onClick={() => navigate(`/app/opportunities/${o.id}`)} className="w-full text-start flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-slate-50 transition-colors">
+                    <div className="w-11 h-11 rounded-lg bg-slate-100 overflow-hidden flex items-center justify-center shrink-0 text-slate-400">
+                      {o.image_url ? <img src={o.image_url} alt="" className="w-full h-full object-cover" /> : <Briefcase size={18} />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-slate-900 truncate">{o.title}</div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={11} /> {o.location || '—'}</div>
+                    </div>
+                    <span className="text-[10px] font-black px-2 py-1 rounded-full shrink-0" style={{ backgroundColor: `${accent}1a`, color: accent }}>
+                      {o.type === 'mentor_offer' ? (isRtl ? 'מנטור' : 'Mentor') : (isRtl ? 'מחפש' : 'Seeking')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Reviews */}
           <div className="px-4 py-5 border-t border-gray-100 space-y-3">

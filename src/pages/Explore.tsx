@@ -11,6 +11,7 @@ interface ExploreProps {
 
 const CATEGORIES = [
   { id: 'all', he: 'הכל', en: 'All' },
+  { id: 'barber', he: 'ספרות', en: 'Barber/Hair' },
   { id: 'electrician', he: 'חשמל', en: 'Electrical' },
   { id: 'plumbing', he: 'אינסטלציה', en: 'Plumbing' },
   { id: 'carpentry', he: 'נגרות', en: 'Carpentry' },
@@ -20,6 +21,20 @@ const CATEGORIES = [
   { id: 'tech', he: 'דיגיטל', en: 'Digital' },
   { id: 'welding', he: 'ריתוך', en: 'Welding' },
 ];
+
+// Map each category to Hebrew/English keywords so we can match the free-text
+// occupation/bio (which is written in Hebrew) rather than the English id.
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  barber: ['ספר', 'שיער', 'תספור', 'ספרות', 'barber', 'hair'],
+  electrician: ['חשמל', 'electric'],
+  plumbing: ['אינסטל', 'צנרת', 'ביוב', 'plumb'],
+  carpentry: ['נגר', 'carpen', 'wood'],
+  construction: ['בנייה', 'בניין', 'שיפוצ', 'בנאי', 'construction', 'renovat'],
+  hvac: ['מיזוג', 'hvac', 'ac'],
+  automotive: ['רכב', 'מכונא', 'מוסך', 'auto', 'mechanic'],
+  tech: ['דיגיטל', 'תוכנה', 'הייטק', 'מחשב', 'פיתוח', 'tech', 'software', 'digital'],
+  welding: ['ריתוך', 'רתך', 'weld'],
+};
 
 export default function Explore({ isRtl }: ExploreProps) {
   const { profile } = useAuth();
@@ -51,7 +66,9 @@ export default function Explore({ isRtl }: ExploreProps) {
         query = query.or(`full_name.ilike.%${searchQuery}%,occupation.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`);
       }
       if (categoryFilter !== 'all') {
-        query = query.ilike('occupation', `%${categoryFilter}%`);
+        const kws = CATEGORY_KEYWORDS[categoryFilter] || [categoryFilter];
+        const clause = kws.map((k) => `occupation.ilike.%${k}%,bio.ilike.%${k}%`).join(',');
+        query = query.or(clause);
       }
 
       const { data, error: queryError } = await query.order('updated_at', { ascending: false }).limit(50);
