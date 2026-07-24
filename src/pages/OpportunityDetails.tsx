@@ -229,7 +229,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.2em] group"
+        className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all tracking-wide group"
       >
         <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
           <ArrowLeft size={16} className="rtl:rotate-180" />
@@ -259,13 +259,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               {/* Scrim so the badges stay legible on any image/placeholder */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />
               <div className={`absolute top-4 sm:top-8 ${isRtl ? 'right-4 sm:right-8' : 'left-4 sm:left-8'} flex flex-col gap-3`}>
-                <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/10 ${
+                <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black tracking-wide shadow-2xl backdrop-blur-md border border-white/10 ${
                   isMentorOffer ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'
                 }`}>
                   {isRtl ? (isMentorOffer ? 'הצעת מנטור' : 'מחפש מנטור') : (isMentorOffer ? 'Mentor Offer' : 'Seeking Mentor')}
                 </div>
                 {opportunity.opportunity_type && (
-                  <div className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/5 bg-white/20 text-white">
+                  <div className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black tracking-wide shadow-2xl backdrop-blur-md border border-white/5 bg-white/20 text-white">
                     {opportunity.opportunity_type === 'apprenticeship' ? (isRtl ? 'חניכה מלאה' : 'Apprenticeship') : (isRtl ? 'עבודה מזדמנת' : 'Project Work')}
                   </div>
                 )}
@@ -292,13 +292,13 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       </div>
                       <div className="space-y-0.5 sm:space-y-1">
                         <h4 className="text-base sm:text-xl font-black text-slate-900">{isRtl ? 'התאמה חכמה' : 'Smart Match'}</h4>
-                        <p className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
+                        <p className="text-[9px] sm:text-xs text-slate-400 font-bold tracking-wide">{isRtl ? 'מבוסס על המיקום והכישורים שלך' : 'Based on your location and skills'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                       <div className="hidden md:block">
                         <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{isRtl ? 'סטטוס' : 'Status'}</p>
+                          <p className="text-[10px] font-black text-slate-400 tracking-wide mb-1">{isRtl ? 'סטטוס' : 'Status'}</p>
                           <p className="text-sm font-black text-emerald-600">
                             {matchScore > 80 ? (isRtl ? 'התאמה מעולה!' : 'Excellent Match!') : matchScore > 50 ? (isRtl ? 'התאמה טובה' : 'Good Match') : (isRtl ? 'פוטנציאל למידה' : 'Learning Potential')}
                           </p>
@@ -321,7 +321,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'מיקום' : 'Location'}</p>
+                          <p className="text-[10px] font-black text-slate-500 tracking-wide">{isRtl ? 'מיקום' : 'Location'}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-lg sm:text-xl font-black">{matchBreakdown.location}/30</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
@@ -330,7 +330,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'תחום ועיסוק' : 'Field & Role'}</p>
+                          <p className="text-[10px] font-black text-slate-500 tracking-wide">{isRtl ? 'תחום ועיסוק' : 'Field & Role'}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-lg sm:text-xl font-black">{matchBreakdown.role}/40</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
@@ -339,7 +339,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isRtl ? 'אמינות' : 'Trust'}</p>
+                          <p className="text-[10px] font-black text-slate-500 tracking-wide">{isRtl ? 'אמינות' : 'Trust'}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-lg sm:text-xl font-black">{matchBreakdown.trust}/30</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
@@ -357,7 +357,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                             </div>
                             <div>
                               <h4 className="text-lg font-black">{isRtl ? 'תובנות AI חכמות' : 'Smart AI Insights'}</h4>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isRtl ? 'ניתוח עומק של ההתאמה שלך' : 'Deep analysis of your fit'}</p>
+                              <p className="text-[10px] font-bold text-slate-500 tracking-wide">{isRtl ? 'ניתוח עומק של ההתאמה שלך' : 'Deep analysis of your fit'}</p>
                             </div>
                           </div>
                           {loadingAi && <Loader2 size={20} className="animate-spin text-blue-500" />}
@@ -370,7 +370,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div className="space-y-3">
-                                <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{isRtl ? 'נקודות חוזק' : 'Strengths'}</p>
+                                <p className="text-[9px] font-black text-emerald-500 tracking-wide">{isRtl ? 'נקודות חוזק' : 'Strengths'}</p>
                                 <ul className="space-y-2">
                                   {aiAnalysis.pros.map((pro, i) => (
                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
@@ -381,7 +381,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                                 </ul>
                               </div>
                               <div className="space-y-3">
-                                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{isRtl ? 'נקודות לשיפור' : 'Gaps to Note'}</p>
+                                <p className="text-[9px] font-black text-orange-500 tracking-wide">{isRtl ? 'נקודות לשיפור' : 'Gaps to Note'}</p>
                                 <ul className="space-y-2">
                                   {aiAnalysis.cons.map((con, i) => (
                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
@@ -393,7 +393,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                               </div>
                             </div>
                             <div className="p-4 bg-emerald-600/10 rounded-xl border border-emerald-600/20">
-                              <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{isRtl ? 'עצה מצוות ה-AI' : 'AI Team Advice'}</p>
+                              <p className="text-xs font-black text-emerald-400 tracking-wide mb-1">{isRtl ? 'עצה מצוות ה-AI' : 'AI Team Advice'}</p>
                               <p className="text-sm font-medium text-emerald-100">{aiAnalysis.advice}</p>
                             </div>
                           </div>
@@ -403,7 +403,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       </div>
 
                       <div className="pt-6 border-t border-slate-800">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">{isRtl ? 'פירוט נוסף' : 'Additional Details'}</p>
+                        <p className="text-[10px] font-black text-slate-500 tracking-wide mb-4">{isRtl ? 'פירוט נוסף' : 'Additional Details'}</p>
                         <div className="flex flex-wrap gap-2 sm:gap-3">
                           {matchBreakdown.details.map((detail, i) => (
                             <span key={i} className="px-3 py-1.5 bg-slate-800 rounded-xl text-[9px] sm:text-[10px] font-bold">
@@ -437,7 +437,12 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                         <Zap size={18} />
                       </div>
-                      <span className="capitalize">{opportunity.commitment_level} {isRtl ? 'התחייבות' : 'Commitment'}</span>
+                      <span className="capitalize">
+                        {isRtl
+                          ? (({ flexible: 'גמישה', low: 'חלקית', high: 'מלאה' } as Record<string, string>)[opportunity.commitment_level] || opportunity.commitment_level)
+                          : opportunity.commitment_level}{' '}
+                        {isRtl ? 'התחייבות' : 'Commitment'}
+                      </span>
                     </div>
                   )}
                   {(opportunity.pay_amount || opportunity.desired_salary) && (
@@ -458,7 +463,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 pt-5 sm:pt-10 border-t border-slate-100">
                 {opportunity.learning_focus && (
                   <div className="col-span-full space-y-4 pb-8 border-b border-slate-100 mb-8">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                       <GraduationCap size={16} className="text-slate-300" />
                       {isRtl ? 'מוקד הלמידה' : 'Learning Focus'}
                     </h3>
@@ -468,28 +473,28 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 {isMentorOffer ? (
                   <>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Info size={16} className="text-slate-300" />
                         {isRtl ? 'על העבודה' : 'About the Work'}
                       </h3>
                       <p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">{opportunity.about_work}</p>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Users size={16} className="text-slate-300" />
                         {isRtl ? 'את מי אני רוצה ללמד' : 'Who I want to teach'}
                       </h3>
                       <p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">{opportunity.who_i_want_to_teach}</p>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <GraduationCap size={16} className="text-slate-300" />
                         {isRtl ? 'מה תלמדו' : 'What you will learn'}
                       </h3>
                       <p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">{opportunity.mentee_will_learn}</p>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Award size={16} className="text-slate-300" />
                         {isRtl ? 'דרישות' : 'Requirements'}
                       </h3>
@@ -499,21 +504,21 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 ) : (
                   <>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Info size={16} className="text-slate-300" />
                         {isRtl ? 'מה אני רוצה ללמוד' : 'What I want to learn'}
                       </h3>
                       <p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">{opportunity.what_i_want_to_learn}</p>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Calendar size={16} className="text-slate-300" />
                         {isRtl ? 'זמינות' : 'Availability'}
                       </h3>
                       <div className="flex flex-wrap gap-3">
                         {Array.isArray(opportunity.availability_days) ? (
                           opportunity.availability_days.map((day: string) => (
-                            <span key={day} className="px-4 py-2 bg-slate-50 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                            <span key={day} className="px-4 py-2 bg-slate-50 text-slate-900 rounded-xl text-[10px] font-black tracking-wide border border-slate-200">
                               {day}
                             </span>
                           ))
@@ -523,7 +528,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h3 className="text-[10px] font-black text-slate-400 tracking-wide flex items-center gap-2">
                         <Award size={16} className="text-slate-300" />
                         {isRtl ? 'ניסיון קודם' : 'Prior Experience'}
                       </h3>
@@ -543,7 +548,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           {isOwner && (
             <div className="industrial-card p-5 sm:p-8 space-y-5">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
+                <h3 className="text-[10px] font-black text-slate-400 tracking-wide">{isRtl ? 'משתמשים שגילו עניין' : 'Interested Users'}</h3>
                 <span className="px-3 py-1 bg-slate-100 text-slate-900 text-[10px] font-black rounded-full border border-slate-200">
                   {interestedUsers.length}
                 </span>
@@ -572,7 +577,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         </div>
                         <div>
                           <p className="text-sm font-black text-slate-900">{interestedUser.userName}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{interestedUser.userTrade || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
+                          <p className="text-[10px] font-bold text-slate-400 tracking-wide">{interestedUser.userTrade || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -604,7 +609,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
           {/* Owner Card */}
           <div className="industrial-card p-5 sm:p-8 space-y-5 sm:space-y-6">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
+            <h3 className="text-[10px] font-black text-slate-400 tracking-wide">{isRtl ? 'פורסם על ידי' : 'Posted By'}</h3>
             <Link
               to={`/app/u/${opportunity.profiles?.username || opportunity.owner_id}`}
               className="flex items-center gap-4 sm:gap-5 cursor-pointer group/owner"
@@ -623,7 +628,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <ShieldCheck size={16} className="text-emerald-600 fill-emerald-500/10" />
                   )}
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black tracking-wide">{opportunity.profiles?.occupation || (isRtl ? 'חבר קהילה' : 'Community Member')}</p>
               </div>
             </Link>
 
@@ -631,7 +636,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             {/* Trust Score */}
             <div className="p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isRtl ? 'מדד אמינות' : 'Trust Score'}</span>
+                <span className="text-[10px] font-black text-slate-400 tracking-wide">{isRtl ? 'מדד אמינות' : 'Trust Score'}</span>
                 <span className="text-xs font-black text-slate-900">
                   {Math.min(100, 75 + (opportunity.profiles?.is_verified ? 20 : 0))}%
                 </span>
@@ -659,11 +664,11 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
 
             <div className="space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+              <div className="flex items-center justify-between text-[10px] font-black tracking-wide">
                 <span className="text-slate-400">{isRtl ? 'מיקום' : 'Location'}</span>
                 <span className="text-slate-900">{opportunity.profiles?.city || opportunity.location}</span>
               </div>
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+              <div className="flex items-center justify-between text-[10px] font-black tracking-wide">
                 <span className="text-slate-400">{isRtl ? 'חבר מאז' : 'Member Since'}</span>
                 <span className="text-slate-900">{opportunity.profiles?.created_at ? new Date(opportunity.profiles.created_at).getFullYear() : '—'}</span>
               </div>
@@ -674,7 +679,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                 isOwner ? (
                   <button
                     onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
-                    className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full bg-slate-900 text-white py-4 sm:py-5 rounded-2xl font-black tracking-wide text-[10px] sm:text-xs shadow-2xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
                     <Pencil size={18} />
                     {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
@@ -684,7 +689,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                     <button
                       onClick={handleInterested}
                       disabled={interesting || isInterested}
-                      className={`w-full py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+                      className={`w-full py-4 sm:py-5 rounded-2xl font-black tracking-wide text-[10px] sm:text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
                         isInterested
                           ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default'
                           : 'bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50'
@@ -698,7 +703,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
 
                     <button
                       onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
-                      className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                      className="w-full bg-white text-slate-900 border-2 border-slate-900 py-4 sm:py-5 rounded-2xl font-black tracking-wide text-[10px] sm:text-xs shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       <MessageSquare size={18} />
                       {isRtl ? 'שלח הודעה' : 'Send Message'}
@@ -708,7 +713,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               ) : (
                 <Link
                   to="/auth?mode=login"
-                  className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl font-black tracking-wide text-[10px] sm:text-xs shadow-2xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
                   <User size={18} />
                   {isRtl ? 'התחבר כדי להגיש מועמדות' : 'Sign in to Apply'}
@@ -722,7 +727,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             <div className="flex gap-4">
               <button
                 onClick={handleShare}
-                className="flex-1 bg-white text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
+                className="flex-1 bg-white text-slate-900 py-4 rounded-2xl font-black tracking-wide text-[10px] hover:bg-slate-50 transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
               >
                 <Share2 size={16} />
                 {isRtl ? 'שתף' : 'Share'}
@@ -730,7 +735,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
               <button
                 onClick={toggleSave}
                 disabled={saving}
-                className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                className={`flex-1 py-4 rounded-2xl font-black tracking-wide text-[10px] transition-all flex items-center justify-center gap-2 border shadow-sm ${
                   isSaved
                     ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
                     : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50'
@@ -742,7 +747,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </div>
 
             <div className="text-center">
-              <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isSaved ? 'text-red-600' : 'text-slate-400'}`}>
+              <p className={`text-[10px] font-black tracking-wide transition-colors ${isSaved ? 'text-red-600' : 'text-slate-400'}`}>
                 {isSaved
                   ? (isRtl ? 'נוסף למועדפים' : 'Added to favorites')
                   : (isRtl ? 'שמור להמשך' : 'Save for later')}
@@ -759,7 +764,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             <button
               onClick={handleInterested}
               disabled={interesting || isInterested}
-              className={`flex-1 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 rounded-xl font-black tracking-wide text-[10px] transition-all active:scale-95 flex items-center justify-center gap-2 ${
                 isInterested
                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
                   : 'bg-slate-900 text-white'
@@ -772,7 +777,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
             </button>
             <button
               onClick={() => navigate('/app/messages', { state: { recipientId: opportunity.owner_id, recipientName: opportunity.profiles?.full_name } })}
-              className="flex-1 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] bg-white border-2 border-slate-900 text-slate-900 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl font-black tracking-wide text-[10px] bg-white border-2 border-slate-900 text-slate-900 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <MessageSquare size={15} />
               {isRtl ? 'הודעה' : 'Message'}
@@ -794,7 +799,7 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
           <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-2xl p-3">
             <button
               onClick={() => navigate(`/app/opportunities/${opportunity.id}/edit`)}
-              className="w-full bg-slate-900 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+              className="w-full bg-slate-900 text-white py-3 rounded-xl font-black tracking-wide text-[10px] flex items-center justify-center gap-2"
             >
               <Pencil size={15} />
               {isRtl ? 'ערוך הזדמנות' : 'Edit Opportunity'}
