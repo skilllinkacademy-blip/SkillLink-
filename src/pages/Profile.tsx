@@ -976,6 +976,65 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         </div>
       </div>
 
+      {/* ===== Landing-page value band ===== */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 space-y-6">
+        <div className="space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
+            {isMentor ? <Hammer size={12} className="text-emerald-400" /> : <Zap size={12} className="text-emerald-400" />}
+            {isMentor ? (isRtl ? 'מנטור מקצועי' : 'Professional Mentor') : (isRtl ? 'מחפש/ת ללמוד' : 'Looking to learn')}
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 leading-tight tracking-tight">
+            {isMentor
+              ? (profile.occupation
+                  ? (isRtl ? `לומדים ${profile.occupation} מהשטח — לא מספר לימוד.` : `Learn ${profile.occupation} in the field — not from a book.`)
+                  : (isRtl ? 'לומדים את המקצוע מהשטח — לא מספר לימוד.' : 'Learn the craft in the field — not from a book.'))
+              : (isRtl ? 'מוכן/ה ללמוד, לעבוד, ולהפוך למקצוען/ית.' : 'Ready to learn, work, and become a pro.')}
+          </h2>
+          <p className="text-base text-slate-500 font-medium leading-relaxed">
+            {isMentor
+              ? (isRtl ? 'ליווי אישי, עבודה אמיתית, ומקצוע שנשאר לך לכל החיים.' : 'Personal guidance, real work, and a craft that stays with you.')
+              : (isRtl ? 'מחפש/ת מנטור שילמד אותי מהשטח — ואני אשקיע כדי להצליח.' : 'Looking for a mentor to learn from in the field — and I will put in the work.')}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          {(isMentor
+            ? [
+                { icon: <Users size={18} />, title: isRtl ? 'ליווי אישי' : '1-on-1 guidance', sub: isRtl ? 'אחד על אחד, לא כיתה' : 'not a classroom' },
+                { icon: <Hammer size={18} />, title: isRtl ? 'עבודה אמיתית' : 'Real work', sub: isRtl ? 'תרגול על פרויקטים בשטח' : 'hands-on projects' },
+                (profile.years_experience || 0) > 0
+                  ? { icon: <Briefcase size={18} />, title: `${profile.years_experience}+ ${isRtl ? 'שנות ניסיון' : 'yrs experience'}`, sub: isRtl ? 'ידע מוכח בתחום' : 'proven expertise' }
+                  : { icon: <ShieldCheck size={18} />, title: isRtl ? 'מקצוען מנוסה' : 'Experienced pro', sub: isRtl ? 'ידע מהשטח' : 'field knowledge' },
+              ]
+            : [
+                { icon: <Zap size={18} />, title: isRtl ? 'למידה מהירה' : 'Fast learner', sub: isRtl ? 'קולט/ת מהר בשטח' : 'picks it up fast' },
+                { icon: <CheckCircle2 size={18} />, title: isRtl ? 'מחויבות מלאה' : 'Fully committed', sub: isRtl ? 'רציני/ת ללמוד' : 'serious about learning' },
+                profile.city
+                  ? { icon: <MapPin size={18} />, title: profile.city, sub: isRtl ? 'זמין/ה באזור' : 'available nearby' }
+                  : { icon: <Star size={18} />, title: isRtl ? 'מוטיבציה גבוהה' : 'Highly motivated', sub: '' },
+              ]
+          ).map((v, i) => (
+            <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 shrink-0">{v.icon}</div>
+              <div className="min-w-0">
+                <div className="font-black text-slate-900 text-sm leading-tight">{v.title}</div>
+                {v.sub && <div className="text-xs text-slate-500 font-medium mt-0.5">{v.sub}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!isMyProfile && (
+          <button
+            onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
+            className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <MessageSquare size={18} />
+            {isMentor ? (isRtl ? 'התחל ללמוד אצלי' : 'Start learning with me') : (isRtl ? 'צור קשר' : 'Get in touch')}
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Bio & Info */}
         <div className="lg:col-span-8 space-y-8">
