@@ -744,13 +744,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
       {/* Header Card */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        <div className="h-48 bg-gray-50 relative group/cover">
+        <div className="h-56 sm:h-72 bg-slate-900 relative group/cover">
           {formData.cover_url ? (
             <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-900 to-slate-950" />
           )}
-          
+          {/* Legibility scrim so the hero reads like a landing-page banner */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+
           {isMyProfile && (
             <label className="absolute top-4 right-4 p-3 bg-black/40 text-white rounded-2xl hover:bg-black/70 transition-all backdrop-blur-md cursor-pointer z-20 border border-white/20">
               <Camera size={20} />
@@ -767,7 +769,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         <div className="px-4 sm:px-8 pb-5 sm:pb-8 -mt-16 relative">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="relative">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-black border-4 sm:border-8 border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-xl overflow-hidden relative">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-900 border-4 sm:border-[6px] border-white flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-2xl overflow-hidden relative">
                 {profile.avatar_url ? (
                   <img src={resolveAsset(profile.avatar_url) || ''} alt={profile.full_name} className="w-full h-full object-cover" />
                 ) : (
