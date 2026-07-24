@@ -754,7 +754,11 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   };
 
   const verified = profile.role === 'mentor' && (profile.is_verified || profile.verification_status === 'approved');
-  const works = (formData.portfolio_urls && formData.portfolio_urls.length) || 0;
+  // For your own profile use the live edit state; for others, read straight
+  // from the fetched profile so their latest updates always show.
+  const displayImages: string[] = (isMyProfile ? formData.portfolio_urls : profile.portfolio_urls) || [];
+  const displaySkills: any[] = (isMyProfile ? formData.skills : profile.skills) || [];
+  const works = displayImages.length;
   const ratingText = reviews.length > 0 ? averageRating.toFixed(1) : '—';
   const category = profile.headline || profile.occupation || (isMentor ? (isRtl ? 'מנטור' : 'Mentor') : (isRtl ? 'מתלמד' : 'Apprentice'));
 
@@ -947,14 +951,14 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           <div className="px-4 pt-4">
             <div className="flex flex-wrap gap-2">
               {quickTags.map((tag) => {
-                const isSelected = formData.skills?.some((s: any) => s.name === tag.id);
+                const isSelected = displaySkills.some((s: any) => s.name === tag.id);
                 return (
                   <button key={tag.id} disabled={!isMyProfile} onClick={() => { let ns = [...(formData.skills || [])]; ns = isSelected ? ns.filter((s: any) => s.name !== tag.id) : [...ns, { name: tag.id, level: tag.label, verified: false }]; setFormData({ ...formData, skills: ns }); handleSave('skills', ns); }} style={isSelected ? { backgroundColor: accent, borderColor: accent } : undefined} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${isSelected ? 'text-white' : 'bg-white border-slate-200 text-slate-500'} ${!isMyProfile && 'cursor-default'}`}>
                     <tag.icon size={13} /> {tag.label}
                   </button>
                 );
               })}
-              {formData.skills?.filter((s: any) => !quickTags.some(q => q.id === s.name)).map((s: any, i: number) => (
+              {displaySkills.filter((s: any) => !quickTags.some(q => q.id === s.name)).map((s: any, i: number) => (
                 <button key={'c' + i} disabled={!isMyProfile} onClick={() => { const ns = formData.skills.filter((x: any) => x.name !== s.name); setFormData({ ...formData, skills: ns }); handleSave('skills', ns); }} style={{ backgroundColor: accent, borderColor: accent }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white border">
                   {s.name}{isMyProfile && <X size={12} />}
                 </button>
@@ -978,7 +982,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
           {/* Grid */}
           <div className="grid grid-cols-3 gap-0.5">
-            {(formData.portfolio_urls || []).map((url: string, i: number) => (
+            {displayImages.map((url: string, i: number) => (
               <button key={i} onClick={() => setLightbox(url)} className="relative aspect-square group overflow-hidden bg-slate-100 cursor-zoom-in">
                 <img src={url} alt={`work ${i}`} className="w-full h-full object-cover" />
                 {isMyProfile && (
@@ -992,7 +996,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 <input type="file" className="hidden" accept="image/*" onChange={handlePortfolioUpload} disabled={uploading} />
               </label>
             )}
-            {!isMyProfile && (!formData.portfolio_urls || formData.portfolio_urls.length === 0) && (
+            {!isMyProfile && displayImages.length === 0 && (
               <div className="col-span-3 py-12 text-center text-slate-400 text-sm font-medium">{isRtl ? 'אין עבודות עדיין.' : 'No work yet.'}</div>
             )}
           </div>
