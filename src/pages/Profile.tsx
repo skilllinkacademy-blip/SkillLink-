@@ -364,13 +364,16 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           throw error;
         }
       }
+      // Keep this page's local profile in sync with what was just saved, so
+      // edits (tags, "what I want to learn", etc.) persist visually without a
+      // reload and don't revert when the display reads from `profile`.
+      setProfile((prev: any) => (prev ? { ...prev, ...updatePayload } : prev));
       await refreshProfile();
     } catch (err: any) {
       console.error('Error updating profile:', err.message);
-      // Only alert on full save or critical errors
-      if (!field) {
-        alert(isRtl ? 'שגיאה בעדכון הפרופיל: ' + err.message : 'Error updating profile: ' + err.message);
-      }
+      // Surface every save failure (including single-field saves like tags),
+      // otherwise a blocked/failed save looks like "nothing happened".
+      alert(isRtl ? 'שגיאה בשמירת הפרופיל: ' + err.message : 'Error saving profile: ' + err.message);
     } finally {
       setSaving(false);
     }
