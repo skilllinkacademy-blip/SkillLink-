@@ -63,14 +63,28 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   const [showTagForm, setShowTagForm] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [newReview, setNewReview] = useState({ 
-    rating: 5, 
+  const [newReview, setNewReview] = useState({
+    rating: 5,
     comment: '',
     professional: 5,
     teaching: 5,
     workEthic: 5,
     reliability: 5
   });
+
+  // ===== Page design (Option A: templates + accent + section toggles) =====
+  const ACCENTS = ['#2563eb', '#10b981', '#d97706', '#e11d48', '#7c3aed', '#0f172a'];
+  const TEMPLATES = [
+    { id: 'classic', labelHe: 'נקי ובהיר', labelEn: 'Clean & Light' },
+    { id: 'dark', labelHe: 'מקצועי כהה', labelEn: 'Bold Dark' },
+    { id: 'warm', labelHe: 'חם ואומנותי', labelEn: 'Warm Craft' },
+  ];
+  const [design, setDesign] = useState<{ template: string; accent: string; sections: { gallery: boolean; reviews: boolean; tags: boolean } }>({
+    template: 'classic',
+    accent: '#2563eb',
+    sections: { gallery: true, reviews: true, tags: true },
+  });
+  const [showDesignPanel, setShowDesignPanel] = useState(false);
 
   const quickTags = [
     { id: 'tools', label: isRtl ? 'בעל כלי עבודה' : 'Owns Tools', icon: Hammer },
@@ -161,6 +175,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
         if (data) {
           setProfile(data);
+          setDesign({
+            template: data.page_design?.template || 'classic',
+            accent: data.page_design?.accent || '#2563eb',
+            sections: {
+              gallery: data.page_design?.sections?.gallery !== false,
+              reviews: data.page_design?.sections?.reviews !== false,
+              tags: data.page_design?.sections?.tags !== false,
+            },
+          });
           
           // Only initialize form data on first load or when switching profiles
           if (!isInitialized || data.id !== currentProfileId.current) {
@@ -637,6 +660,15 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
 
   const placeholders = getProfilePlaceholder(profession);
 
+  // Design-derived styles (accent + template)
+  const accent = design.accent || '#2563eb';
+  const heroBg =
+    design.template === 'dark'
+      ? 'linear-gradient(135deg,#1e293b,#020617)'
+      : design.template === 'warm'
+      ? 'linear-gradient(135deg,#b45309 0%,#7c2d12 45%,#431407 100%)'
+      : `linear-gradient(135deg, ${accent} 0%, #0f172a 85%)`;
+
   const renderProfileHelper = (text: string) => (
     <p className="mt-1 text-[10px] font-bold text-slate-400 px-1 animate-in fade-in">
       {text}
@@ -677,7 +709,78 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500" style={{ ['--pa' as any]: accent }}>
+
+      {/* ===== Design panel (own profile) ===== */}
+      {isMyProfile && showDesignPanel && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDesignPanel(false)} />
+          <div className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-slate-900">{isRtl ? 'עיצוב הדף שלך' : 'Design your page'}</h3>
+              <button onClick={() => setShowDesignPanel(false)} className="p-2 rounded-lg hover:bg-slate-100"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'תבנית' : 'Template'}</div>
+              <div className="grid grid-cols-3 gap-2">
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => { const nd = { ...design, template: t.id }; setDesign(nd); handleSave('page_design', nd); }}
+                    className={`p-3 rounded-2xl border-2 text-center transition-all ${design.template === t.id ? 'border-slate-900' : 'border-slate-100 hover:border-slate-200'}`}
+                  >
+                    <div className="h-10 rounded-lg mb-2" style={{ background: t.id === 'dark' ? 'linear-gradient(135deg,#1e293b,#020617)' : t.id === 'warm' ? 'linear-gradient(135deg,#b45309,#431407)' : `linear-gradient(135deg, ${accent}, #0f172a)` }} />
+                    <div className="text-[11px] font-black text-slate-700">{isRtl ? t.labelHe : t.labelEn}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">{isRtl ? 'צבע ראשי' : 'Accent color'}</div>
+              <div className="flex flex-wrap gap-3">
+                {ACCENTS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { const nd = { ...design, accent: c }; setDesign(nd); handleSave('page_design', nd); }}
+                    className={`w-9 h-9 rounded-full transition-all ${design.accent === c ? 'ring-2 ring-offset-2 ring-slate-900 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                    aria-label={c}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">{isRtl ? 'מה להציג בדף' : 'Sections'}</div>
+              {[
+                { key: 'tags', labelHe: 'תגיות מקצועיות', labelEn: 'Professional tags' },
+                { key: 'gallery', labelHe: 'גלריית עבודות', labelEn: 'Work gallery' },
+                { key: 'reviews', labelHe: 'ביקורות', labelEn: 'Reviews' },
+              ].map((s) => {
+                const on = (design.sections as any)[s.key];
+                return (
+                  <div key={s.key} className="flex items-center justify-between py-2">
+                    <span className="text-sm font-bold text-slate-700">{isRtl ? s.labelHe : s.labelEn}</span>
+                    <button
+                      onClick={() => { const nd = { ...design, sections: { ...design.sections, [s.key]: !on } }; setDesign(nd); handleSave('page_design', nd); }}
+                      className={`w-11 h-6 rounded-full transition-all relative ${on ? '' : 'bg-slate-200'}`}
+                      style={on ? { backgroundColor: accent } : undefined}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${on ? (isRtl ? 'left-0.5' : 'right-0.5') : (isRtl ? 'right-0.5' : 'left-0.5')}`} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button onClick={() => setShowDesignPanel(false)} className="w-full py-3 rounded-2xl font-black text-white" style={{ backgroundColor: accent }}>
+              {isRtl ? 'סיימתי' : 'Done'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Profile Completion Bar — own profile + incomplete */}
       {isMyProfile && completionPercentage < 100 && (
@@ -749,7 +852,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
           {formData.cover_url ? (
             <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-900 to-slate-950" />
+            <div className="absolute inset-0" style={{ background: heroBg }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 pointer-events-none" />
 
@@ -861,6 +964,16 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               >
                 <MessageSquare size={16} />
                 {isRtl ? 'שלח הודעה' : 'Message'}
+              </button>
+            )}
+            {isMyProfile && (
+              <button
+                onClick={() => setShowDesignPanel(true)}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white rounded-lg transition-all active:scale-95 shadow-sm"
+                style={{ backgroundColor: accent }}
+              >
+                <Pencil size={13} />
+                {isRtl ? 'עצב את הדף' : 'Design'}
               </button>
             )}
             {isMyProfile && (
@@ -1015,7 +1128,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               ]
           ).map((v, i) => (
             <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 shrink-0">{v.icon}</div>
+              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0" style={{ color: accent }}>{v.icon}</div>
               <div className="min-w-0">
                 <div className="font-black text-slate-900 text-sm leading-tight">{v.title}</div>
                 {v.sub && <div className="text-xs text-slate-500 font-medium mt-0.5">{v.sub}</div>}
@@ -1027,7 +1140,8 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
         {!isMyProfile && (
           <button
             onClick={() => navigate('/app/messages', { state: { recipientId: profile.id, recipientName: profile.full_name } })}
-            className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+            style={{ backgroundColor: accent }}
+            className="w-full sm:w-auto px-8 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <MessageSquare size={18} />
             {isMentor ? (isRtl ? 'התחל ללמוד אצלי' : 'Start learning with me') : (isRtl ? 'צור קשר' : 'Get in touch')}
@@ -1231,7 +1345,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                 <div className="pt-6 mt-2 border-t border-gray-50">
                   <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100 p-5 sm:p-6">
                     <div className="flex items-start gap-3 mb-1">
-                      <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
+                      <div className="w-11 h-11 rounded-xl text-white flex items-center justify-center shrink-0 shadow-lg" style={{ backgroundColor: accent }}>
                         {isMentor ? <Users size={22} /> : <Hammer size={22} />}
                       </div>
                       <div className="min-w-0">
@@ -1271,6 +1385,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
               </div>
 
               {/* Professional DNA / Quick Tags */}
+              {design.sections.tags && (
               <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 -z-10" />
                 
@@ -1354,8 +1469,10 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   )}
                 </div>
               </div>
+              )}
 
               {/* Gallery */}
+              {design.sections.gallery && (
               <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl sm:text-2xl font-black text-black">{isRtl ? 'גלריית עבודות' : 'Gallery of Work'}</h2>
@@ -1390,9 +1507,10 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   )}
                 </div>
               </div>
+              )}
 
               {/* Social proof — reviews preview */}
-              {reviews.length > 0 && (
+              {design.sections.reviews && reviews.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 shadow-sm space-y-5">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="text-xl sm:text-2xl font-black text-black flex items-center gap-2">
