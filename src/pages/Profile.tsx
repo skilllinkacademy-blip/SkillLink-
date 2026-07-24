@@ -743,7 +743,7 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
   };
 
   return (
-    <div className={`max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${hasPageBg ? 'p-3 sm:p-5 rounded-3xl shadow-sm' : ''}`} style={{ ['--pa' as any]: accent, background: pageBackground }}>
+    <div className={`max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${hasPageBg ? 'p-3 sm:p-5 rounded-3xl shadow-sm profile-glass' : ''}`} style={{ ['--pa' as any]: accent, background: pageBackground }}>
 
       {/* ===== Design panel (own profile) ===== */}
       {isMyProfile && showDesignPanel && (
