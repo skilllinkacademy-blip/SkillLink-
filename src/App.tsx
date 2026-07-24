@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 // Entry screens stay eager so first paint has no loading flash.
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
+import AuthCallback from './pages/AuthCallback';
 // Everything behind auth (and legal pages) is code-split per route.
 const Home = lazy(() => import('./pages/Home'));
 const Explore = lazy(() => import('./pages/Explore'));
@@ -73,14 +74,18 @@ function AppRoutes({ isRtl, toggleLang }: { isRtl: boolean; toggleLang: () => vo
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/auth" 
+          <Route
+            path="/auth"
             element={
               <ProtectedRoute requireAuth={false}>
                 <Auth isRtl={isRtl} />
               </ProtectedRoute>
-            } 
+            }
           />
+          {/* Email-confirmation / magic-link redirect target. Not wrapped in
+              ProtectedRoute so it can establish the session from the URL and
+              handle its own navigation regardless of current auth state. */}
+          <Route path="/auth/callback" element={<AuthCallback isRtl={isRtl} />} />
           <Route path="/privacy" element={<Privacy isRtl={isRtl} />} />
           <Route path="/terms" element={<Terms isRtl={isRtl} />} />
           <Route path="/contact" element={<Contact isRtl={isRtl} />} />

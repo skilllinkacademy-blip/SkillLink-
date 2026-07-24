@@ -111,6 +111,10 @@ export default function Auth({ isRtl }: AuthProps) {
           email,
           password,
           options: {
+            // Send the user back into the app (not the Supabase-hosted page)
+            // after they click the confirmation link. /auth/callback reads the
+            // session from the URL and finishes logging them in.
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
               full_name: fullName,
               role: role,
