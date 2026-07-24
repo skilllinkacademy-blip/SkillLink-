@@ -323,18 +323,18 @@ export default function OpportunityDetails({ isRtl }: OpportunityDetailsProps) {
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 tracking-wide">{isRtl ? 'מיקום' : 'Location'}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.location}/30</span>
+                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.location}/40</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500" style={{ width: `${(matchBreakdown.location / 30) * 100}%` }} />
+                              <div className="h-full bg-blue-500" style={{ width: `${(matchBreakdown.location / 40) * 100}%` }} />
                             </div>
                           </div>
                         </div>
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-500 tracking-wide">{isRtl ? 'תחום ועיסוק' : 'Field & Role'}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.role}/40</span>
+                            <span className="text-lg sm:text-xl font-black">{matchBreakdown.role}/30</span>
                             <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-emerald-500" style={{ width: `${(matchBreakdown.role / 40) * 100}%` }} />
+                              <div className="h-full bg-emerald-500" style={{ width: `${(matchBreakdown.role / 30) * 100}%` }} />
                             </div>
                           </div>
                         </div>

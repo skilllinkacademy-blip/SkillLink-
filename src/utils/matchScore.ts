@@ -76,10 +76,12 @@ export const calculateMatchScore = (opportunity: any, myProfile: any, isRtl: boo
 
   const oppTitle = (opportunity.title || '').toLowerCase();
   const oppAbout = (opportunity.about_work || opportunity.aboutWork || '').toLowerCase();
-  const oppTrade = (opportunity.trade || opportunity.ownerTrade || opportunity.profession || '').toLowerCase();
+  const oppTrade = (opportunity.trade || opportunity.ownerTrade || opportunity.profession || opportunity.profiles?.occupation || '').toLowerCase();
   const oppLearningFocus = (opportunity.learning_focus || opportunity.learningFocus || '').toLowerCase();
   const myOcc = (myProfile.occupation || '').toLowerCase();
-  const myIntent = (myProfile.learningIntent || '').toLowerCase();
+  // The learner's goal / the mentor's target — this is what should drive the
+  // field match, not a non-existent `learningIntent` field.
+  const myIntent = (myProfile.what_i_want_to_learn || myProfile.who_i_want_to_teach || myProfile.learningIntent || '').toLowerCase();
   
   // Semantic keyword matching for learning intent
   if (myIntent) {
