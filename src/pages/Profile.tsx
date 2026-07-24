@@ -1169,36 +1169,45 @@ export default function Profile({ isRtl, isPublicView = false }: ProfileProps) {
                   </motion.div>
                 )}
                 
-                <div className="pt-8 border-t border-gray-50">
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <h3 className="text-xl font-black text-black">
-                      {isMentor ? (isRtl ? 'את מי אני רוצה ללמד?' : 'Who I want to teach?') : (isRtl ? 'מה אני רוצה ללמוד?' : 'What I want to learn?')}
-                    </h3>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                      {isRtl ? 'משפיע על ההתאמה' : 'Powers matching'}
-                    </span>
+                <div className="pt-6 mt-2 border-t border-gray-50">
+                  <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100 p-5 sm:p-6">
+                    <div className="flex items-start gap-3 mb-1">
+                      <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
+                        {isMentor ? <Users size={22} /> : <Hammer size={22} />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg sm:text-xl font-black text-slate-900">
+                            {isMentor ? (isRtl ? 'את מי אני רוצה ללמד?' : 'Who I want to teach?') : (isRtl ? 'מה אני רוצה ללמוד?' : 'What I want to learn?')}
+                          </h3>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-white px-2 py-0.5 rounded-full border border-blue-100">
+                            {isRtl ? 'משפיע על ההתאמה' : 'Powers matching'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-0.5">
+                          {isMentor
+                            ? (isRtl ? 'תאר את החניך האידיאלי ואת התחום שתלמד — לפי זה נחליט למי להציג אותך.' : 'Describe your ideal apprentice and the field you teach — this decides who sees you.')
+                            : (isRtl ? 'תאר בדיוק מה אתה רוצה ללמוד ומאיזה תחום — לפי זה נמצא לך את ההתאמות הטובות ביותר.' : 'Describe exactly what you want to learn and in which field — we find your best matches by this.')}
+                        </p>
+                      </div>
+                    </div>
+                    {isMyProfile ? (
+                      <textarea
+                        value={isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn}
+                        onChange={(e) => setFormData({...formData, [isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn']: e.target.value})}
+                        onBlur={() => handleSave(isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn', isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn)}
+                        rows={3}
+                        placeholder={isMentor
+                          ? (isRtl ? 'למשל: מחפש מתלמד רציני לתחום החשמל, בלי ניסיון קודם, שרוצה ללמוד עבודה בשטח.' : 'e.g. Looking for a serious apprentice in electrical work, no experience needed, wants hands-on field work.')
+                          : (isRtl ? 'למשל: רוצה ללמוד ספרות גברים — תספורות, פייד ועיצוב זקן — אצל ספר מנוסה בפתח תקווה.' : 'e.g. I want to learn men\'s barbering — cuts, fades and beard styling — with an experienced barber in my area.')}
+                        className="mt-3 w-full p-4 bg-white border border-blue-100 rounded-xl focus:border-blue-500 transition-all font-medium outline-none resize-none"
+                      />
+                    ) : (
+                      <p className="mt-3 text-slate-700 font-semibold leading-relaxed text-base sm:text-lg">
+                        {(isMentor ? profile.who_i_want_to_teach : profile.what_i_want_to_learn) || (isRtl ? 'עדיין לא נוסף מידע.' : 'No information added yet.')}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-400 font-semibold mb-3 leading-relaxed">
-                    {isMentor
-                      ? (isRtl ? 'תאר את החניך האידיאלי ואת התחום שתלמד — לפי זה נחליט למי להציג אותך.' : 'Describe your ideal apprentice and the field you teach — this decides who sees you.')
-                      : (isRtl ? 'תאר בדיוק מה אתה רוצה ללמוד ומאיזה תחום — לפי זה נמצא לך את ההתאמות הטובות ביותר.' : 'Describe exactly what you want to learn and in which field — we find your best matches by this.')}
-                  </p>
-                  {isMyProfile ? (
-                    <textarea
-                      value={isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn}
-                      onChange={(e) => setFormData({...formData, [isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn']: e.target.value})}
-                      onBlur={() => handleSave(isMentor ? 'who_i_want_to_teach' : 'what_i_want_to_learn', isMentor ? formData.who_i_want_to_teach : formData.what_i_want_to_learn)}
-                      rows={3}
-                      placeholder={isMentor
-                        ? (isRtl ? 'למשל: מחפש מתלמד רציני לתחום החשמל, בלי ניסיון קודם, שרוצה ללמוד עבודה בשטח.' : 'e.g. Looking for a serious apprentice in electrical work, no experience needed, wants hands-on field work.')
-                        : (isRtl ? 'למשל: רוצה ללמוד ספרות גברים — תספורות, פייד ועיצוב זקן — אצל ספר מנוסה בפתח תקווה.' : 'e.g. I want to learn men\'s barbering — cuts, fades and beard styling — with an experienced barber in my area.')}
-                      className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-black transition-all font-medium outline-none resize-none"
-                    />
-                  ) : (
-                    <p className="text-gray-500 font-medium leading-relaxed">
-                      {(isMentor ? profile.who_i_want_to_teach : profile.what_i_want_to_learn) || (isRtl ? 'עדיין לא נוסף מידע.' : 'No information added yet.')}
-                    </p>
-                  )}
                 </div>
               </div>
 
