@@ -53,10 +53,13 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           BODY=$(printf 'Keep-alive ping returned HTTP %s. The project is most likely paused.\n\nRestore it: https://supabase.com/dashboard/project/cprfaimmxtqsmmutdbcb\n\nFailing run: %s' "${STATUS:-000}" "$RUN_URL")
-          EXISTING=$(gh issue list --state open --label keepalive --json number --jq '.[0].number')
+          # Create the label first - `gh issue list --label` errors out if the
+          # label does not exist yet, which would kill this step the very
+          # first time it is needed.
+          gh label create keepalive --color b60205 --description "Supabase keep-alive alerts" 2>/dev/null || true
+          EXISTING=$(gh issue list --state open --label keepalive --json number --jq '.[0].number' 2>/dev/null || true)
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
           else
-            gh label create keepalive --color b60205 --description "Supabase keep-alive alerts" 2>/dev/null || true
             gh issue create --title "Supabase keep-alive failing" --label keepalive --body "$BODY"
           fi
