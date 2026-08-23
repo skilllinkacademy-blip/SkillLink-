@@ -2,9 +2,14 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Daily at 08:00 UTC (11:00 IST) - Supabase free tier pauses after 7 days idle
+    # Daily at 08:00 UTC (11:00 IST). Supabase free tier pauses after 7 days
+    # idle; daily leaves margin and surfaces an outage within 24h.
     - cron: '0 8 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   ping:
@@ -12,15 +17,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Query Supabase to prevent inactivity pause
+        id: ping
         run: |
+          # A paused project loses its DNS record, so curl exits non-zero
+          # before ever setting a status. Never let that abort the step -
+          # the check below needs to run so the failure is reported.
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --retry 3 --retry-delay 5 --max-time 30 \
             "https://cprfaimmxtqsmmutdbcb.supabase.co/rest/v1/profiles?select=id&limit=1" \
             -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwcmZhaW1teHRxc21tdXRkYmNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0OTEsImV4cCI6MjA4NzkzMDQ5MX0.Mmekj9MJP5w37jjtypvvD7pbOtPeOhYTT9Y3mcSsLZE" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwcmZhaW1teHRxc21tdXRkYmNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0OTEsImV4cCI6MjA4NzkzMDQ5MX0.Mmekj9MJP5w37jjtypvvD7pbOtPeOhYTT9Y3mcSsLZE")
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwcmZhaW1teHRxc21tdXRkYmNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0OTEsImV4cCI6MjA4NzkzMDQ5MX0.Mmekj9MJP5w37jjtypvvD7pbOtPeOhYTT9Y3mcSsLZE" || true)
+          # curl already emits 000 on transport failure; normalise either way
+          # so the branches below always see a bare 3-digit code.
+          STATUS=$(printf '%s' "$STATUS" | tr -dc '0-9' | tail -c 3)
+          : "${STATUS:=000}"
           echo "Supabase responded with HTTP $STATUS"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
           if [ "$STATUS" = "200" ] || [ "$STATUS" = "206" ]; then
             echo "Supabase is active and healthy."
+          elif [ "$STATUS" = "000" ]; then
+            echo "Could not reach the project at all (DNS/network) - it is most likely paused."
+            exit 1
           else
             echo "Warning: Supabase returned status $STATUS. Project may be paused."
             exit 1
+          fi
+
+      # Without this the ping fails silently - it went unnoticed for 17 days
+      # in Aug 2026 while the project sat paused.
+      - name: Open an issue if the ping failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUS: ${{ steps.ping.outputs.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          BODY=$(printf 'Keep-alive ping returned HTTP %s. The project is most likely paused.\n\nRestore it: https://supabase.com/dashboard/project/cprfaimmxtqsmmutdbcb\n\nFailing run: %s' "${STATUS:-000}" "$RUN_URL")
+          EXISTING=$(gh issue list --state open --label keepalive --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh label create keepalive --color b60205 --description "Supabase keep-alive alerts" 2>/dev/null || true
+            gh issue create --title "Supabase keep-alive failing" --label keepalive --body "$BODY"
           fi
