@@ -2,8 +2,8 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Every 5 days at 08:00 UTC (11:00 IST)
-    - cron: '0 8 */5 * *'
+    # Daily at 08:00 UTC (11:00 IST) - Supabase free tier pauses after 7 days idle
+    - cron: '0 8 * * *'
   workflow_dispatch:
 
 jobs:
